@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>你和妈妈的半年 · 妈妈的消息</title>
+<style>
+  :root{
+    --bg:#EDEDED; --card:#FFFFFF; --ink:#1B1B1B; --mute:#7A7A7A; --line:#E2E2E2;
+    --green:#07C160; --green-soft:#E6F7EC; --red:#E0502A; --yellow:#D99A2B; --bubble:#95EC69;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    --sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;padding:28px 14px 60px}
+  .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border-radius:14px;padding:22px 22px 20px}
+  .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mute)}
+  h1{font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.3;margin-top:6px}
+  h2{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
+  .range{color:var(--mute);font-size:13px;margin-top:6px}
+  .countdown{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+  .countdown span{background:var(--green-soft);color:#0B7A3E;border-radius:20px;padding:4px 12px;font-size:13px}
+
+  .idx{display:flex;flex-direction:column;gap:14px}
+  .idx .row{display:grid;grid-template-columns:110px 44px 1fr;gap:12px;align-items:center}
+  .idx .name{font-size:14px}
+  .idx .n{font-family:var(--serif);font-size:24px;font-weight:600;text-align:right}
+  .idx .bar{display:block;height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+  .idx .bar i{display:block;height:100%;background:var(--green);border-radius:5px}
+  .idx .line{grid-column:1/-1;font-size:13px;color:var(--mute);margin-top:-6px}
+
+  ol.six{list-style:none;counter-reset:n}
+  ol.six li{counter-increment:n;display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  ol.six li:last-child{border-bottom:0}
+  ol.six li::before{content:counter(n);font-family:var(--serif);font-size:18px;font-weight:600;color:var(--mute)}
+  ol.six b{font-family:var(--serif);font-weight:600}
+  ol.six small{display:block;color:var(--mute);font-size:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--mute);width:38%}
+  td.v{font-family:var(--serif);font-weight:600;text-align:right;width:14%}
+  td.b{padding-left:12px}
+  td.b i{display:block;height:8px;background:var(--green);border-radius:4px;opacity:.85}
+  .comp-note{font-size:12px;color:var(--mute);margin-top:8px}
+
+  .cert{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cert .who{font-size:12px;color:var(--mute)}
+  .cert .type{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.3;margin-top:2px}
+  .cert .sub{font-size:13px;color:var(--mute);margin-top:4px}
+  .cert .q{font-size:13px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:8px}
+  .stamp{grid-column:1/-1;margin-top:8px;display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--line);padding-top:14px}
+  .stamp .lbl{font-size:13px;color:var(--mute)}
+  .stamp .val{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--red);border:2px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-3deg)}
+
+  .dict td.k{width:44%;color:var(--ink)}
+  .dict td.arrow{width:24px;color:var(--mute);text-align:center}
+  .dict td.m{color:var(--ink)}
+
+  .fest td.k{width:26%}
+  .fest .who-her{color:#0B7A3E}
+  .fest .who-me{color:var(--red)}
+  .fest .none{color:var(--mute)}
+
+  .bubble{background:var(--bg);border-radius:4px 12px 12px 12px;padding:9px 12px;font-size:14px;max-width:82%;margin-bottom:8px}
+  .bubble time{display:block;font-size:11px;color:var(--mute);margin-bottom:2px}
+  .noreply{margin-left:auto;width:fit-content;max-width:64%;border:1.5px dashed var(--bubble);border-radius:12px 4px 12px 12px;padding:9px 12px;font-size:12px;color:var(--mute);margin-top:4px}
+
+  .sig{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .sig li{display:grid;grid-template-columns:14px 1fr;gap:10px;font-size:14px;align-items:start}
+  .sig li::before{content:"";width:10px;height:10px;border-radius:50%;margin-top:7px;background:var(--yellow)}
+  .sig li.red::before{background:var(--red)}
+  .sig .empty{color:var(--mute);font-size:13px}
+
+  .chart{margin-top:6px}
+  .chart svg{width:100%;height:auto;display:block}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px;display:flex;gap:14px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .big .n{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1}
+  .big .l{font-size:12px;color:var(--mute);margin-top:6px}
+
+  .say{font-size:15px;line-height:1.9}
+  .say p{margin-bottom:8px}
+  ol.tonight{padding-left:22px;font-size:14px;display:flex;flex-direction:column;gap:8px}
+  ol.tonight li::marker{font-family:var(--serif);font-weight:600}
+  .reply{border-left:3px solid var(--line);padding:6px 12px;margin-bottom:10px;font-size:14px}
+  .reply .to{color:var(--mute);font-size:12px}
+  .reply .draft{margin-top:2px}
+  .openers{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .openers li::before{content:"📞 ";}
+
+  .bill{font-family:var(--serif)}
+  .bill .r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .bill .r.total{border-bottom:0;border-top:1.5px solid var(--ink);margin-top:4px;padding-top:12px;font-size:17px;font-weight:600}
+  .send{background:var(--bubble);border-radius:12px 4px 12px 12px;padding:14px 16px;font-size:15px;line-height:1.8;margin-left:auto;max-width:92%}
+  .send-note{font-size:12px;color:var(--mute);margin-top:8px;text-align:right}
+  .foot{font-size:12px;color:var(--mute);line-height:1.7}
+  .foot b{color:var(--ink)}
+  @media (max-width:520px){ .cert,.big{grid-template-columns:1fr} h1{font-size:24px} .idx .row{grid-template-columns:96px 40px 1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="card">
+  <div class="eyebrow">妈妈的消息</div>
+  <h1>你和妈妈的半年</h1>
+  <div class="range">2026-03-01 至 2026-08-28 · 181 天 · 共 294 条（她 192 / 你 102）</div>
+  <div class="countdown"><span>中秋 还有 26 天</span><span>国庆 还有 32 天</span></div>
+</section>
+
+<section class="card">
+  <h2>三个指数</h2>
+  <div class="idx">
+    <div class="row"><span class="name">💛 牵挂指数</span><span class="n">57</span><span class="bar"><i style="width:57%"></i></span><span class="line">她发起了 67% 的对话，有 28 条是早上 8 点前发的、51 条是晚上 10 点以后</span></div>
+    <div class="row"><span class="name">🧊 嗯哦好指数</span><span class="n">42</span><span class="bar"><i style="width:42%"></i></span><span class="line">你 93 条回复里有 52 条不超过三个字，最长一次 3 天没回</span></div>
+    <div class="row"><span class="name">🕰️ 不计较指数</span><span class="n">92</span><span class="bar"><i style="width:92%"></i></span><span class="line">你没回的 59 次里，有 51 次是她自己先开口了下一次，一次都没问过“怎么不回”</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>六个数字</h2>
+  <ol class="six"><li><span><b>谁先开口</b> —— 她 86 次 / 你 42 次</span></li><li><span><b>你回她，通常要</b> 1 小时 30 分<small>最长的一次隔了 3 天 10 小时，她那条是“好 到了就好”</small></span></li><li><span><b>她最长的一条</b> 18 字：“发烧了？多少度 喝水了吗 去医院了没”<small>你回了 1 字：“好”</small></span></li><li><span><b>你的“嗯 / 好 / 知道了”</b> 52 条，占你全部回复的 56%<small>嗯×8、好×7、好的×5、在吗×5</small></span></li><li><span><b>她最常问的三件事</b><small>身体 21 次“发烧了？多少度 喝水了吗 去医院了没” ／ 吃饭 19 次“今天吃的什么” ／ 钱 11 次“转了 不用还 你省着点”</small></span></li><li><span><b>她最常在</b> 20:00–22:00 找你<small>你最常在 22:00–00:00 回</small></span></li></ol>
+</section>
+
+<section class="card">
+  <h2>她的消息成分表</h2>
+  <table class="comp"><tr><td class="k">其他文字</td><td class="v">22.4%</td><td class="b"><i style="width:100%"></i></td></tr><tr><td class="k">表情包</td><td class="v">19.3%</td><td class="b"><i style="width:86%"></i></td></tr><tr><td class="k">语音</td><td class="v">13.0%</td><td class="b"><i style="width:58%"></i></td></tr><tr><td class="k">身体</td><td class="v">10.9%</td><td class="b"><i style="width:49%"></i></td></tr><tr><td class="k">吃饭</td><td class="v">9.9%</td><td class="b"><i style="width:44%"></i></td></tr><tr><td class="k">钱</td><td class="v">5.7%</td><td class="b"><i style="width:25%"></i></td></tr><tr><td class="k">天气</td><td class="v">4.7%</td><td class="b"><i style="width:21%"></i></td></tr><tr><td class="k">回家</td><td class="v">4.2%</td><td class="b"><i style="width:19%"></i></td></tr></table>
+  <div class="comp-note">她最常发的表情：[强] 10 次、[握手] 6 次、[玫瑰] 6 次、[合十] 5 次 · 她的口头禅：“好我去接你”、“今天吃的什么”、“转了不用还你省着点”</div>
+</section>
+
+<section class="card">
+  <h2>鉴定结果</h2>
+  <div class="cert">
+    <div><div class="who">她</div><div class="type">三餐监督型</div><div class="sub">副型：语音轰炸型</div><div class="q">“吃饭了吗”“今天吃的什么”“别老吃外卖”——她问吃饭 19 次，只有 3 次是在饭点</div></div>
+    <div><div class="who">你</div><div class="type">嗯哦好选手</div><div class="sub">也符合：已读不回选手、深夜忏悔型</div><div class="q">“嗯”8 次、“好”7 次、“好的”5 次。你的前三名加起来 20 条，没有一条超过两个字</div></div>
+    <div class="stamp"><span class="lbl">综合评级</span><span class="val">欠一个电话</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>她的黑话翻译表</h2>
+  <table class="dict"><tr><td class="k">“吃饭了吗”</td><td class="arrow">→</td><td class="m">在吗，我想你了</td></tr><tr><td class="k">“你那边降温了 多穿点”</td><td class="arrow">→</td><td class="m">我看了你们那儿的天气预报</td></tr><tr><td class="k">“没事 就是问问”</td><td class="arrow">→</td><td class="m">有事，但怕耽误你</td></tr><tr><td class="k">“打扰你了 你忙吧”</td><td class="arrow">→</td><td class="m">我等你</td></tr><tr><td class="k">“钱够不够花”</td><td class="arrow">→</td><td class="m">我能为你做的只剩这个了</td></tr><tr><td class="k">“这几种菜千万不能一起吃”</td><td class="arrow">→</td><td class="m">我不会说担心你，所以转了个链接</td></tr><tr><td class="k">“周末回来吗”</td><td class="arrow">→</td><td class="m">我已经开始想周末做什么菜了</td></tr><tr><td class="k">“早点睡 别熬夜”</td><td class="arrow">→</td><td class="m">我也没睡，在等你回</td></tr></table>
+</section>
+
+<section class="card">
+  <h2>节日记分牌</h2>
+  <table class="fest"><tr><td class="k">母亲节</td><td><span class="who-me">你</span> 21:40 先发的：“[表情包]”</td><td style="text-align:right;color:var(--mute)">她 1 条 / 你 1 条</td></tr><tr><td class="k">你的生日</td><td><span class="who-her">她</span> 00:02 先发的：“生日快乐 儿子 妈妈永远爱你”</td><td style="text-align:right;color:var(--mute)">她 3 条 / 你 2 条</td></tr></table>
+</section>
+
+<section class="card">
+  <h2>她发了，你没回</h2>
+  <div class="bubble"><time>08-19 20:30</time>打扰你了 你忙吧</div><div class="bubble"><time>08-20 22:22</time>[表情包]</div><div class="bubble"><time>08-23 12:21</time>没什么事</div><div class="bubble"><time>08-27 02:26</time>没事 就是问问</div><div class="bubble"><time>08-28 06:08</time>你那边台风大不大</div>
+  <div class="noreply">这里本来该有你的一句</div>
+</section>
+
+<section class="card">
+  <h2>她转给你的</h2>
+  <p style="font-size:14px">她转发了 7 篇文章，6 篇是养生的——久坐伤腰、颈椎病年轻化、熬夜的危害。你 3 月 13 日在电话里咳嗽过一次，之后她转的文章里三篇跟这个有关。你回了 4 篇，回的都是“嗯”。</p>
+  <p style="font-size:13px;color:var(--mute);margin-top:6px">《熬夜的危害 你不知道的十件事》 · 《熬夜的危害 你不知道的十件事》 · 《这几种菜千万不能一起吃》 · 《秋天要多吃这三样》 · 《颈椎病年轻化 看完这篇》</p>
+</section>
+
+<section class="card">
+  <h2>该打电话了</h2>
+  <ul class="sig"><li class="red">08-14 她说“最近腰不太好 医生说要少干活”，你回了“注意休息”4 个字</li><li class="red">她有 8 次用“打扰你了 你忙吧”这类话收尾——她在把自己缩小</li><li class="yellow">通话时长比之前少了一半以上（最近 30 天 0 分钟）</li><li class="yellow">她说了 9 次“没事”</li></ul>
+</section>
+
+<section class="card">
+  <h2>你们像两个时区</h2>
+  <div class="chart"><svg viewBox="0 0 720 96" xmlns="http://www.w3.org/2000/svg" font-family="PingFang SC,Noto Sans SC,sans-serif"><rect x="0" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.20"/><rect x="0" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.26"/><text x="13.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">0时</text><rect x="30" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.53"/><rect x="30" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.93"/><rect x="60" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.23"/><rect x="60" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.53"/><rect x="90" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.17"/><rect x="90" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><text x="103.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">3时</text><rect x="120" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.12"/><rect x="120" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><rect x="150" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.17"/><rect x="150" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><rect x="180" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.37"/><rect x="180" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><text x="193.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">6时</text><rect x="210" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.59"/><rect x="210" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.32"/><rect x="240" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.59"/><rect x="240" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.39"/><rect x="270" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.17"/><rect x="270" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.26"/><text x="283.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">9时</text><rect x="300" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.15"/><rect x="300" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><rect x="330" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.12"/><rect x="330" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><rect x="360" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.67"/><rect x="360" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="1.00"/><text x="373.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">12时</text><rect x="390" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.31"/><rect x="390" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.66"/><rect x="420" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.12"/><rect x="420" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.12"/><rect x="450" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.15"/><rect x="450" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.19"/><text x="463.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">15时</text><rect x="480" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.12"/><rect x="480" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.12"/><rect x="510" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.12"/><rect x="510" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.26"/><rect x="540" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.42"/><rect x="540" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.32"/><text x="553.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">18时</text><rect x="570" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.20"/><rect x="570" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.59"/><rect x="600" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.64"/><rect x="600" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.53"/><rect x="630" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="1.00"/><rect x="630" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.46"/><text x="643.5" y="14" font-size="11" fill="#7A7A7A" text-anchor="middle">21时</text><rect x="660" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.61"/><rect x="660" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.93"/><rect x="690" y="22" width="27" height="27" rx="4" fill="#07C160" fill-opacity="0.37"/><rect x="690" y="52" width="27" height="27" rx="4" fill="#9A9A9A" fill-opacity="0.80"/></svg></div>
+  <div class="legend"><span><i style="background:var(--green)"></i>她</span><span><i style="background:#9A9A9A"></i>你</span><span>颜色越深消息越多</span></div>
+  <h2 style="margin-top:20px">每周消息量</h2>
+  <div class="chart"><svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" font-family="PingFang SC,Noto Sans SC,sans-serif"><rect x="24.0" y="160.0" width="9.5" height="12.0" rx="2" fill="#07C160"/><rect x="34.5" y="172.0" width="9.5" height="0.0" rx="2" fill="#9A9A9A"/><text x="33.5" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W09</text><rect x="48.9" y="64.0" width="9.5" height="108.0" rx="2" fill="#07C160"/><rect x="59.3" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="58.3" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W10</text><rect x="73.8" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="84.2" y="76.0" width="9.5" height="96.0" rx="2" fill="#9A9A9A"/><text x="83.2" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W11</text><rect x="98.7" y="52.0" width="9.5" height="120.0" rx="2" fill="#07C160"/><rect x="109.1" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="108.1" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W12</text><rect x="123.6" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="134.0" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="133.0" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W13</text><rect x="148.4" y="76.0" width="9.5" height="96.0" rx="2" fill="#07C160"/><rect x="158.9" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="157.9" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W14</text><rect x="173.3" y="64.0" width="9.5" height="108.0" rx="2" fill="#07C160"/><rect x="183.8" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="182.8" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W15</text><rect x="198.2" y="88.0" width="9.5" height="84.0" rx="2" fill="#07C160"/><rect x="208.7" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="207.7" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W16</text><rect x="223.1" y="76.0" width="9.5" height="96.0" rx="2" fill="#07C160"/><rect x="233.6" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="232.6" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W17</text><rect x="248.0" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="258.5" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="257.5" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W18</text><rect x="272.9" y="64.0" width="9.5" height="108.0" rx="2" fill="#07C160"/><rect x="283.3" y="100.0" width="9.5" height="72.0" rx="2" fill="#9A9A9A"/><text x="282.3" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W19</text><rect x="297.8" y="88.0" width="9.5" height="84.0" rx="2" fill="#07C160"/><rect x="308.2" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="307.2" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W20</text><rect x="322.7" y="112.0" width="9.5" height="60.0" rx="2" fill="#07C160"/><rect x="333.1" y="148.0" width="9.5" height="24.0" rx="2" fill="#9A9A9A"/><text x="332.1" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W21</text><rect x="347.6" y="52.0" width="9.5" height="120.0" rx="2" fill="#07C160"/><rect x="358.0" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="357.0" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W22</text><rect x="372.4" y="52.0" width="9.5" height="120.0" rx="2" fill="#07C160"/><rect x="382.9" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="381.9" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W23</text><rect x="397.3" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="407.8" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="406.8" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W24</text><rect x="422.2" y="112.0" width="9.5" height="60.0" rx="2" fill="#07C160"/><rect x="432.7" y="160.0" width="9.5" height="12.0" rx="2" fill="#9A9A9A"/><text x="431.7" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W25</text><rect x="447.1" y="16.0" width="9.5" height="156.0" rx="2" fill="#07C160"/><rect x="457.6" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="456.6" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W26</text><rect x="472.0" y="88.0" width="9.5" height="84.0" rx="2" fill="#07C160"/><rect x="482.5" y="112.0" width="9.5" height="60.0" rx="2" fill="#9A9A9A"/><text x="481.5" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W27</text><rect x="496.9" y="88.0" width="9.5" height="84.0" rx="2" fill="#07C160"/><rect x="507.3" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="506.3" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W28</text><rect x="521.8" y="76.0" width="9.5" height="96.0" rx="2" fill="#07C160"/><rect x="532.2" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="531.2" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W29</text><rect x="546.7" y="136.0" width="9.5" height="36.0" rx="2" fill="#07C160"/><rect x="557.1" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="556.1" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W30</text><rect x="571.6" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="582.0" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="581.0" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W31</text><rect x="596.4" y="124.0" width="9.5" height="48.0" rx="2" fill="#07C160"/><rect x="606.9" y="124.0" width="9.5" height="48.0" rx="2" fill="#9A9A9A"/><text x="605.9" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W32</text><rect x="621.3" y="88.0" width="9.5" height="84.0" rx="2" fill="#07C160"/><rect x="631.8" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="630.8" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W33</text><rect x="646.2" y="64.0" width="9.5" height="108.0" rx="2" fill="#07C160"/><rect x="656.7" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="655.7" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W34</text><rect x="671.1" y="100.0" width="9.5" height="72.0" rx="2" fill="#07C160"/><rect x="681.6" y="136.0" width="9.5" height="36.0" rx="2" fill="#9A9A9A"/><text x="680.6" y="192" font-size="10" fill="#7A7A7A" text-anchor="middle">W35</text><line x1="24" y1="172" x2="696" y2="172" stroke="#DEDEDE"/></svg></div>
+  <div class="big">
+    <div><div class="n">7</div><div class="l">天没有主动找她</div></div>
+    <div><div class="n">2</div><div class="l">天前她上次主动找你</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>她其实想说的是</h2>
+  <div class="say"><p>她这半年问了你 19 次吃饭，21 次身体，但只有 1 次提到自己的：8 月 14 日早上 7 点 15 分，“最近腰不太好 医生说要少干活”。你晚上 7 点回了四个字，“注意休息”，之后没再问过。她也没再提。</p><p>她有 8 次用“打扰你了 你忙吧”结束对话。这 8 次里有 6 次，前一条是她问的问题，你没回。她不是在生气，她是在替你找台阶——你不回，她就先替你说“你忙”。</p><p>你没回的 59 次里，她有 51 次自己先开了下一次口，从来没问过一句“怎么不回”。她大概觉得，能开口就已经够了。</p></div>
+</section>
+
+<section class="card">
+  <h2>你可以今晚就做的三件事</h2>
+  <ol class="tonight"><li>她 8 月 25 日问的“中秋回来吗”你还没回。回一句：“回，我 24 号晚上到。”或者“今年回不去，我提前给你打电话。”哪句是真的发哪句。</li><li>问一句她的腰。不用铺垫，就发：“妈，腰好点没？医生让你少干活你听了吗。”</li><li>中秋还有 26 天。今晚打个电话，10 分钟就行，开场白在下面。</li></ol>
+</section>
+
+<section class="card">
+  <h2>帮你回</h2>
+  <div class="reply"><div class="to">回 08-25 “中秋回来吗”</div><div class="draft">回，我 24 号晚上到家。想吃你做的红烧肉。</div></div><div class="reply"><div class="to">回 08-19 “打扰你了 你忙吧”</div><div class="draft">没打扰，那天在开会没看手机。你说的核桃我收到了，吃了一半了。</div></div><div class="reply"><div class="to">回 08-14 “最近腰不太好 医生说要少干活”</div><div class="draft">妈，腰现在怎么样了？医生让你少干活你就少干，家里的活等我回去干。</div></div>
+  <h2 style="margin-top:16px">三句打电话的开场白</h2>
+  <ul class="openers"><li>“妈，我下午刷到一个东西，说我半年回了你 102 条消息，你发了我 192 条。”——把这件事本身当话题，她会笑。</li><li>“妈，腰怎么样了？我没在，你别硬撑。”——直接问她上次提过的事。</li><li>“妈，中秋我 24 号到，你想吃什么我路上买。”——给她一个能开始张罗的理由。</li></ul>
+</section>
+
+<section class="card">
+  <h2>亲情账单</h2>
+  <div class="bill">
+    <div class="r"><span>她发给你</span><span>192 条</span></div>
+    <div class="r"><span>你回她</span><span>102 条</span></div>
+    <div class="r"><span>她发了你没回</span><span>59 次</span></div>
+    <div class="r"><span>通话</span><span>3 次</span></div>
+    <div class="r total"><span>结余</span><span>欠 59 条回复、1 个电话</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>可以直接发给她的一条</h2>
+  <div class="send">妈，我用了个软件，它把咱俩这半年的聊天记录算了一遍：你发了我 192 条，我回了 102 条，还有 59 条我压根没回。它说我欠你一个电话。今晚 8 点打给你，你别做饭了，等我电话。</div>
+  <div class="send-note">长按复制，或者打开 mama-message-card-send.html 截图发过去</div>
+</section>
+
+<section class="card">
+  <p class="foot"><b>数据说明</b> 基于 294 条模拟记录（examples/make_sample.py 生成，没有任何真实的人），全部有时间戳；回复间隔基于 87 对相邻消息取中位数；语音不计字数；转账只记次数。这是一份统计，不是评判。</p>
+</section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>亲情账单</title>
+<style>
+  :root{--bg:#EDEDED;--paper:#FFFFFF;--ink:#1B1B1B;--mute:#7A7A7A;--line:#DCDCDC;--red:#E0502A;--green:#07C160;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;--sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#D6D6D6;font-family:var(--sans);color:var(--ink);display:flex;justify-content:center;padding:24px}
+  .card{width:390px;min-height:844px;background:var(--bg);padding:34px 24px 28px;display:flex;flex-direction:column;gap:18px}
+  .paper{background:var(--paper);border-radius:10px;padding:22px 20px;position:relative}
+  .paper::before,.paper::after{content:"";position:absolute;left:0;right:0;height:8px;background:radial-gradient(circle,var(--bg) 4px,transparent 4.5px) 0 0/16px 8px repeat-x}
+  .paper::before{top:-4px}.paper::after{bottom:-4px;transform:rotate(180deg)}
+  .eyebrow{font-size:11px;letter-spacing:.24em;color:var(--mute);text-align:center}
+  h1{font-family:var(--serif);font-size:24px;font-weight:600;text-align:center;margin-top:6px}
+  .period{text-align:center;font-size:12px;color:var(--mute);margin-top:4px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+  .r{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .r .v{font-family:var(--serif);font-size:20px;font-weight:600}
+  .r.total{border-bottom:0;padding-top:16px}
+  .r.total span:first-child{font-size:13px;color:var(--mute)}
+  .r.total .v{font-size:16px;line-height:1.5;text-align:right;max-width:70%}
+  .stamp{display:flex;justify-content:center;margin:6px 0 2px}
+  .stamp span{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--red);border:2.5px solid var(--red);border-radius:10px;padding:2px 18px;transform:rotate(-6deg);opacity:.9}
+  .types{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .types div{background:var(--paper);border-radius:10px;padding:12px 14px}
+  .types .k{font-size:11px;color:var(--mute)}
+  .types .t{font-family:var(--serif);font-size:17px;font-weight:600;margin-top:2px}
+  .idx{background:var(--paper);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+  .idx div{display:grid;grid-template-columns:100px 30px 1fr;gap:10px;align-items:center;white-space:nowrap}
+  .idx b{font-family:var(--serif);font-size:16px;text-align:right}
+  .idx i{display:block;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+  .idx i::after{content:"";display:block;height:100%;background:var(--green);width:var(--w)}
+  .cta{margin-top:auto;font-family:var(--serif);font-size:16px;font-weight:600;text-align:center;line-height:1.6}
+  .foot{font-size:10px;color:var(--mute);text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<article class="card">
+  <div class="paper">
+    <div class="eyebrow">妈妈的消息</div>
+    <h1>亲情账单</h1>
+    <div class="period">{{RANGE_LINE}}</div>
+    <div class="r"><span>{{PRONOUN}}发给你</span><span class="v">{{BILL_HER}} 条</span></div>
+    <div class="r"><span>你回{{PRONOUN}}</span><span class="v">{{BILL_ME}} 条</span></div>
+    <div class="r"><span>你的"嗯 / 好 / 知道了"</span><span class="v">{{SHORT_COUNT}} 次</span></div>
+    <div class="r"><span>{{PRONOUN}}发了你没回</span><span class="v">{{BILL_UNANSWERED}} 次</span></div>
+    <div class="r"><span>你上一次主动开口</span><span class="v">{{DAYS_SINCE_MY_OPEN}} 天前</span></div>
+    <div class="r total"><span>结余</span><span class="v">{{BILL_BALANCE}}</span></div>
+    <div class="stamp"><span>{{RATING}}</span></div>
+  </div>
+  <div class="types">
+    <div><div class="k">{{PRONOUN}}</div><div class="t">{{MOTHER_TYPE}}</div></div>
+    <div><div class="k">你</div><div class="t">{{CHILD_TYPE}}</div></div>
+  </div>
+  <div class="idx">
+    <div><span>💛 牵挂指数</span><b>{{CARE_SCORE}}</b><i style="--w:{{CARE_W}}%"></i></div>
+    <div><span>🧊 嗯哦好指数</span><b>{{SHORT_SCORE}}</b><i style="--w:{{SHORT_W}}%"></i></div>
+    <div><span>🕰️ 不计较指数</span><b>{{FORGIVE_SCORE}}</b><i style="--w:{{FORGIVE_W}}%"></i></div>
+  </div>
+  <p class="cta">{{CTA}}</p>
+  <p class="foot">这是一份统计，不是评判 · 数据在本地，没有上传 · 妈妈的消息</p>
+</article>
+</body>
+</html>

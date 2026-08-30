@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>发给她的一条</title>
+<style>
+  :root{--bg:#EDEDED;--paper:#FFFFFF;--ink:#1B1B1B;--mute:#7A7A7A;--bubble:#95EC69;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;--sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#D6D6D6;font-family:var(--sans);color:var(--ink);display:flex;justify-content:center;padding:24px}
+  .card{width:390px;min-height:600px;background:var(--bg);padding:40px 26px 30px;display:flex;flex-direction:column;gap:22px}
+  .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mute)}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .big div{background:var(--paper);border-radius:12px;padding:16px 14px}
+  .big .n{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1}
+  .big .l{font-size:14px;color:var(--mute);margin-top:8px}
+  .bubble{margin-left:auto;max-width:92%;background:var(--bubble);border-radius:14px 4px 14px 14px;padding:16px 18px;font-size:18px;line-height:1.8}
+  .from{font-size:13px;color:var(--mute);text-align:right}
+  .cta{margin-top:auto;font-family:var(--serif);font-size:18px;font-weight:600;text-align:center;line-height:1.6}
+  .foot{font-size:11px;color:var(--mute);text-align:center}
+</style>
+</head>
+<body>
+<article class="card">
+  <div class="eyebrow">妈妈的消息</div>
+  <div class="big">
+    <div><div class="n">{{BILL_HER}}</div><div class="l">条，你发给我的</div></div>
+    <div><div class="n">{{BILL_ME}}</div><div class="l">条，我回你的</div></div>
+  </div>
+  <div class="bubble">{{SEND_TEXT}}</div>
+  <div class="from">—— 你{{CHILD_CALL}}</div>
+  <p class="cta">{{SEND_CTA}}</p>
+  <p class="foot">用《妈妈的消息》算的 · 数字不会骗人，人会</p>
+</article>
+</body>
+</html>

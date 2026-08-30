@@ -1,0 +1,689 @@
+{
+ "her_name": "妈妈",
+ "pronoun": "她",
+ "warnings": [],
+ "basics": {
+  "total": 294,
+  "her": 192,
+  "me": 102,
+  "her_text": 118,
+  "me_text": 100,
+  "first": "2026-03-01",
+  "last": "2026-08-28",
+  "span_days": 181,
+  "active_days": 119,
+  "with_ts": 294,
+  "without_ts": 0
+ },
+ "opens": {
+  "her": 86,
+  "me": 42,
+  "her_ratio": 0.672,
+  "my_last_open": "2026-08-23",
+  "her_last_open": "2026-08-28",
+  "days_since_my_last_open": 7,
+  "days_since_her_last_open": 2
+ },
+ "reply": {
+  "me": {
+   "n": 87,
+   "median_s": 5400.0,
+   "median": "1 小时 30 分",
+   "max_s": 296760.0,
+   "max": "3 天 10 小时",
+   "max_msg": {
+    "date": "08-04",
+    "content": "好 到了就好",
+    "type": "text"
+   }
+  },
+  "her": {
+   "n": 87,
+   "median_s": 1020.0,
+   "median": "17 分钟",
+   "max_s": 288900.0,
+   "max": "3 天 8 小时",
+   "max_msg": {
+    "date": "05-17",
+    "content": "嗯",
+    "type": "text"
+   }
+  }
+ },
+ "longest": {
+  "chars": 18,
+  "content": "发烧了？多少度 喝水了吗 去医院了没",
+  "date": "03-13",
+  "reply_chars": 1,
+  "reply": "好"
+ },
+ "longest_voice_s": 59,
+ "short": {
+  "count": 52,
+  "replies": 93,
+  "ratio": 0.559,
+  "top": [
+   [
+    "嗯",
+    8
+   ],
+   [
+    "好",
+    7
+   ],
+   [
+    "好的",
+    5
+   ],
+   [
+    "在吗",
+    5
+   ],
+   [
+    "没事",
+    5
+   ]
+  ]
+ },
+ "topics": [
+  {
+   "topic": "身体",
+   "count": 21,
+   "example": "发烧了？多少度 喝水了吗 去医院了没"
+  },
+  {
+   "topic": "吃饭",
+   "count": 19,
+   "example": "今天吃的什么"
+  },
+  {
+   "topic": "钱",
+   "count": 11,
+   "example": "转了 不用还 你省着点"
+  },
+  {
+   "topic": "天气",
+   "count": 9,
+   "example": "你那边降温了 多穿点"
+  },
+  {
+   "topic": "回家",
+   "count": 8,
+   "example": "周末回来吗"
+  },
+  {
+   "topic": "查岗",
+   "count": 7,
+   "example": "在吗"
+  },
+  {
+   "topic": "睡觉",
+   "count": 3,
+   "example": "睡了吗"
+  },
+  {
+   "topic": "对象结婚",
+   "count": 1,
+   "example": "你王阿姨问你有对象了吗"
+  }
+ ],
+ "care_ratio": 0.627,
+ "hours": {
+  "her": [
+   3,
+   15,
+   4,
+   2,
+   0,
+   2,
+   9,
+   17,
+   17,
+   2,
+   1,
+   0,
+   20,
+   7,
+   0,
+   1,
+   0,
+   0,
+   11,
+   3,
+   19,
+   32,
+   18,
+   9
+  ],
+  "me": [
+   2,
+   12,
+   6,
+   1,
+   1,
+   1,
+   1,
+   3,
+   4,
+   2,
+   1,
+   1,
+   13,
+   8,
+   0,
+   1,
+   0,
+   2,
+   3,
+   7,
+   6,
+   5,
+   12,
+   10
+  ],
+  "her_peak": "20:00–22:00",
+  "me_peak": "22:00–00:00",
+  "her_offhour_ratio": 0.411,
+  "her_early_count": 28,
+  "her_late_count": 51,
+  "me_late_ratio": 0.314
+ },
+ "unanswered": {
+  "count": 59,
+  "turns": 139,
+  "ratio": 0.424,
+  "items": [
+   {
+    "date": "08-07 12:32",
+    "content": "好 到了就好",
+    "type": "text"
+   },
+   {
+    "date": "08-12 22:53",
+    "content": "[表情包]",
+    "type": "sticker"
+   },
+   {
+    "date": "08-13 18:05",
+    "content": "今天忙吗",
+    "type": "text"
+   },
+   {
+    "date": "08-19 20:30",
+    "content": "打扰你了 你忙吧",
+    "type": "text"
+   },
+   {
+    "date": "08-20 22:22",
+    "content": "[表情包]",
+    "type": "sticker"
+   },
+   {
+    "date": "08-23 12:21",
+    "content": "没什么事",
+    "type": "text"
+   },
+   {
+    "date": "08-27 02:26",
+    "content": "没事 就是问问",
+    "type": "text"
+   },
+   {
+    "date": "08-28 06:08",
+    "content": "你那边台风大不大",
+    "type": "text"
+   }
+  ],
+  "reopened_by_her": 51,
+  "reopen_ratio": 0.864
+ },
+ "phrases": {
+  "chase": 0,
+  "self_shrink": 8,
+  "self_shrink_examples": [
+   "你忙你的",
+   "你忙你的",
+   "打扰你了 你忙吧"
+  ],
+  "nothing": 9
+ },
+ "extras": {
+  "her_voice_count": 25,
+  "her_voice_total_s": 1014,
+  "me_voice_count": 0,
+  "call_count": 3,
+  "call_total_s": 4320,
+  "her_transfer_count": 1,
+  "me_transfer_count": 0,
+  "her_image_count": 2,
+  "her_link_count": 7,
+  "her_sticker_count": 37,
+  "her_recall_count": 0
+ },
+ "composition": [
+  {
+   "name": "其他文字",
+   "count": 43,
+   "pct": 22.4
+  },
+  {
+   "name": "表情包",
+   "count": 37,
+   "pct": 19.3
+  },
+  {
+   "name": "语音",
+   "count": 25,
+   "pct": 13.0
+  },
+  {
+   "name": "身体",
+   "count": 21,
+   "pct": 10.9
+  },
+  {
+   "name": "吃饭",
+   "count": 19,
+   "pct": 9.9
+  },
+  {
+   "name": "钱",
+   "count": 11,
+   "pct": 5.7
+  },
+  {
+   "name": "天气",
+   "count": 9,
+   "pct": 4.7
+  },
+  {
+   "name": "回家",
+   "count": 8,
+   "pct": 4.2
+  },
+  {
+   "name": "转发文章",
+   "count": 7,
+   "pct": 3.6
+  },
+  {
+   "name": "查岗",
+   "count": 5,
+   "pct": 2.6
+  },
+  {
+   "name": "其他",
+   "count": 3,
+   "pct": 1.6
+  },
+  {
+   "name": "照片视频",
+   "count": 2,
+   "pct": 1.0
+  },
+  {
+   "name": "睡觉",
+   "count": 1,
+   "pct": 0.5
+  },
+  {
+   "name": "对象结婚",
+   "count": 1,
+   "pct": 0.5
+  }
+ ],
+ "emoji": {
+  "her": [
+   [
+    "强",
+    10
+   ],
+   [
+    "握手",
+    6
+   ],
+   [
+    "玫瑰",
+    6
+   ],
+   [
+    "合十",
+    5
+   ],
+   [
+    "抱拳",
+    4
+   ]
+  ],
+  "me": [
+   [
+    "玫瑰",
+    1
+   ]
+  ]
+ },
+ "catchphrases": {
+  "her": [
+   [
+    "好我去接你",
+    8
+   ],
+   [
+    "今天吃的什么",
+    7
+   ],
+   [
+    "转了不用还你省着点",
+    6
+   ],
+   [
+    "你那边降温了多穿点",
+    5
+   ],
+   [
+    "钱够不够花",
+    5
+   ]
+  ],
+  "me": [
+   [
+    "谢谢妈",
+    7
+   ],
+   [
+    "在吗",
+    6
+   ],
+   [
+    "妈我到了",
+    6
+   ],
+   [
+    "好的",
+    5
+   ],
+   [
+    "收到了谢谢妈",
+    5
+   ]
+  ]
+ },
+ "forwards": {
+  "count": 7,
+  "health": 6,
+  "news": 1,
+  "titles": [
+   "久坐伤腰 三个动作缓解",
+   "熬夜的危害 你不知道的十件事",
+   "熬夜的危害 你不知道的十件事",
+   "这几种菜千万不能一起吃",
+   "秋天要多吃这三样",
+   "颈椎病年轻化 看完这篇"
+  ],
+  "my_reply_count": 4
+ },
+ "weekly": [
+  {
+   "week": "2026-W09",
+   "her": 1,
+   "me": 0
+  },
+  {
+   "week": "2026-W10",
+   "her": 9,
+   "me": 3
+  },
+  {
+   "week": "2026-W11",
+   "her": 6,
+   "me": 8
+  },
+  {
+   "week": "2026-W12",
+   "her": 10,
+   "me": 4
+  },
+  {
+   "week": "2026-W13",
+   "her": 6,
+   "me": 5
+  },
+  {
+   "week": "2026-W14",
+   "her": 8,
+   "me": 3
+  },
+  {
+   "week": "2026-W15",
+   "her": 9,
+   "me": 4
+  },
+  {
+   "week": "2026-W16",
+   "her": 7,
+   "me": 3
+  },
+  {
+   "week": "2026-W17",
+   "her": 8,
+   "me": 5
+  },
+  {
+   "week": "2026-W18",
+   "her": 6,
+   "me": 5
+  },
+  {
+   "week": "2026-W19",
+   "her": 9,
+   "me": 6
+  },
+  {
+   "week": "2026-W20",
+   "her": 7,
+   "me": 5
+  },
+  {
+   "week": "2026-W21",
+   "her": 5,
+   "me": 2
+  },
+  {
+   "week": "2026-W22",
+   "her": 10,
+   "me": 5
+  },
+  {
+   "week": "2026-W23",
+   "her": 10,
+   "me": 4
+  },
+  {
+   "week": "2026-W24",
+   "her": 6,
+   "me": 3
+  },
+  {
+   "week": "2026-W25",
+   "her": 5,
+   "me": 1
+  },
+  {
+   "week": "2026-W26",
+   "her": 13,
+   "me": 4
+  },
+  {
+   "week": "2026-W27",
+   "her": 7,
+   "me": 5
+  },
+  {
+   "week": "2026-W28",
+   "her": 7,
+   "me": 3
+  },
+  {
+   "week": "2026-W29",
+   "her": 8,
+   "me": 4
+  },
+  {
+   "week": "2026-W30",
+   "her": 3,
+   "me": 3
+  },
+  {
+   "week": "2026-W31",
+   "her": 6,
+   "me": 4
+  },
+  {
+   "week": "2026-W32",
+   "her": 4,
+   "me": 4
+  },
+  {
+   "week": "2026-W33",
+   "her": 7,
+   "me": 3
+  },
+  {
+   "week": "2026-W34",
+   "her": 9,
+   "me": 3
+  },
+  {
+   "week": "2026-W35",
+   "her": 6,
+   "me": 3
+  }
+ ],
+ "trend": {
+  "her_opens_recent_30d": 15,
+  "her_opens_prior_per30d": 13.3,
+  "change_pct": 13,
+  "sticker_ratio_recent": 0.2,
+  "sticker_ratio_prior": 0.191,
+  "call_s_recent": 0,
+  "call_s_prior_per30d": 820
+ },
+ "festivals": [
+  {
+   "name": "母亲节",
+   "date": "2026-05-10",
+   "first": "me",
+   "time": "21:40",
+   "content": "[表情包]",
+   "other_replied": true,
+   "count_her": 1,
+   "count_me": 1
+  },
+  {
+   "name": "你的生日",
+   "date": "2026-06-03",
+   "first": "her",
+   "time": "00:02",
+   "content": "生日快乐 儿子 妈妈永远爱你",
+   "other_replied": true,
+   "count_her": 3,
+   "count_me": 2
+  }
+ ],
+ "countdown": [
+  {
+   "name": "中秋",
+   "date": "2026-09-25",
+   "days": 26
+  },
+  {
+   "name": "国庆",
+   "date": "2026-10-01",
+   "days": 32
+  }
+ ],
+ "signals": [
+  {
+   "level": "red",
+   "kind": "health_short_reply",
+   "text": "08-14 她说“最近腰不太好 医生说要少干活”，你回了“注意休息”4 个字"
+  },
+  {
+   "level": "red",
+   "kind": "self_shrink",
+   "text": "她有 8 次用“打扰你了 你忙吧”这类话收尾——她在把自己缩小"
+  },
+  {
+   "level": "yellow",
+   "kind": "call_drop",
+   "text": "通话时长比之前少了一半以上（最近 30 天 0 分钟）"
+  },
+  {
+   "level": "yellow",
+   "kind": "nothing",
+   "text": "她说了 9 次“没事”"
+  }
+ ],
+ "index": {
+  "care": {
+   "score": 57,
+   "parts": {
+    "her_open_ratio": 0.672,
+    "care_ratio": 0.627,
+    "offhour_ratio": 0.411,
+    "density": 0.403
+   }
+  },
+  "short": {
+   "score": 42,
+   "parts": {
+    "short_ratio": 0.559,
+    "unanswered_ratio": 0.424,
+    "latency_score": 0.125
+   }
+  },
+  "forgive": {
+   "score": 92,
+   "parts": {
+    "reopen_ratio": 0.864,
+    "chase_ratio": 0.0
+   }
+  }
+ },
+ "mother_type": {
+  "primary": "三餐监督型",
+  "secondary": "语音轰炸型",
+  "scores": {
+   "三餐监督型": 0.161,
+   "语音轰炸型": 0.13,
+   "钱够不够型": 0.098,
+   "天气预报型": 0.076,
+   "养生转发型": 0.062,
+   "查岗型": 0.059,
+   "催婚型": 0.013,
+   "新闻联播型": 0.01,
+   "等你先开口型": 0,
+   "沉默守望型": 0
+  }
+ },
+ "child_type": {
+  "primary": "嗯哦好选手",
+  "all": [
+   "嗯哦好选手",
+   "已读不回选手",
+   "深夜忏悔型"
+  ]
+ },
+ "rating": {
+  "label": "欠一个电话",
+  "score": 62
+ },
+ "bill": {
+  "her_sent": 192,
+  "me_sent": 102,
+  "balance": 90,
+  "unanswered": 59,
+  "calls": 3
+ },
+ "today": "2026-08-30"
+}

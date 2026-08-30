@@ -1,0 +1,2066 @@
+{
+ "me": "我",
+ "her": "妈妈",
+ "her_pronoun": "她",
+ "source": "synthetic-demo",
+ "messages": [
+  {
+   "ts": "2026-03-01T07:25:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-03T21:13:00",
+   "sender": "her",
+   "type": "link",
+   "content": "医生提醒 这样喝水最伤肾",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-05T22:07:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-06T05:07:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-06T05:35:00",
+   "sender": "her",
+   "type": "text",
+   "content": "那你忙 没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-06T05:40:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[抱拳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-06T21:52:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边降温了 多穿点",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-07T02:52:00",
+   "sender": "me",
+   "type": "text",
+   "content": "哦",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-07T02:54:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没事 就是问问",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-07T03:31:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-07T21:23:00",
+   "sender": "her",
+   "type": "image",
+   "content": "桂花/饭菜/天空的照片",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-07T22:53:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在忙",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-08T12:38:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边降温了 多穿点",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-09T21:26:00",
+   "sender": "her",
+   "type": "link",
+   "content": "久坐伤腰 三个动作缓解",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-10T02:26:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-11T12:53:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我这周末回去",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-11T12:58:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-11T13:33:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-13T01:28:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-13T01:35:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-13T01:44:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 42
+  },
+  {
+   "ts": "2026-03-13T01:56:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-14T12:08:00",
+   "sender": "her",
+   "type": "text",
+   "content": "腰还疼不疼",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-14T12:28:00",
+   "sender": "me",
+   "type": "text",
+   "content": "行",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-15T01:35:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-15T01:42:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-15T02:10:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-16T08:42:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 43
+  },
+  {
+   "ts": "2026-03-17T20:34:00",
+   "sender": "her",
+   "type": "text",
+   "content": "天气预报说你们那要下雪",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-17T20:36:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[合十]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-17T20:37:00",
+   "sender": "me",
+   "type": "text",
+   "content": "忙",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-19T20:06:00",
+   "sender": "her",
+   "type": "text",
+   "content": "腰还疼不疼",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-19T20:07:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-19T20:26:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-19T20:45:00",
+   "sender": "her",
+   "type": "text",
+   "content": "那你忙 没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-20T07:55:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 36
+  },
+  {
+   "ts": "2026-03-20T07:58:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[太阳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-20T17:55:00",
+   "sender": "me",
+   "type": "text",
+   "content": "吃了",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-22T12:05:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 59
+  },
+  {
+   "ts": "2026-03-22T12:08:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-22T12:50:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-24T21:58:00",
+   "sender": "her",
+   "type": "link",
+   "content": "熬夜的危害 你不知道的十件事",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-25T00:58:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-25T01:06:00",
+   "sender": "her",
+   "type": "text",
+   "content": "记得吃饭",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-26T08:39:00",
+   "sender": "her",
+   "type": "text",
+   "content": "买了点核桃给你寄过去了 收到说一声",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-26T15:39:00",
+   "sender": "me",
+   "type": "text",
+   "content": "收到了 谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-26T15:55:00",
+   "sender": "her",
+   "type": "text",
+   "content": "知道了",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-27T23:16:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-27T23:22:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-28T22:05:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-28T22:07:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在的 怎么了",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-28T22:56:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-30T23:58:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-31T00:00:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-31T07:27:00",
+   "sender": "her",
+   "type": "text",
+   "content": "钱够不够花",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-31T07:31:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-03-31T07:47:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事妈 就是有点累 睡一觉就好了",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-01T21:51:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边台风大不大",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-02T02:51:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-02T02:52:00",
+   "sender": "her",
+   "type": "text",
+   "content": "行吧",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-04T07:27:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周末回来吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-05T21:15:00",
+   "sender": "her",
+   "type": "text",
+   "content": "钱够不够花",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-05T21:19:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[微笑]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-08T21:42:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天忙吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-09T01:11:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-09T01:12:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在的 怎么了",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-09T01:27:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 27
+  },
+  {
+   "ts": "2026-04-09T12:42:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-09T20:00:00",
+   "sender": "her",
+   "type": "transfer",
+   "content": "转账",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-09T22:30:00",
+   "sender": "me",
+   "type": "text",
+   "content": "收到了 谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-10T21:35:00",
+   "sender": "her",
+   "type": "text",
+   "content": "买了点核桃给你寄过去了 收到说一声",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-10T21:40:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-11T07:32:00",
+   "sender": "her",
+   "type": "text",
+   "content": "吃饭了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-11T17:32:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-12T20:10:00",
+   "sender": "her",
+   "type": "call_video",
+   "content": "视频通话",
+   "dur": 1860
+  },
+  {
+   "ts": "2026-04-12T21:32:00",
+   "sender": "her",
+   "type": "text",
+   "content": "睡了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-14T22:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-14T23:03:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-14T23:09:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 45
+  },
+  {
+   "ts": "2026-04-14T23:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-15T08:42:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边降温了 多穿点",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-18T18:09:00",
+   "sender": "her",
+   "type": "image",
+   "content": "桂花/饭菜/天空的照片",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-18T18:13:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-18T18:29:00",
+   "sender": "me",
+   "type": "text",
+   "content": "吃了",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-18T18:51:00",
+   "sender": "her",
+   "type": "text",
+   "content": "嗯嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-18T19:06:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[抱拳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-20T08:22:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你王阿姨问你有对象了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-20T18:22:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-20T18:39:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没事 就是问问",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-20T18:54:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-21T12:05:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-21T12:10:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-21T12:34:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-24T22:25:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-24T22:33:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-24T22:34:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 31
+  },
+  {
+   "ts": "2026-04-24T22:50:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-25T12:05:00",
+   "sender": "her",
+   "type": "text",
+   "content": "什么时候放假",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-25T12:06:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-27T12:39:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 45
+  },
+  {
+   "ts": "2026-04-27T13:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-27T13:34:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没什么事",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-28T21:43:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 34
+  },
+  {
+   "ts": "2026-04-28T21:46:00",
+   "sender": "me",
+   "type": "text",
+   "content": "哦",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-29T08:59:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你表姐生了 男孩",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-29T18:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "行",
+   "dur": null
+  },
+  {
+   "ts": "2026-04-30T08:21:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 57
+  },
+  {
+   "ts": "2026-05-01T01:08:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我这周末回去",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-01T01:10:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-01T01:53:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-04T23:15:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-04T23:16:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-04T23:28:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 48
+  },
+  {
+   "ts": "2026-05-04T23:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-06T06:56:00",
+   "sender": "her",
+   "type": "text",
+   "content": "身体怎么样",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-06T06:59:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-07T08:15:00",
+   "sender": "her",
+   "type": "text",
+   "content": "吃饭了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-07T08:16:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-07T08:18:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在忙",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-07T08:26:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 不打扰你了",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-09T19:42:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-09T19:49:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-09T20:21:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-10T21:40:00",
+   "sender": "me",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-10T21:41:00",
+   "sender": "her",
+   "type": "text",
+   "content": "谢谢儿子 吃饭了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-11T06:52:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天忙吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-11T21:52:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-13T01:01:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-13T01:05:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-13T01:12:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 43
+  },
+  {
+   "ts": "2026-05-15T23:03:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我这周末回去",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-15T23:07:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-15T23:19:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 24
+  },
+  {
+   "ts": "2026-05-17T12:42:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-17T12:44:00",
+   "sender": "her",
+   "type": "text",
+   "content": "转了 不用还 你省着点",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-17T12:52:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 36
+  },
+  {
+   "ts": "2026-05-17T13:16:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-20T21:31:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-20T21:34:00",
+   "sender": "me",
+   "type": "text",
+   "content": "忙",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-20T21:54:00",
+   "sender": "her",
+   "type": "text",
+   "content": "那你忙 没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-23T12:39:00",
+   "sender": "her",
+   "type": "text",
+   "content": "吃饭了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-23T12:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈我这边挺好的别担心",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-23T13:16:00",
+   "sender": "her",
+   "type": "text",
+   "content": "嗯 注意身体",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-24T20:05:00",
+   "sender": "her",
+   "type": "call_video",
+   "content": "视频通话",
+   "dur": 1620
+  },
+  {
+   "ts": "2026-05-25T21:12:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-27T21:28:00",
+   "sender": "her",
+   "type": "text",
+   "content": "腰还疼不疼",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-27T21:30:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-27T22:13:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的 我看看车票",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-28T21:17:00",
+   "sender": "her",
+   "type": "text",
+   "content": "家里的桂花开了 给你拍了一张",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-29T07:17:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-29T07:33:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没什么事",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-29T20:22:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边降温了 多穿点",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-30T12:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-30T13:00:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-30T13:09:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 45
+  },
+  {
+   "ts": "2026-05-30T13:57:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-31T01:17:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我这周末回去",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-31T01:22:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-05-31T01:36:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 38
+  },
+  {
+   "ts": "2026-06-01T12:27:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周末回来吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-01T19:27:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了 你也早点睡",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-03T00:02:00",
+   "sender": "her",
+   "type": "text",
+   "content": "生日快乐 儿子 妈妈永远爱你",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-03T07:03:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你爸说你上次电话里咳嗽 好点了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-03T10:03:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-03T10:19:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-03T13:20:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-04T12:25:00",
+   "sender": "her",
+   "type": "text",
+   "content": "早点睡 别熬夜",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-04T12:45:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-04T13:02:00",
+   "sender": "her",
+   "type": "text",
+   "content": "行吧",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-05T18:48:00",
+   "sender": "her",
+   "type": "text",
+   "content": "下雨了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-06T07:20:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 28
+  },
+  {
+   "ts": "2026-06-07T20:24:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天忙吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-07T20:27:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[太阳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-08T06:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-08T06:41:00",
+   "sender": "her",
+   "type": "text",
+   "content": "记得吃饭",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-08T08:24:00",
+   "sender": "her",
+   "type": "text",
+   "content": "到家了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-09T20:45:00",
+   "sender": "her",
+   "type": "text",
+   "content": "别老吃外卖",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-09T20:48:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-11T07:14:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 45
+  },
+  {
+   "ts": "2026-06-14T21:05:00",
+   "sender": "her",
+   "type": "text",
+   "content": "吃了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-14T21:07:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-14T21:08:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的 我看看车票",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-17T20:44:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边降温了 多穿点",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-17T20:49:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[抱拳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-18T22:00:00",
+   "sender": "her",
+   "type": "link",
+   "content": "熬夜的危害 你不知道的十件事",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-19T08:30:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说脖子疼 去看了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-19T08:33:00",
+   "sender": "me",
+   "type": "text",
+   "content": "吃了",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-19T08:34:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[合十]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-22T12:14:00",
+   "sender": "her",
+   "type": "text",
+   "content": "身体怎么样",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-22T12:15:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[合十]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-22T19:14:00",
+   "sender": "me",
+   "type": "text",
+   "content": "行",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-22T19:40:00",
+   "sender": "her",
+   "type": "text",
+   "content": "嗯 注意身体",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-24T21:12:00",
+   "sender": "her",
+   "type": "text",
+   "content": "早饭吃了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-24T21:16:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-25T22:31:00",
+   "sender": "her",
+   "type": "text",
+   "content": "什么时候放假",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-25T22:34:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事妈 就是有点累 睡一觉就好了",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-26T22:09:00",
+   "sender": "her",
+   "type": "text",
+   "content": "家里的桂花开了 给你拍了一张",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-26T22:13:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-27T03:09:00",
+   "sender": "me",
+   "type": "text",
+   "content": "吃了 公司楼下吃的",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-27T21:47:00",
+   "sender": "her",
+   "type": "text",
+   "content": "早点睡 别熬夜",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-28T02:47:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈我这边挺好的别担心",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-28T02:48:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 不打扰你了",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-28T03:23:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-28T08:24:00",
+   "sender": "her",
+   "type": "text",
+   "content": "早饭吃了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-28T08:28:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-30T21:58:00",
+   "sender": "her",
+   "type": "text",
+   "content": "钱够不够花",
+   "dur": null
+  },
+  {
+   "ts": "2026-06-30T22:01:00",
+   "sender": "me",
+   "type": "text",
+   "content": "收到了 谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-02T06:29:00",
+   "sender": "her",
+   "type": "link",
+   "content": "这几种菜千万不能一起吃",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-02T06:30:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[抱拳]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-02T09:29:00",
+   "sender": "me",
+   "type": "text",
+   "content": "还行",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-02T09:53:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你忙你的",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-03T22:58:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-03T23:00:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-04T08:58:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了 你也早点睡",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-05T19:40:00",
+   "sender": "me",
+   "type": "call_video",
+   "content": "视频通话",
+   "dur": 840
+  },
+  {
+   "ts": "2026-07-05T19:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 转我两千 下周还你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-05T20:02:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-08T22:15:00",
+   "sender": "her",
+   "type": "text",
+   "content": "钱够不够花",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-08T22:35:00",
+   "sender": "me",
+   "type": "text",
+   "content": "行",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T06:30:00",
+   "sender": "her",
+   "type": "text",
+   "content": "钱够不够花",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T06:34:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[玫瑰]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T09:30:00",
+   "sender": "me",
+   "type": "text",
+   "content": "收到了 谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T09:46:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你忙你的",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T20:29:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你表姐生了 男孩",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T20:34:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[微笑]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T20:49:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好的 我看看车票",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T21:08:00",
+   "sender": "her",
+   "type": "text",
+   "content": "嗯 注意身体",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-13T21:15:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 27
+  },
+  {
+   "ts": "2026-07-13T21:20:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[握手]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-14T04:15:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-14T07:41:00",
+   "sender": "her",
+   "type": "text",
+   "content": "吃了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-14T07:45:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[微笑]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-16T12:56:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-16T13:00:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-16T13:14:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 57
+  },
+  {
+   "ts": "2026-07-16T13:21:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-18T23:38:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-18T23:39:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-19T18:21:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 25
+  },
+  {
+   "ts": "2026-07-22T08:52:00",
+   "sender": "her",
+   "type": "link",
+   "content": "秋天要多吃这三样",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-22T11:52:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-24T20:06:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你表姐生了 男孩",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-24T20:26:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了 你也早点睡",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-26T00:19:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 转我两千 下周还你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-26T00:20:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-28T18:41:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 58
+  },
+  {
+   "ts": "2026-07-29T01:41:00",
+   "sender": "me",
+   "type": "text",
+   "content": "知道了 你也早点睡",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-29T01:44:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好的",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-29T07:08:00",
+   "sender": "her",
+   "type": "link",
+   "content": "颈椎病年轻化 看完这篇",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-29T07:28:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-30T12:10:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-30T12:14:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[微笑]",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-30T13:40:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-01T22:59:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-01T23:44:00",
+   "sender": "me",
+   "type": "text",
+   "content": "收到了 谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-03T01:30:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-03T01:34:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-03T01:47:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 30
+  },
+  {
+   "ts": "2026-08-03T01:58:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-04T01:57:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-04T01:58:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 到了就好",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-07T12:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我到了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-07T12:32:00",
+   "sender": "her",
+   "type": "text",
+   "content": "好 到了就好",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-10T22:15:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你表姐生了 男孩",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-10T23:00:00",
+   "sender": "me",
+   "type": "text",
+   "content": "还行",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-12T22:49:00",
+   "sender": "her",
+   "type": "text",
+   "content": "早饭吃了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-12T22:53:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-13T18:05:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天忙吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-14T07:15:00",
+   "sender": "her",
+   "type": "text",
+   "content": "最近腰不太好 医生说要少干活",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-14T19:02:00",
+   "sender": "me",
+   "type": "text",
+   "content": "注意休息",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-16T18:49:00",
+   "sender": "her",
+   "type": "text",
+   "content": "今天吃的什么",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-16T18:54:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-16T19:34:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-19T07:12:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 43
+  },
+  {
+   "ts": "2026-08-19T07:14:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[合十]",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-19T08:42:00",
+   "sender": "me",
+   "type": "text",
+   "content": "嗯嗯",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-19T20:30:00",
+   "sender": "her",
+   "type": "text",
+   "content": "打扰你了 你忙吧",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-20T22:17:00",
+   "sender": "her",
+   "type": "text",
+   "content": "到家了吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-20T22:22:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[强]",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-21T08:20:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周末回来吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-21T08:22:00",
+   "sender": "her",
+   "type": "sticker",
+   "content": "[合十]",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-21T13:20:00",
+   "sender": "me",
+   "type": "text",
+   "content": "没事妈 就是有点累 睡一觉就好了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-22T21:03:00",
+   "sender": "her",
+   "type": "text",
+   "content": "身体怎么样",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-23T12:03:00",
+   "sender": "me",
+   "type": "text",
+   "content": "好",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-23T12:21:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没什么事",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T21:10:00",
+   "sender": "her",
+   "type": "text",
+   "content": "中秋回来吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T22:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "妈 我发烧了 家里有退烧药吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T22:27:00",
+   "sender": "her",
+   "type": "text",
+   "content": "发烧了？多少度 喝水了吗 去医院了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T22:34:00",
+   "sender": "her",
+   "type": "voice",
+   "content": "",
+   "dur": 48
+  },
+  {
+   "ts": "2026-08-25T23:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "谢谢妈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-26T21:16:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周末干什么了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-27T02:16:00",
+   "sender": "me",
+   "type": "text",
+   "content": "最近项目忙 周末可能加班 下个月看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-27T02:26:00",
+   "sender": "her",
+   "type": "text",
+   "content": "没事 就是问问",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-28T06:08:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你那边台风大不大",
+   "dur": null
+  }
+ ]
+}

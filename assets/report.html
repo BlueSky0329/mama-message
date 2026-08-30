@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} · 妈妈的消息</title>
+<style>
+  :root{
+    --bg:#EDEDED; --card:#FFFFFF; --ink:#1B1B1B; --mute:#7A7A7A; --line:#E2E2E2;
+    --green:#07C160; --green-soft:#E6F7EC; --red:#E0502A; --yellow:#D99A2B; --bubble:#95EC69;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    --sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;padding:28px 14px 60px}
+  .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border-radius:14px;padding:22px 22px 20px}
+  .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mute)}
+  h1{font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.3;margin-top:6px}
+  h2{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
+  .range{color:var(--mute);font-size:13px;margin-top:6px}
+  .countdown{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+  .countdown span{background:var(--green-soft);color:#0B7A3E;border-radius:20px;padding:4px 12px;font-size:13px}
+
+  .idx{display:flex;flex-direction:column;gap:14px}
+  .idx .row{display:grid;grid-template-columns:110px 44px 1fr;gap:12px;align-items:center}
+  .idx .name{font-size:14px}
+  .idx .n{font-family:var(--serif);font-size:24px;font-weight:600;text-align:right}
+  .idx .bar{display:block;height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+  .idx .bar i{display:block;height:100%;background:var(--green);border-radius:5px}
+  .idx .line{grid-column:1/-1;font-size:13px;color:var(--mute);margin-top:-6px}
+
+  ol.six{list-style:none;counter-reset:n}
+  ol.six li{counter-increment:n;display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  ol.six li:last-child{border-bottom:0}
+  ol.six li::before{content:counter(n);font-family:var(--serif);font-size:18px;font-weight:600;color:var(--mute)}
+  ol.six b{font-family:var(--serif);font-weight:600}
+  ol.six small{display:block;color:var(--mute);font-size:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--mute);width:38%}
+  td.v{font-family:var(--serif);font-weight:600;text-align:right;width:14%}
+  td.b{padding-left:12px}
+  td.b i{display:block;height:8px;background:var(--green);border-radius:4px;opacity:.85}
+  .comp-note{font-size:12px;color:var(--mute);margin-top:8px}
+
+  .cert{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cert .who{font-size:12px;color:var(--mute)}
+  .cert .type{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.3;margin-top:2px}
+  .cert .sub{font-size:13px;color:var(--mute);margin-top:4px}
+  .cert .q{font-size:13px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:8px}
+  .stamp{grid-column:1/-1;margin-top:8px;display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--line);padding-top:14px}
+  .stamp .lbl{font-size:13px;color:var(--mute)}
+  .stamp .val{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--red);border:2px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-3deg)}
+
+  .dict td.k{width:44%;color:var(--ink)}
+  .dict td.arrow{width:24px;color:var(--mute);text-align:center}
+  .dict td.m{color:var(--ink)}
+
+  .fest td.k{width:26%}
+  .fest .who-her{color:#0B7A3E}
+  .fest .who-me{color:var(--red)}
+  .fest .none{color:var(--mute)}
+
+  .bubble{background:var(--bg);border-radius:4px 12px 12px 12px;padding:9px 12px;font-size:14px;max-width:82%;margin-bottom:8px}
+  .bubble time{display:block;font-size:11px;color:var(--mute);margin-bottom:2px}
+  .noreply{margin-left:auto;width:fit-content;max-width:64%;border:1.5px dashed var(--bubble);border-radius:12px 4px 12px 12px;padding:9px 12px;font-size:12px;color:var(--mute);margin-top:4px}
+
+  .sig{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .sig li{display:grid;grid-template-columns:14px 1fr;gap:10px;font-size:14px;align-items:start}
+  .sig li::before{content:"";width:10px;height:10px;border-radius:50%;margin-top:7px;background:var(--yellow)}
+  .sig li.red::before{background:var(--red)}
+  .sig .empty{color:var(--mute);font-size:13px}
+
+  .chart{margin-top:6px}
+  .chart svg{width:100%;height:auto;display:block}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px;display:flex;gap:14px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .big .n{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1}
+  .big .l{font-size:12px;color:var(--mute);margin-top:6px}
+
+  .say{font-size:15px;line-height:1.9}
+  .say p{margin-bottom:8px}
+  ol.tonight{padding-left:22px;font-size:14px;display:flex;flex-direction:column;gap:8px}
+  ol.tonight li::marker{font-family:var(--serif);font-weight:600}
+  .reply{border-left:3px solid var(--line);padding:6px 12px;margin-bottom:10px;font-size:14px}
+  .reply .to{color:var(--mute);font-size:12px}
+  .reply .draft{margin-top:2px}
+  .openers{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .openers li::before{content:"📞 ";}
+
+  .bill{font-family:var(--serif)}
+  .bill .r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .bill .r.total{border-bottom:0;border-top:1.5px solid var(--ink);margin-top:4px;padding-top:12px;font-size:17px;font-weight:600}
+  .send{background:var(--bubble);border-radius:12px 4px 12px 12px;padding:14px 16px;font-size:15px;line-height:1.8;margin-left:auto;max-width:92%}
+  .send-note{font-size:12px;color:var(--mute);margin-top:8px;text-align:right}
+  .foot{font-size:12px;color:var(--mute);line-height:1.7}
+  .foot b{color:var(--ink)}
+  @media (max-width:520px){ .cert,.big{grid-template-columns:1fr} h1{font-size:24px} .idx .row{grid-template-columns:96px 40px 1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="card">
+  <div class="eyebrow">妈妈的消息</div>
+  <h1>{{TITLE}}</h1>
+  <div class="range">{{RANGE_LINE}}</div>
+  <div class="countdown">{{COUNTDOWN}}</div>
+</section>
+
+<section class="card">
+  <h2>三个指数</h2>
+  <div class="idx">
+    <div class="row"><span class="name">💛 牵挂指数</span><span class="n">{{CARE_SCORE}}</span><span class="bar"><i style="width:{{CARE_W}}%"></i></span><span class="line">{{CARE_LINE}}</span></div>
+    <div class="row"><span class="name">🧊 嗯哦好指数</span><span class="n">{{SHORT_SCORE}}</span><span class="bar"><i style="width:{{SHORT_W}}%"></i></span><span class="line">{{SHORT_LINE}}</span></div>
+    <div class="row"><span class="name">🕰️ 不计较指数</span><span class="n">{{FORGIVE_SCORE}}</span><span class="bar"><i style="width:{{FORGIVE_W}}%"></i></span><span class="line">{{FORGIVE_LINE}}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>六个数字</h2>
+  <ol class="six">{{SIX_ROWS}}</ol>
+</section>
+
+<section class="card">
+  <h2>{{PRONOUN}}的消息成分表</h2>
+  <table class="comp">{{COMPOSITION_ROWS}}</table>
+  <div class="comp-note">{{EMOJI_LINE}}</div>
+</section>
+
+<section class="card">
+  <h2>鉴定结果</h2>
+  <div class="cert">
+    <div><div class="who">{{PRONOUN}}</div><div class="type">{{MOTHER_TYPE}}</div><div class="sub">{{MOTHER_TYPE_SUB}}</div><div class="q">{{MOTHER_TYPE_LINE}}</div></div>
+    <div><div class="who">你</div><div class="type">{{CHILD_TYPE}}</div><div class="sub">{{CHILD_TYPE_SUB}}</div><div class="q">{{CHILD_TYPE_LINE}}</div></div>
+    <div class="stamp"><span class="lbl">综合评级</span><span class="val">{{RATING}}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{PRONOUN}}的黑话翻译表</h2>
+  <table class="dict">{{DICT_ROWS}}</table>
+</section>
+
+<section class="card">
+  <h2>节日记分牌</h2>
+  <table class="fest">{{FESTIVAL_ROWS}}</table>
+</section>
+
+<section class="card">
+  <h2>{{PRONOUN}}发了，你没回</h2>
+  {{UNANSWERED_BUBBLES}}
+  <div class="noreply">这里本来该有你的一句</div>
+</section>
+
+<section class="card">
+  <h2>{{PRONOUN}}转给你的</h2>
+  <p style="font-size:14px">{{FORWARD_LINE}}</p>
+  <p style="font-size:13px;color:var(--mute);margin-top:6px">{{FORWARD_TITLES}}</p>
+</section>
+
+<section class="card">
+  <h2>该打电话了</h2>
+  <ul class="sig">{{SIGNAL_ROWS}}</ul>
+</section>
+
+<section class="card">
+  <h2>你们像两个时区</h2>
+  <div class="chart">{{HOURS_SVG}}</div>
+  <div class="legend"><span><i style="background:var(--green)"></i>{{PRONOUN}}</span><span><i style="background:#9A9A9A"></i>你</span><span>颜色越深消息越多</span></div>
+  <h2 style="margin-top:20px">每周消息量</h2>
+  <div class="chart">{{WEEKLY_SVG}}</div>
+  <div class="big">
+    <div><div class="n">{{DAYS_SINCE_MY_OPEN}}</div><div class="l">天没有主动找{{PRONOUN}}</div></div>
+    <div><div class="n">{{DAYS_SINCE_HER_OPEN}}</div><div class="l">天前{{PRONOUN}}上次主动找你</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{PRONOUN}}其实想说的是</h2>
+  <div class="say">{{SHE_MEANS}}</div>
+</section>
+
+<section class="card">
+  <h2>你可以今晚就做的三件事</h2>
+  <ol class="tonight">{{TONIGHT_ROWS}}</ol>
+</section>
+
+<section class="card">
+  <h2>帮你回</h2>
+  {{REPLY_ROWS}}
+  <h2 style="margin-top:16px">三句打电话的开场白</h2>
+  <ul class="openers">{{CALL_OPENERS}}</ul>
+</section>
+
+<section class="card">
+  <h2>亲情账单</h2>
+  <div class="bill">
+    <div class="r"><span>{{PRONOUN}}发给你</span><span>{{BILL_HER}} 条</span></div>
+    <div class="r"><span>你回{{PRONOUN}}</span><span>{{BILL_ME}} 条</span></div>
+    <div class="r"><span>{{PRONOUN}}发了你没回</span><span>{{BILL_UNANSWERED}} 次</span></div>
+    <div class="r"><span>通话</span><span>{{BILL_CALLS}} 次</span></div>
+    <div class="r total"><span>结余</span><span>{{BILL_BALANCE}}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>可以直接发给{{PRONOUN}}的一条</h2>
+  <div class="send">{{SEND_TEXT}}</div>
+  <div class="send-note">长按复制，或者打开 mama-message-card-send.html 截图发过去</div>
+</section>
+
+<section class="card">
+  <p class="foot"><b>数据说明</b> {{FOOTNOTE}}</p>
+</section>
+
+</div>
+</body>
+</html>

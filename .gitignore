@@ -1,0 +1,9 @@
+messages.json
+stats.json
+narrative.json
+friend-*.json
+compare.json
+reports/
+!examples/reports/
+*.redacted.*
+__pycache__/

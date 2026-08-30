@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>妈妈的消息 · 浏览器版</title>
+<style>
+  :root{--bg:#EDEDED;--card:#fff;--ink:#1B1B1B;--mute:#7A7A7A;--line:#E2E2E2;--green:#07C160;--green-soft:#E6F7EC;--red:#E0502A;--yellow:#D99A2B;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;--sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;padding:28px 14px 80px}
+  .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border-radius:14px;padding:22px}
+  .card[hidden]{display:none}
+  .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mute)}
+  h1{font-family:var(--serif);font-size:26px;font-weight:600;margin-top:6px}
+  h2{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;align-items:center;justify-content:center;font-family:var(--sans)}
+  p.lead{font-size:14px;color:var(--mute);margin-top:4px}
+  .privacy{background:var(--green-soft);color:#0B7A3E;border-radius:10px;padding:10px 14px;font-size:13px;margin-top:12px;line-height:1.7}
+  .status{font-size:13px;color:var(--mute);margin-top:10px}
+  .status.err{color:var(--red)}
+  label{display:block;font-size:13px;color:var(--mute);margin-top:10px}
+  input[type=text],input[type=date],select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:4px}
+  textarea{min-height:120px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media (max-width:560px){.row,.row3{grid-template-columns:1fr}}
+  .drop{border:1.5px dashed #C9C9C9;border-radius:10px;padding:22px;text-align:center;color:var(--mute);font-size:14px;margin-top:10px;cursor:pointer}
+  .drop.on{border-color:var(--green);background:var(--green-soft)}
+  .drop b{color:var(--ink)}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{font:inherit;font-size:14px;padding:9px 16px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button.primary{background:var(--green);border-color:var(--green);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  pre.out{background:var(--bg);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-all;margin-top:12px;max-height:360px;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .idx{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  @media (max-width:560px){.idx{grid-template-columns:1fr}}
+  .idx div{background:var(--bg);border-radius:10px;padding:12px 14px}
+  .idx .k{font-size:12px;color:var(--mute)}
+  .idx .v{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.2}
+  .idx .l{font-size:12px;color:var(--mute);margin-top:4px}
+  .tag{display:inline-block;background:var(--bg);border-radius:6px;padding:2px 8px;font-size:13px;margin:6px 6px 0 0}
+  .stamp{display:inline-block;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--red);border:2px solid var(--red);border-radius:8px;padding:0 12px;transform:rotate(-3deg);margin-top:8px}
+  .frames{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+  .frame h3{font-size:14px;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .frame h3 span{font-weight:400;font-size:12px}
+  .frame h3 a{color:#0B7A3E;font-size:13px;margin-left:10px}
+  iframe{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .warn{color:var(--yellow);font-size:13px;margin-top:8px}
+  .foot{font-size:12px;color:var(--mute);line-height:1.7;text-align:center}
+  a{color:#0B7A3E}
+  details{margin-top:10px;font-size:13px}
+  summary{cursor:pointer;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="card">
+  <div class="eyebrow">妈妈的消息</div>
+  <h1>浏览器版</h1>
+  <p class="lead">把聊天记录变成一个数字、一个标签、一句可以发出去的话。五步，不用装任何东西。</p>
+  <div class="privacy">
+    所有计算都在你的浏览器里完成，页面不向任何服务器发送你的记录。首次打开会从 CDN 下载一个 Python 运行时（约 10 MB，只下载一次），之后断网也能用。
+    写文字那一步需要你自己把提示词粘到任意 AI 里——粘到谁那儿，记录就发给了谁，这一点页面管不了。
+  </div>
+  <div class="status" id="boot">正在加载 Python 运行时…</div>
+</section>
+
+<section class="card" id="s1">
+  <h2><span class="n">1</span>把记录放进来</h2>
+  <p class="lead">导出文件（留痕 / WeChatMsg 的 CSV、JSON、微信 QQ 的 txt）、她不一样的 messages.json、或者 AI 转录好的 JSON。不知道怎么拿出来？看<a href="../references/export-guide.md" target="_blank">导出指南</a>；只有截图的话，先让 AI 按指南里的格式转录成 JSON 再贴进来。</p>
+  <div class="drop" id="drop"><b>把文件拖到这里</b>，或点击选择<input type="file" id="file" accept=".txt,.csv,.json" hidden></div>
+  <label>或者直接粘贴文本 / JSON<textarea id="paste" placeholder="2026-05-12 21:03 妈妈：吃饭了吗&#10;2026-05-12 21:30 我：吃了&#10;&#10;或者整段 messages.json"></textarea></label>
+  <div class="row3">
+    <label>对方是谁（报告里的称呼）<input type="text" id="call" value="妈妈"></label>
+    <label>她 / 他<select id="pronoun"><option value="她">她</option><option value="他">他</option></select></label>
+    <label>对方在记录里显示的名字（txt / csv 需要）<input type="text" id="her" placeholder="如：老妈、李秀兰"></label>
+  </div>
+  <div class="row3">
+    <label>我在记录里的名字（可不填）<input type="text" id="me" placeholder="留空自动判断"></label>
+    <label>对方生日（MM-DD，可不填）<input type="text" id="hb" placeholder="10-20"></label>
+    <label>我的生日（MM-DD，可不填）<input type="text" id="mb" placeholder="06-03"></label>
+  </div>
+  <div class="btns">
+    <button class="primary" id="go1" disabled>整理并检查</button>
+    <button id="sample" disabled>用模拟数据试试</button>
+  </div>
+  <div class="status" id="st1"></div>
+  <pre class="out" id="out1" hidden></pre>
+</section>
+
+<section class="card" id="s2" hidden>
+  <h2><span class="n">2</span>算数</h2>
+  <div class="row">
+    <label>以哪天为"今天"（算倒计时、多久没主动开口）<input type="date" id="today"></label>
+  </div>
+  <div class="btns"><button class="primary" id="go2">算</button></div>
+  <div class="status" id="st2"></div>
+  <div id="numbers" hidden>
+    <div class="idx">
+      <div><div class="k">💛 牵挂指数</div><div class="v" id="i_care">—</div><div class="l" id="l_care"></div></div>
+      <div><div class="k">🧊 嗯哦好指数</div><div class="v" id="i_short">—</div><div class="l" id="l_short"></div></div>
+      <div><div class="k">🕰️ 不计较指数</div><div class="v" id="i_forgive">—</div><div class="l" id="l_forgive"></div></div>
+    </div>
+    <div id="types"></div>
+    <details><summary>终端摘要（全部数字在 stats.json 里）</summary><pre class="out" id="out2"></pre></details>
+    <div class="btns"><button id="dl_stats">下载 stats.json</button><button id="dl_msgs">下载 messages.json</button></div>
+  </div>
+</section>
+
+<section class="card" id="s3" hidden>
+  <h2><span class="n">3</span>写文字</h2>
+  <p class="lead">数字算完了，文字要靠 AI 写。回答三个问题（都可以跳过），复制提示词，粘到你常用的 AI（豆包 / Kimi / DeepSeek / Claude / ChatGPT），把它回的 JSON 粘回来。</p>
+  <label>① 多久没回家了？上次回去是什么时候？<input type="text" id="q1"></label>
+  <label>② TA 最近有没有什么事——身体、家里？<input type="text" id="q2"></label>
+  <label>③ 你们上次打电话聊了什么？<input type="text" id="q3"></label>
+  <div class="btns">
+    <button class="primary" id="copy">复制提示词</button>
+    <button id="skip">跳过文字，先看数字版</button>
+  </div>
+  <div class="status" id="st3"></div>
+  <label>把 AI 回的 narrative.json 粘到这里<textarea id="narr" placeholder='{"title": "...", "she_means": "...", ...}'></textarea></label>
+  <div class="btns"><button class="primary" id="go3">用这段文字出报告</button></div>
+</section>
+
+<section class="card" id="s4" hidden>
+  <h2><span class="n">4</span>报告和两张卡</h2>
+  <p class="lead">卡片是竖版的，截图就能发。<b>发给她的那张是这个产品真正的出口</b>——如果只发一张，发它。</p>
+  <div class="status" id="st4"></div>
+  <div class="frames" id="frames"></div>
+</section>
+
+<section class="card">
+  <p class="foot">这是一份统计，不是评判。"短回复"不是"敷衍"，"没回"不是"不孝"。<br>
+  <a href="https://github.com/BlueSky0329/mama-message" target="_blank">源码</a> · 脚本只用 Python 标准库，本页用 <a href="https://pyodide.org" target="_blank">Pyodide</a> 在浏览器里跑同一套脚本 · MIT</p>
+</section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const APP_FILES = [
+  "scripts/parse_export.py","scripts/validate.py","scripts/stats.py","scripts/render.py",
+  "assets/report.html","assets/card-bill.html","assets/card-send.html",
+  "references/writing-rules.md","references/dictionary.md","references/types.md","references/report-template.md",
+];
+const RUNNER = `
+import sys, io, runpy, contextlib, traceback
+def run(script, argv):
+    buf = io.StringIO()
+    sys.argv = [script] + [str(x) for x in argv]
+    code = 0
+    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+        try:
+            runpy.run_path(script, run_name="__main__")
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
+        except Exception:
+            traceback.print_exc()
+            code = 2
+    return [code, buf.getvalue()]
+`;
+let py = null, refs = {}, stats = null, inputName = null;
+
+function status(id, text, err){ const el=$(id); el.textContent=text; el.className = "status" + (err ? " err" : ""); }
+function show(id, on=true){ $(id).hidden = !on; }
+function readFS(p){ return py.FS.readFile(p, {encoding:"utf8"}); }
+function writeFS(p, s){ py.FS.writeFile(p, s); }
+function exists(p){ try { py.FS.stat(p); return true; } catch(e){ return false; } }
+async function run(script, argv){
+  const r = py.globals.get("run")("/app/scripts/" + script, argv);
+  const [code, out] = r.toJs(); r.destroy();
+  return {code, out};
+}
+function download(name, text){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type: name.endsWith(".html") ? "text/html" : "application/json"}));
+  a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
+async function boot(){
+  try {
+    py = await loadPyodide({indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/"});
+    for (const d of ["/app/scripts","/app/assets","/app/references","/work","/work/reports"]) py.FS.mkdirTree(d);
+    for (const p of APP_FILES) {
+      const r = await fetch("../" + p, {cache: "no-cache"});
+      if (!r.ok) throw new Error("取不到 " + p + "（这个页面要和 scripts/ assets/ references/ 放在同一个仓库里，用 http 打开，不能直接双击文件）");
+      const t = await r.text();
+      writeFS("/app/" + p, t);
+      if (p.startsWith("references/")) refs[p] = t;
+    }
+    py.FS.chdir("/work");
+    await py.runPythonAsync(RUNNER);
+    $("today").value = new Date().toISOString().slice(0,10);
+    status("boot", "就绪。脚本版本和仓库里的一样，数字口径见 references/metrics.md。");
+    $("go1").disabled = false; $("sample").disabled = false;
+  } catch (e) {
+    status("boot", "加载失败：" + e.message, true);
+  }
+}
+
+// ---------- 第 1 步 ----------
+let pendingFile = null;
+$("drop").addEventListener("click", () => $("file").click());
+$("drop").addEventListener("dragover", e => { e.preventDefault(); $("drop").classList.add("on"); });
+$("drop").addEventListener("dragleave", () => $("drop").classList.remove("on"));
+$("drop").addEventListener("drop", e => { e.preventDefault(); $("drop").classList.remove("on"); if (e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]); });
+$("file").addEventListener("change", e => { if (e.target.files[0]) pickFile(e.target.files[0]); });
+async function pickFile(f){
+  pendingFile = {name: f.name, text: await f.text()};
+  $("drop").innerHTML = "<b>" + f.name + "</b>（" + Math.round(f.size/1024) + " KB）· 点击换一个";
+  $("paste").value = "";
+}
+
+function looksNative(text){
+  try { const j = JSON.parse(text); return j && Array.isArray(j.messages) && j.messages.length && ("sender" in j.messages[0]); } catch(e){ return false; }
+}
+
+$("go1").addEventListener("click", () => step1());
+async function step1(fromSample){
+  let text, name;
+  if (fromSample) { text = fromSample.text; name = fromSample.name; }
+  else if (pendingFile) { text = pendingFile.text; name = pendingFile.name; }
+  else { text = $("paste").value.trim(); name = text.startsWith("{") ? "paste.json" : "paste.txt"; }
+  if (!text) { status("st1", "先放一个文件或粘一段文本。", true); return; }
+  const call = $("call").value.trim() || "妈妈", pronoun = $("pronoun").value;
+  show("out1", false); show("s2", false); show("s3", false); show("s4", false); stats = null;
+  status("st1", "整理中…");
+  if (looksNative(text)) {
+    const j = JSON.parse(text);
+    if (!fromSample) { j.her = call; j.her_pronoun = pronoun; }
+    writeFS("/work/messages.json", JSON.stringify(j, null, 1));
+  } else {
+    const ext = name.toLowerCase().endsWith(".csv") ? ".csv" : name.toLowerCase().endsWith(".json") ? ".json" : ".txt";
+    inputName = "/work/input" + ext;
+    writeFS(inputName, text);
+    const argv = [inputName, "--out", "/work/messages.json", "--pronoun", pronoun, "--call", call];
+    if ($("her").value.trim()) argv.push("--her", $("her").value.trim());
+    if ($("me").value.trim()) argv.push("--me", $("me").value.trim());
+    const r = await run("parse_export.py", argv);
+    $("out1").textContent = r.out; show("out1");
+    if (r.code !== 0) { status("st1", "没整理出来——看上面的提示。txt / csv 通常是「对方在记录里显示的名字」没填或不一致。", true); return; }
+  }
+  const v = await run("validate.py", ["/work/messages.json"]);
+  $("out1").textContent = ($("out1").hidden ? "" : $("out1").textContent + "\n\n") + v.out; show("out1");
+  if (v.code !== 0) { status("st1", "记录有问题，stats.py 会算错。按上面的提示改一下再来。", true); return; }
+  status("st1", "检查通过。确认一下上面的条数和时间范围对不对，对就往下走。");
+  show("s2"); $("s2").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+$("sample").addEventListener("click", async () => {
+  status("st1", "正在取模拟数据…");
+  const m = await (await fetch("../examples/sample-messages.json")).text();
+  const n = await (await fetch("../examples/sample-narrative.json")).text();
+  $("narr").value = n; $("today").value = "2026-08-30"; $("hb").value = "10-20"; $("mb").value = "06-03";
+  $("drop").innerHTML = "<b>examples/sample-messages.json</b>（模拟数据，没有任何真实的人）";
+  pendingFile = null;
+  await step1({text: m, name: "sample-messages.json"});
+});
+
+// ---------- 第 2 步 ----------
+$("go2").addEventListener("click", async () => {
+  status("st2", "算数中…");
+  const argv = ["/work/messages.json", "--out", "/work/stats.json"];
+  if ($("today").value) argv.push("--today", $("today").value);
+  if (/^\d{2}-\d{2}$/.test($("hb").value.trim())) argv.push("--her-birthday", $("hb").value.trim());
+  if (/^\d{2}-\d{2}$/.test($("mb").value.trim())) argv.push("--my-birthday", $("mb").value.trim());
+  const r = await run("stats.py", argv);
+  $("out2").textContent = r.out;
+  if (r.code !== 0) { status("st2", "算数失败，看摘要里的报错。", true); show("numbers"); return; }
+  stats = JSON.parse(readFS("/work/stats.json"));
+  const ix = stats.index, p = stats.pronoun;
+  $("i_care").textContent = ix.care.score; $("l_care").textContent = p + "发起了 " + Math.round(100*(stats.opens.her_ratio||0)) + "% 的对话";
+  $("i_short").textContent = ix.short.score; $("l_short").textContent = "短回复 " + stats.short.count + " 条，占你 " + stats.short.replies + " 条回复的 " + Math.round(100*(stats.short.ratio||0)) + "%";
+  $("i_forgive").textContent = ix.forgive.score ?? "—"; $("l_forgive").textContent = stats.unanswered.count ? ("你没回的 " + stats.unanswered.count + " 次里，" + stats.unanswered.reopened_by_her + " 次是" + p + "自己先开口了下一次") : (p + "没有被你晾过一整天");
+  $("types").innerHTML = '<span class="tag">' + p + "：" + stats.mother_type.primary + (stats.mother_type.secondary ? "（副：" + stats.mother_type.secondary + "）" : "") + '</span>'
+    + '<span class="tag">你：' + stats.child_type.primary + '</span>'
+    + '<br><span class="stamp">' + stats.rating.label + '</span>'
+    + (stats.warnings.length ? '<div class="warn">⚠ ' + stats.warnings.join("<br>⚠ ") + '</div>' : "");
+  show("numbers");
+  status("st2", "这些数字全部来自 stats.json，报告里每个数字都能在里面找到。");
+  show("s3"); $("s3").scrollIntoView({behavior:"smooth", block:"start"});
+});
+$("dl_stats").addEventListener("click", () => download("stats.json", readFS("/work/stats.json")));
+$("dl_msgs").addEventListener("click", () => download("messages.json", readFS("/work/messages.json")));
+
+// ---------- 第 3 步 ----------
+function narrativeSpec(){
+  const md = refs["references/report-template.md"] || "";
+  const m = md.match(/## narrative\.json[\s\S]*?```json([\s\S]*?)```([\s\S]*?)(?=\n## |$)/);
+  return m ? ("```json" + m[1] + "```" + m[2]) : "（见 references/report-template.md）";
+}
+function typeRules(){
+  const md = refs["references/types.md"] || "";
+  const i = md.indexOf("## 写类型那一句的规矩");
+  return i >= 0 ? md.slice(i) : "";
+}
+function buildPrompt(){
+  const call = stats.her_name, p = stats.pronoun;
+  const answers = [["多久没回家了", $("q1").value], [call + "最近有没有什么事", $("q2").value], ["上次打电话聊了什么", $("q3").value]]
+    .filter(x => x[1].trim()).map(x => "- " + x[0] + "：" + x[1].trim()).join("\n") || "（用户跳过了，只用记录里的证据）";
+  return `你是《妈妈的消息》的写手。数字已经由脚本算好在下面的 stats.json 里，你不要重新算、不要心算，报告里每个数字直接引用它。你的任务是写文字部分，输出一个 narrative.json。
+
+要求：**只输出一个 JSON 对象**，不要解释，不要 markdown 围栏以外的任何文字。字段按下面的 narrative.json 说明，必填字段一个都不能缺。
+对方是用户的「${call}」，用「${p}」。用户平时怎么称呼${call}，发给${p}的那条就怎么称呼。
+
+用户回答的三个问题（可以用，但要标"你说"）：
+${answers}
+
+== narrative.json 字段说明 ==
+${narrativeSpec()}
+
+== 写作规矩（全部生效，尤其是黑名单和"什么时候要收着"） ==
+${refs["references/writing-rules.md"] || ""}
+
+== 黑话翻译表怎么写 ==
+${refs["references/dictionary.md"] || ""}
+
+== 类型那一句怎么写 ==
+${typeRules()}
+
+== stats.json ==
+${readFS("/work/stats.json")}
+`;
+}
+$("copy").addEventListener("click", async () => {
+  if (!stats) { status("st3", "先算数。", true); return; }
+  const t = buildPrompt();
+  try { await navigator.clipboard.writeText(t); status("st3", "已复制（约 " + Math.round(t.length/1000) + " 千字）。粘到 AI 里，把它回的 JSON 粘到下面。"); }
+  catch(e) { download("prompt.txt", t); status("st3", "剪贴板不可用，已下载 prompt.txt。"); }
+});
+$("skip").addEventListener("click", () => render(null));
+$("go3").addEventListener("click", () => {
+  let t = $("narr").value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  if (!t) { status("st3", "还没粘 narrative.json。", true); return; }
+  let j; try { j = JSON.parse(t); } catch(e) { status("st3", "不是合法的 JSON：" + e.message + "。让 AI 只输出 JSON 再试。", true); return; }
+  render(JSON.stringify(j, null, 1));
+});
+
+// ---------- 第 4 步 ----------
+async function render(narr){
+  if (!stats) { status("st3", "先算数。", true); return; }
+  if (narr) writeFS("/work/narrative.json", narr); else if (exists("/work/narrative.json")) py.FS.unlink("/work/narrative.json");
+  const argv = ["/work/stats.json"]; if (narr) argv.push("/work/narrative.json"); argv.push("--out", "/work/reports");
+  const r = await run("render.py", argv);
+  if (r.code !== 0) { status("st3", "出图失败：" + r.out, true); return; }
+  show("s4");
+  status("st4", r.out.includes("还缺") ? r.out.split("\n").filter(x => x.includes("还缺")).join("") : "三个文件都好了。");
+  const items = [["mama-message-card-send.html", "发给" + stats.pronoun + "的一条", 640], ["mama-message-card-bill.html", "亲情账单卡", 900], ["mama-message-report.html", "完整报告", 1400]];
+  $("frames").innerHTML = "";
+  for (const [f, title, h] of items) {
+    const html = readFS("/work/reports/" + f);
+    const div = document.createElement("div"); div.className = "frame";
+    const head = document.createElement("h3");
+    head.innerHTML = title + "<span></span>";
+    const a1 = document.createElement("a"); a1.href = "#"; a1.textContent = "下载 HTML"; a1.onclick = e => { e.preventDefault(); download(f, html); };
+    const a2 = document.createElement("a"); a2.href = URL.createObjectURL(new Blob([html], {type:"text/html"})); a2.target = "_blank"; a2.textContent = "新标签打开（截图用）";
+    head.querySelector("span").append(a1, a2);
+    const fr = document.createElement("iframe"); fr.srcdoc = html; fr.style.height = h + "px"; fr.setAttribute("sandbox", "");
+    div.append(head, fr); $("frames").append(div);
+  }
+  $("s4").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+boot();
+})();
+</script>
+</body>
+</html>
