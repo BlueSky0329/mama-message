@@ -1,74 +1,111 @@
 # 聊天记录怎么拿出来
 
-用户问"怎么导出"时照这里答。原则：**先推荐截图**——它不需要装任何东西、不碰数据库、在哪个手机上都行。导出文件是给已经有的人用的，不是让用户为了这个去折腾。
+用户问"怎么导出"时照这里答。**导出优先，截图兜底**——半年的记录一次拿全、时间戳完整；截图一屏只有几条，几十张也只覆盖几百条，还要 AI 逐张转录。聊天记录是用户自己的数据，下面这些工具都在用户自己的电脑上本地运行，不联网上传。
 
-## 一句话版
+## 先分流：你的微信是哪个版本
 
-| 你有什么 | 怎么做 | 给脚本 |
-|---|---|---|
-| 手机上的微信 / QQ / 短信 | 一屏截一张，从最近往上翻 | 截图直接发给 AI 转录成 messages.json |
-| 安卓手机 | 用系统的**长截图 / 滚动截屏**，一张顶五六屏 | 同上，张数少很多 |
-| 电脑微信 + 留痕 / WeChatMsg / PyWxDump 导出的 CSV、JSON、TXT | 只导这一个联系人 | `parse_export.py 文件 --her 记录里的名字 --call 妈妈` |
-| 她不一样（she-love-me）已经导过的 messages.json | 直接用 | `parse_export.py 文件`（原样直通） |
-| 微信 / QQ 的文本导出 txt | 两行式、单行式、带方括号时间都认 | `parse_export.py 文件 --her 记录里的名字` |
-| 自己手打的文本 | 一行一条，`时间 名字：内容` | 同上 |
+电脑微信 → 设置 → 关于微信。
 
-任何一种拿到 messages.json 之后：`python scripts/validate.py messages.json` 先检查，再 `stats.py`。
+| 情况 | 走哪条 |
+|---|---|
+| 微信 **4.0+**（Windows 10+ / macOS Apple Silicon / Linux） | **WeFlow**，首选 |
+| 微信 **3.x** | 留痕 MemoTrace / WeChatMsg / PyWxDump |
+| 只有手机、Intel Mac、或不想在电脑上装东西 | 截图（见下） |
+| QQ / 短信 / iMessage | 见对应小节 |
 
-## 截图（推荐）
+任何一条路拿到文件之后都是同样的三步：
 
-- 打开和她的聊天，从最近往上翻，**每一屏截一张**。十几张能出报告，三四十张数字才稳。
-- 相邻两张**重叠一两条**，转录时好对齐；转录的时候重叠的只记一次。
-- 安卓：截完屏点"滚动截屏 / 长截图"（小米、华为、OPPO、vivo 都有，手势各家不同）。一张长图顶五六屏，转录也更准。iPhone 微信里没有长截图，只能一屏一张。
-- 微信只在两条消息隔得久时显示时间，所以大部分消息没有时间戳。这是正常的，转录时填 `null`，**不要编时间**。
-- 名字、地址、钱数、别人的消息先打码。手机自带的标注工具就行。
-- 语音消息截图上只有秒数，转录记 `voice` + `dur`。表情包记 `sticker`。转账截图只记"转账"，不记金额。
+```bash
+python scripts/parse_export.py 导出文件 --call 妈妈 --last-days 180 --out messages.json
+python scripts/validate.py messages.json
+python scripts/stats.py messages.json --out stats.json
+```
 
-转录的时候把截图和下面这段一起给 AI（skill 环境里 AI 自己会做，普通用户版提示词里已经含了）：
+## WeFlow（微信 4.0+，首选）
 
-> 把这些截图逐张转录成 JSON，格式：`{"ts": "2026-05-12T21:03:14" 或 null, "sender": "her"/"me", "type": "text/voice/image/sticker/link/transfer/...", "content": "...", "dur": 秒数或 null}`。右侧绿色气泡是 me，左侧白色是 her。相邻截图重叠的消息只记一次。没有时间戳的填 null，不要编。转账只写"转账"。
+完全本地的微信聊天记录查看 / 导出 / 年报应用（Electron），实时读取本机微信的记录，数据不出电脑。
 
-## 电脑微信 + 第三方导出工具
+**先说现状（2026-08）**：原仓库 [hicccc77/WeFlow](https://github.com/hicccc77/WeFlow)（★1.4 万）被腾讯以 DMCA 1201 发函，作者已把功能下架。完整源码和可用版本在 fork 里：
 
-微信官方没有文本导出。能拿到文件的路径是：手机微信 → **我 → 设置 → 通用 → 聊天记录迁移与备份 → 迁移到电脑**（或电脑微信登录后自动同步）→ 用第三方工具读电脑上的数据库导出。
+- 现成安装包：[863108316/WeFlow](https://github.com/863108316/WeFlow) 的 Releases（nightly-preview：Windows `Setup.exe` / macOS `.dmg` / Linux `.AppImage`）
+- 源码完整的 fork：[jacklilyhello/WeFlow](https://github.com/jacklilyhello/WeFlow)（★173）、[lurve1314/WeFlow](https://github.com/lurve1314/WeFlow)（★56），可自行构建
+- fork 也可能被下架，要用趁早下载留档。许可证 CC BY-NC-SA 4.0（非商业）
 
-常见工具（都是开源项目，以它们自己的最新说明为准）：
+**步骤**：
+
+1. 装好打开，它会自动读取本机微信（4.0+）的记录
+2. 找到和她的会话 → 导出 → **格式选 JSON**（时间、发送方 `isSend`、消息类型 `localType` 最全，不用再填 `--her`）。TXT、weclone CSV 也认，但信息少一些
+3. 导出是全量的，可能几万条跨好几年——用 `--last-days 180` 切最近半年再分析，报告才像"最近的她"
+
+```bash
+python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180 --out messages.json
+```
+
+**口径提醒**（如实写进报告的数据说明）：
+
+- WeFlow 不导出语音秒数，语音条数照算，"最长的一条语音"会缺
+- 它的转账文案带金额（`[转账] (妈妈转账给我) ￥10.00`），`parse_export.py` 入库时只记"转账"，金额不落地
+- weclone CSV 的时间是 UTC，脚本会自动转回本地时间；发现"她最常在凌晨找你"这种反常结论，先怀疑时区
+
+它还有本地 HTTP API（`http://127.0.0.1:5031`，Bearer token），以后浏览器版可以直接连它拉记录，不用手动导文件。
+
+## 留痕 / WeChatMsg / PyWxDump（微信 3.x）
+
+微信 3.x 的记录 WeFlow 读不了，用这几个：手机微信 → 我 → 设置 → 通用 → 聊天记录迁移与备份 → 迁移到电脑（或电脑微信登录同步），然后工具读电脑端数据库导出。
 
 | 工具 | 平台 | 导出格式 | `parse_export.py` 认哪些列 |
 |---|---|---|---|
 | 留痕 MemoTrace | Windows | CSV / JSON / TXT / HTML | `IsSender` `StrContent` `StrTime` `Type` `SubType` `NickName/Remark` |
-| WeChatMsg | Windows | CSV / TXT / HTML | 同上（同一个作者的前身） |
-| PyWxDump | Windows | CSV / JSON | `is_sender` `msg` `CreateTime` `type_name`（列名可能不同，不认就看下面"认不出来怎么办"） |
-| 她不一样 she-love-me 的导出 | — | messages.json | 原样直通 |
+| WeChatMsg | Windows | CSV / TXT / HTML | 同上（同一作者的前身） |
+| PyWxDump | Windows | CSV / JSON | 列名可能不同，认不出就 `--peek` 看一眼 |
 
-注意：
-- **这些工具需要在你自己的电脑上解密微信数据库。本项目不做这一步**，只读它们导出的文件。装不装、信不信，你自己判断。
-- 导出时**只选这一个联系人**，不要导全部。
-- Mac 微信目前这几个工具不支持，用截图。
-- 导出的 CSV 可能很大（几年的记录），`stats.py` 跑几万条没问题，但报告只看得过来最近一两年——可以先在 Excel 里按时间截一段。
-
-命令：
+- 导出时**只选这一个联系人**，不要导全部
+- 这套 CSV 列名是按公开 schema 写的，还没在真实导出上验证过（HANDOFF T2）——跑完 `validate.py` 对一下条数
+- Mac 上这几个工具不支持，用截图
 
 ```bash
-python scripts/parse_export.py 导出.csv --her 妈妈备注名 --call 妈妈 --out messages.json
-# 不知道对方在记录里叫什么：先不加 --her 跑一次，脚本会把出现的名字列出来
-python scripts/validate.py messages.json
+python scripts/parse_export.py 导出.csv --her 妈妈备注名 --call 妈妈 --last-days 180 --out messages.json
+# 不知道对方在记录里叫什么：先不加 --her 跑一次，脚本会列出名字
 ```
+
+## 截图（兜底）
+
+只有手机、或者上面的路都走不通时用。
+
+- 打开和她的聊天，从最近往上翻，**每一屏截一张**，相邻两张重叠一两条。十几张能出报告，三四十张数字才稳
+- 安卓：截屏后点"滚动截屏 / 长截图"（小米、华为、OPPO、vivo 都有），一张顶五六屏。iPhone 微信里没有长截图
+- 微信只在隔得久时显示时间，大部分消息没有时间戳——转录时填 `null`，**不要编时间**
+- 语音记 `voice` + 秒数，表情包记 `sticker`，转账只记"转账"不记金额
+
+转录给 AI 的指令（skill 环境里 AI 自己做，普通用户版提示词里已含）：
+
+> 把这些截图逐张转录成 JSON，格式：`{"ts": "2026-05-12T21:03:14" 或 null, "sender": "her"/"me", "type": "text/voice/image/sticker/link/transfer/...", "content": "...", "dur": 秒数或 null}`。右侧绿色气泡是 me，左侧白色是 her。相邻截图重叠的消息只记一次。没有时间戳的填 null，不要编。转账只写"转账"。
 
 ## QQ / 短信 / iMessage
 
-- **QQ**：电脑 QQ 的消息管理器可以导出 txt（`时间 名字：内容` 或两行式），`parse_export.py` 认。手机 QQ 用截图。
-- **安卓短信**：SMS Backup & Restore 之类导出的是 XML，目前不认；用截图，或者转成一行一条的 txt。
-- **iMessage**：Mac 上 imessage-exporter 导出的 txt 是 `时间` 一行、发送者一行、内容一行，大概率能认；认不出来见下。
+- **QQ**：电脑 QQ 消息管理器导出 txt（单行式或两行式），认。手机 QQ 用截图
+- **安卓短信**：SMS Backup & Restore 导的 XML 目前不认；用截图，或转成一行一条的 txt
+- **iMessage**：Mac 上 imessage-exporter 导出的 txt 大概率能认，跑 `--peek` 验证
 
 ## 认不出来怎么办
 
-`parse_export.py` 对 txt 的判断规则：每行开头是时间（`2026-05-12 21:03` 或 `2026/5/12 21:03:14`，可带方括号），后面跟名字和冒号；或者时间 + 名字一行、内容在下一行。不满足这两种的行会挂到上一条消息末尾。
+```bash
+python scripts/parse_export.py 文件 --peek
+```
 
-- 跑完看终端打印的"她 N 条 / 你 M 条"，两边条数明显不对就是名字没对上——`--her` 要和记录里显示的**一模一样**（含备注、空格、括号里的 QQ 号不用带）。
-- 时间列是 Unix 秒数（如 `1715518994`）也认。
-- 全都认不出：把文件开头 5 行贴给 AI，让它照 messages.json 的格式转，或者直接改成 `时间 名字：内容` 的一行式。
+打印前 10 条的解析结果（时间、发送者、类型、内容）和识别到的名字，一眼能看出是哪一步歪了：
 
-## 隐私提醒（每次都说一次，只说一次）
+- 名字对不上 → `--her` 要和记录里显示的一模一样（含备注、空格）
+- 时间全是 `(无时间戳)` → 时间格式没认出来（Unix 秒数、UTC ISO、`2026/5/12 21:03` 都认，其他的把前几行贴给 AI 转）
+- 类型全是 text → `[语音][图片]` 这类标记和预期不一样，同样贴给 AI 照 messages.json 格式转
+- 两边条数明显失衡 → sender 可能标反了，`validate.py` 也会提醒
 
-导出文件里有原文、有别人的消息、可能有金额。给 AI 之前：`python scripts/redact.py 文件 --map "真名=妈妈" --map "我的真名=我"` 打掉手机号、身份证、卡号、金额、指定的名字。打码后的文件是 `*.redacted.*`，原文件不动。工具认不出的地址、单位、小名它不会打，自己再翻一遍。
+## 打码
+
+导出文件里有原文、有金额、可能有别人拉进来的消息。发给任何 AI 之前：
+
+```bash
+python scripts/redact.py messages.json --map "李秀兰=妈妈" --map "张小明=我"
+```
+
+手机号、身份证、卡号、￥金额、邮箱、指定的名字自动打掉，产出 `*.redacted.*`，原文件不动。工具认不出的地址、单位、小名它不会打，自己再翻一遍。

@@ -16,6 +16,10 @@
 - `stats.json` 的 `warnings`：无时间戳过半、时间倒序、未知 sender、年份不在农历表——要照抄进报告的数据说明
 - 农历节日表扩到 2022–2030，表外年份进 warnings
 - `parse_export.py --call`：记录里的真名（`--her`）和报告里的称呼分开
+- `parse_export.py --since / --until / --last-days`：全量导出（WeFlow / 留痕，动辄几万条跨几年）切最近一段再分析，`--last-days` 相对最后一条消息算，老档案也能用
+- `parse_export.py --peek`：不写文件，打印前 10 条的解析结果和识别到的名字，格式认不出来时自己诊断
+- **认 WeFlow 的三种导出**（字段从社区 fork 源码逐行核对）：详细 JSON（`createTime` 秒 / `isSend` / `localType`，49/50 型按内容标记再分类，系统消息跳过，`linkTitle` 兜底）；TXT（`时间 '名字'` 两行式，剥引号）；weclone CSV（`type_name` 列，**UTC 时间转回本地**，否则时段统计偏 8 小时）
+- 转账 content 一律只写"转账"——WeFlow 的转账文案带金额（`￥10.00`），原来会原样进 messages.json；`redact.py` 补 ￥/¥ 金额模式；`[语音消息]``[转账收款]` 标记
 - `tests/test_pipeline.py`：29 个测试，含 golden 测试、边界（空记录、全无时间戳、单方说话、爸爸模式）、全链路
 - `references/export-guide.md`：分平台的聊天记录导出 / 截图指南
 - `web/index.html`：浏览器版，Pyodide 跑同一套脚本，数据不离开浏览器；文字部分靠"复制提示词 → 粘回 narrative.json"

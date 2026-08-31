@@ -111,15 +111,17 @@ python scripts/render.py stats.json narrative.json --out reports/
 
 ## 数据来源
 
+**推荐用导出文件，不要截图。** 半年的聊天一次拿全，时间戳完整；截图一屏才几条，几十张也只覆盖几百条，还得让 AI 逐张转录。
+
 | 来源 | 怎么给 | 备注 |
 |---|---|---|
-| 微信 / QQ / 短信截图 | 直接发给 AI | 推荐，普通人只需要这个 |
-| 微信文本导出 | `parse_export.py` | 两行式、单行式、带方括号时间都认 |
-| 留痕 / WeChatMsg | CSV 或 JSON | 认 IsSender / StrContent / StrTime / Type |
+| **WeFlow** 导出的 JSON / CSV / TXT | `parse_export.py` | 微信 **4.0+**，本地运行，Windows / macOS / Linux。首选 |
+| 留痕 MemoTrace / WeChatMsg / PyWxDump | CSV 或 JSON | 微信 **3.x** 走这条 |
+| 微信 / QQ 文本导出 txt | `parse_export.py` | 两行式、单行式、带方括号时间都认 |
 | 她不一样（she-love-me）的 messages.json | 直接喂 | 已经为她导出过的，换个人再跑一遍 |
-| QQ 导出 txt | `parse_export.py` | |
+| 微信 / QQ / 短信截图 | 直接发给 AI | 只有手机、或用 Mac 时的兜底 |
 
-每种怎么拿出来、安卓怎么长截图、留痕导出选什么：[`references/export-guide.md`](./references/export-guide.md)。
+哪个版本用哪个工具、怎么只导一个人、怎么截最近半年：[`references/export-guide.md`](./references/export-guide.md)。
 
 `examples/` 里是用 `make_sample.py` 生成的**模拟数据**（没有任何真实的人）跑出来的完整产物：`sample-stats.json`、`sample-narrative.json`、`reports/` 下三个 HTML。
 

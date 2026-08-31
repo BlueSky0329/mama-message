@@ -9,9 +9,18 @@
 
 用法:
   python scripts/parse_export.py 导出文件 --her 妈妈 [--call 妈妈] [--me 我] [--pronoun 她] [--out messages.json]
+  python scripts/parse_export.py 导出文件 --her 妈妈 --last-days 180     # 只要最近半年
+  python scripts/parse_export.py 导出文件 --her 妈妈 --since 2026-01-01 --until 2026-06-30
+  python scripts/parse_export.py 导出文件 --peek                        # 认不出格式时先看它读到了什么
 
 --her  填对方在记录里显示的名字（或备注）。不填会先列出记录里出现的名字让你选。
 --call 报告里怎么称呼对方；记录里是真名时用它，默认同 --her。
+--peek 不写文件，只打印前 10 条的解析结果（时间、发送者、类型、内容）和识别到的名字。
+       文件格式怪、条数不对、名字对不上时先跑这个，一眼能看出是哪一步歪了。
+--since / --until / --last-days
+       只取一段时间。WeFlow、留痕这类工具导出的是全量记录，可能有几万条、跨好几年，
+       报告会被稀释成"三年平均"；一般取最近 6–12 个月。--last-days 是相对**最后一条消息**
+       算的（不是今天），所以老档案也能用。
 只用标准库。
 """
 import argparse
@@ -20,7 +29,7 @@ import json
 import re
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 # Windows 默认控制台是 GBK，打不出 emoji；统一把输出切到 UTF-8（其他平台无影响）
 for _s in (sys.stdout, sys.stderr):
@@ -41,11 +50,12 @@ TYPE_MARKERS = [
     (re.compile(r"\[语音\]\s*(\d+)\s*[\"”秒s]?"), "voice"),
     (re.compile(r"\[语音(?:通话|聊天)\]"), "call_voice"),
     (re.compile(r"\[视频通话\]|\[视频聊天\]"), "call_video"),
+    (re.compile(r"\[语音消息[^\]]*\]"), "voice"),
     (re.compile(r"\[语音\]"), "voice"),
     (re.compile(r"\[图片\]|\[照片\]"), "image"),
     (re.compile(r"\[视频\]"), "video"),
     (re.compile(r"\[动画表情\]|\[表情\]|\[表情包\]|\[贴图\]"), "sticker"),
-    (re.compile(r"\[转账\]|\[红包\]|\[微信红包\]|\[微信转账\]"), "transfer"),
+    (re.compile(r"\[转账[^\]]*\]|\[红包[^\]]*\]|\[微信红包\]|\[微信转账\]"), "transfer"),
     (re.compile(r"\[链接\]|\[分享\]|\[文章\]|\[公众号\]|\[小程序\]"), "link"),
     (re.compile(r"撤回了一条消息"), "recall"),
     (re.compile(r"\[位置\]"), "location"),
@@ -57,7 +67,11 @@ CALL_DUR = re.compile(r"(?:通话时长|时长)\s*(?:(\d+):)?(\d+):(\d+)")
 def norm_ts(s):
     """各种写法的时间 → ISO；认不出来返回 None（stats.py 会当无时间戳处理，不会崩）"""
     try:
-        s = s.replace("/", "-").replace("T", " ").strip()
+        s = s.strip()
+        if s.endswith("Z") or re.search(r"[+-]\d{2}:\d{2}$", s):
+            # WeFlow weclone CSV 的 CreateTime 是 UTC ISO-8601，转回本地时间
+            return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%dT%H:%M:%S")
+        s = s.replace("/", "-").replace("T", " ")
         parts = s.split(" ")
         d = parts[0].split("-")
         d = f"{int(d[0]):04d}-{int(d[1]):02d}-{int(d[2]):02d}"
@@ -86,7 +100,7 @@ def classify(body):
                 if cm:
                     h, mi, se = cm.groups()
                     dur = (int(h or 0) * 3600) + int(mi) * 60 + int(se)
-            content = body if typ in ("link", "transfer", "recall") else ""
+            content = body if typ in ("link", "recall") else ("转账" if typ == "transfer" else "")
             if typ == "link":
                 content = re.sub(r"\[[^\]]*\]", "", body).strip() or body
             return typ, content, dur
@@ -96,6 +110,11 @@ def classify(body):
 
 
 # ---------- txt ----------
+
+def clean_who(w):
+    """WeFlow 的 txt 把名字包在单引号里；顺手把各种引号都剥掉"""
+    return w.strip().strip("'\"“”‘’").strip()
+
 
 def parse_txt(path):
     rows = []
@@ -110,7 +129,7 @@ def parse_txt(path):
         for pat in LINE_PATTERNS:
             m = pat.match(line)
             if m and m.group("body").strip():
-                rows.append((norm_ts(m.group(1)), m.group("who").strip(), m.group("body")))
+                rows.append((norm_ts(m.group(1)), clean_who(m.group("who")), m.group("body")))
                 matched = True
                 break
         if matched:
@@ -124,7 +143,7 @@ def parse_txt(path):
                 if lines[j].strip():
                     body.append(lines[j].strip())
                 j += 1
-            rows.append((norm_ts(m.group(1)), m.group("who").strip(), "\n".join(body)))
+            rows.append((norm_ts(m.group(1)), clean_who(m.group("who")), "\n".join(body)))
             i = j
             continue
         # 既不是头也不是消息行：挂到上一条
@@ -154,7 +173,7 @@ def parse_csv(path):
         c_time = col("StrTime", "CreateTime", "time", "timestamp", "ts")
         c_content = col("StrContent", "content", "msg", "text", "message")
         c_sender = col("IsSender", "is_sender", "sender", "from", "Sender")
-        c_type = col("Type", "type", "msg_type")
+        c_type = col("Type", "type", "msg_type", "type_name")
         c_sub = col("SubType", "sub_type")
         c_nick = col("NickName", "Remark", "nickname", "name")
         for row in r:
@@ -165,7 +184,8 @@ def parse_csv(path):
             if who in ("1", "0", "True", "False", "true", "false"):
                 who = "__me__" if who in ("1", "True", "true") else (row.get(c_nick) if c_nick else "__her__") or "__her__"
             body = row.get(c_content, "") if c_content else ""
-            typ = CSV_TYPE.get(str(row.get(c_type, "")).strip(), None) if c_type else None
+            raw_t = str(row.get(c_type, "")).strip() if c_type else ""
+            typ = CSV_TYPE.get(raw_t) or (raw_t.lower() if raw_t.lower() in ("text", "image", "sticker", "video", "voice", "location", "file") else None)
             if typ == "link" and c_sub and str(row.get(c_sub, "")).strip() in ("2000", "2001"):
                 typ = "transfer"
             if typ == "system":
@@ -198,23 +218,53 @@ def parse_json(path):
     for it in items:
         if not isinstance(it, dict):
             continue
-        t = pick(it, "ts", "time", "timestamp", "create_time", "CreateTime", "StrTime", "datetime", "date")
+        t = pick(it, "ts", "time", "timestamp", "createTime", "create_time", "CreateTime", "StrTime", "datetime", "date", "formattedTime")
         if isinstance(t, (int, float)) or (isinstance(t, str) and t.isdigit()):
             t = datetime.fromtimestamp(int(t) if int(t) < 1e11 else int(t) / 1000).strftime("%Y-%m-%d %H:%M:%S")
-        who = pick(it, "sender", "from", "talker", "nickname", "name", "who", "role", "speaker")
-        is_sender = pick(it, "is_sender", "isSender", "IsSender", "is_me", "self")
+        who = pick(it, "sender", "from", "talker", "senderDisplayName", "senderUsername", "nickname", "name", "who", "role", "speaker")
+        is_sender = pick(it, "is_sender", "isSender", "IsSender", "isSend", "is_me", "self")
         if is_sender is not None:
             who = "__me__" if str(is_sender) in ("1", "True", "true") else (who or "__her__")
         body = pick(it, "content", "text", "msg", "message", "StrContent", "body") or ""
         typ = pick(it, "type", "msg_type", "kind")
-        if isinstance(typ, int) or (isinstance(typ, str) and typ.isdigit()):
+        lt = pick(it, "localType", "local_type")
+        if lt is not None and str(lt).isdigit():
+            # WeFlow：微信原生类型码。49（应用消息：链接/转账/文件/引用…）和 50（通话）看内容标记更准，交给 classify
+            if str(lt) == "10000":
+                if "撤回" in str(body):
+                    typ = "recall"
+                else:
+                    continue                      # 系统消息不进记录
+            elif str(lt) in ("49", "50"):
+                typ = None
+            else:
+                typ = CSV_TYPE.get(str(lt))
+        elif isinstance(typ, int) or (isinstance(typ, str) and typ.isdigit()):
             typ = CSV_TYPE.get(str(typ))
-        dur = pick(it, "dur", "duration", "seconds")
+        elif isinstance(typ, str) and typ and not typ.isascii():
+            typ = None                            # 中文类型名（"文本消息"）交给 classify 按内容判
+        if not str(body).strip() and it.get("linkTitle"):
+            body = "[链接] " + str(it["linkTitle"])
+        dur = pick(it, "dur", "duration", "seconds", "voiceDuration")
         rows.append((norm_ts(str(t)) if t else None, str(who), str(body), typ, dur))
     return "generic", rows
 
 
 # ---------- 主流程 ----------
+
+def clip(msgs, since=None, until=None, last_days=None):
+    """按日期切一段。返回 (保留的消息, 丢掉的条数, 实际起点, 实际终点)。
+    没有时间戳的消息在切片时会被丢掉——留着也没法判断它在不在区间里。"""
+    if last_days:
+        dates = [m["ts"][:10] for m in msgs if m["ts"]]
+        if dates:
+            start = date.fromisoformat(max(dates)) - timedelta(days=last_days - 1)
+            since = max(since, start.isoformat()) if since else start.isoformat()
+    if not since and not until:
+        return msgs, 0, None, None
+    keep = [m for m in msgs if m["ts"] and (not since or m["ts"][:10] >= since) and (not until or m["ts"][:10] <= until)]
+    return keep, len(msgs) - len(keep), since, until
+
 
 def build(rows, her, me, pronoun):
     msgs = []
@@ -234,9 +284,45 @@ def build(rows, her, me, pronoun):
             typ = typ2
             dur = dur if dur is not None else dur2
         else:
-            content = body if typ in ("text", "link", "transfer", "recall") else ""
+            content = body if typ in ("text", "link", "recall") else ("转账" if typ == "transfer" else "")
         msgs.append({"ts": ts, "sender": side, "type": typ, "content": content, "dur": dur})
     return {"me": me or "我", "her": her or "妈妈", "her_pronoun": pronoun, "source": "export", "messages": msgs}, senders
+
+
+def peek(path):
+    """把文件按各种规则读一遍，打印前 10 条的解析结果。不写任何文件。"""
+    p = path.lower()
+    print(f"文件：{path}")
+    if p.endswith(".json"):
+        kind, payload = parse_json(path)
+        if kind == "native":
+            ms = payload["messages"]
+            print(f"识别为：已经是 messages.json（{len(ms)} 条，{payload.get('her')} / {payload.get('me')}）")
+            rows = [(m.get("ts"), m.get("sender"), m.get("type"), m.get("content", "")) for m in ms[:10]]
+        else:
+            print(f"识别为：通用 JSON（{len(payload)} 条）")
+            rows = [(r[0], r[1], (r[3] if len(r) > 3 else None) or "text", r[2]) for r in payload[:10]]
+    elif p.endswith(".csv"):
+        rows0 = parse_csv(path)
+        with open(path, encoding="utf-8-sig", errors="ignore", newline="") as f:
+            header = (csv.reader(f).__next__() if True else [])
+        print(f"识别为：CSV（{len(rows0)} 行）\n列名：{header}")
+        rows = [(r[0], r[1], (r[3] if len(r) > 3 else None) or "text", r[2]) for r in rows0[:10]]
+    else:
+        rows0 = parse_txt(path)
+        print(f"识别为：文本（{len(rows0)} 条）")
+        rows = []
+        for ts, who, body in rows0[:10]:
+            typ, content, dur = classify(body)
+            rows.append((ts, who, typ + (f" {dur}秒" if dur else ""), content or body))
+    names = Counter(r[1] for r in rows)
+    print("\n前 10 条：")
+    for ts, who, typ, content in rows:
+        c = (content or "").replace("\n", " ")[:36]
+        print(f"  {str(ts or '(无时间戳)'):20s} {str(who):12s} {str(typ):12s} {c}")
+    print("\n这几条里出现的发送者：" + "、".join(f"{k}({v})" for k, v in names.most_common()))
+    print("名字对不上就调 --her / --me；时间是 (无时间戳) 说明时间格式没认出来；"
+          "类型全是 text 说明 [语音][图片] 这类标记和脚本预期的不一样——把上面几行贴给 AI，让它照 messages.json 的格式转。")
 
 
 def main():
@@ -247,16 +333,36 @@ def main():
     ap.add_argument("--pronoun", default="她")
     ap.add_argument("--call", default=None, help="报告里怎么称呼对方（妈妈 / 老爸 / 外婆），默认同 --her")
     ap.add_argument("--out", default="messages.json")
+    ap.add_argument("--since", default=None, help="只要这天及以后的（YYYY-MM-DD）")
+    ap.add_argument("--until", default=None, help="只要这天及以前的（YYYY-MM-DD）")
+    ap.add_argument("--last-days", type=int, default=None, help="只要最后一条消息往前 N 天（跨好几年的全量导出用这个）")
+    ap.add_argument("--peek", action="store_true", help="不写文件，只看前 10 条是怎么解析的")
     a = ap.parse_args()
+    for f in ("since", "until"):
+        v = getattr(a, f)
+        if v:
+            try:
+                date.fromisoformat(v)
+            except ValueError:
+                print(f"--{f} 要写成 2026-01-01 这样的日期，现在是 {v!r}")
+                sys.exit(1)
 
+    if a.peek:
+        peek(a.path)
+        return
     p = a.path.lower()
     if p.endswith(".json"):
         kind, payload = parse_json(a.path)
         if kind == "native":
             if a.call:
                 payload["her"] = a.call
+            payload["messages"], dropped, s0, s1 = clip(payload["messages"], a.since, a.until, a.last_days)
+            if not payload["messages"]:
+                print(f"这段时间（{s0 or '最早'} → {s1 or '最后'}）里没有消息，换个范围试试。" if dropped else "文件里没有消息。")
+                sys.exit(1)
             json.dump(payload, open(a.out, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
-            print(f"已经是 messages.json 格式，原样写到 {a.out}（{len(payload['messages'])} 条）")
+            print(f"已经是 messages.json 格式，写到 {a.out}（{len(payload['messages'])} 条）"
+                  + (f"，按 {s0 or '最早'} → {s1 or '最后'} 切掉了 {dropped} 条" if dropped else ""))
             return
         rows = payload
     elif p.endswith(".csv"):
@@ -285,14 +391,18 @@ def main():
         data, _ = build(rows, her, me, a.pronoun)
     if a.call:
         data["her"] = a.call        # 记录里叫“李秀兰”，报告里叫“妈妈”
+    data["messages"], dropped, s0, s1 = clip(data["messages"], a.since, a.until, a.last_days)
     n = len(data["messages"])
+    if dropped and n == 0:
+        print(f"这段时间（{s0 or '最早'} → {s1 or '最后'}）里没有消息，换个范围试试。")
+        sys.exit(1)
     if n == 0:
         print("没解析出任何消息。检查 --her 的名字是不是和记录里一模一样（包括空格和备注）。")
         sys.exit(1)
     json.dump(data, open(a.out, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     c = Counter(m["sender"] for m in data["messages"])
     t = Counter(m["type"] for m in data["messages"])
-    print(f"解析完成：{n} 条 → {a.out}")
+    print(f"解析完成：{n} 条 → {a.out}" + (f"（按 {s0 or '最早'} → {s1 or '最后'} 切掉了 {dropped} 条）" if dropped else ""))
     print(f"  {data['her']} {c['her']} 条 / {data['me']} {c['me']} 条")
     print("  类型：" + " · ".join(f"{k} {v}" for k, v in t.most_common()))
     print("  无时间戳：" + str(sum(1 for m in data['messages'] if not m['ts'])))
