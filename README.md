@@ -2,21 +2,21 @@
 
 # 妈妈的消息 · mama-message
 
-**你觉得你和你妈关系挺好的？** 把你们的聊天截图丢给 AI，它给你算一遍。
+**你觉得你和你妈关系挺好的？** 把你们的聊天记录给它算一遍。
 
 一份报告、两张卡片、一句可以直接发给她的话。<br>
-不是心理学分析，妈妈不需要依恋类型。
+分析爸爸、外婆也行，称呼和节日会跟着换。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-07C160.svg)](./LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B%20%C2%B7%20%E5%8F%AA%E7%94%A8%E6%A0%87%E5%87%86%E5%BA%93-3776AB?logo=python&logoColor=white)](./scripts)
-[![No network](https://img.shields.io/badge/%E4%B8%8D%E8%81%94%E7%BD%91-%E6%96%AD%E7%BD%91%E4%B9%9F%E8%83%BD%E8%B7%91-lightgrey)](#先说隐私)
-[![Tests](https://img.shields.io/badge/tests-29%20passing-brightgreen)](./tests)
+[![Python](https://img.shields.io/badge/Python-3.8%2B%20%C2%B7%20%E6%A0%87%E5%87%86%E5%BA%93-3776AB?logo=python&logoColor=white)](./scripts)
+[![No network](https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E6%97%A0%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82-%E6%96%AD%E7%BD%91%E8%83%BD%E8%B7%91-lightgrey)](#先说隐私)
+[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](./tests)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-1B1B1B)](./SKILL.md)
 
 <img src="docs/img/card-send.png" width="300" alt="发给她的卡：妈，我用了个软件，它说我欠你一个电话。今晚 8 点打给你。">&nbsp;&nbsp;
 <img src="docs/img/card-bill.png" width="300" alt="亲情账单卡：她发给你 192 条 / 你回她 102 条 / 结余：欠 59 条回复、1 个电话">
 
-<sub>模拟数据，没有任何真实的人。左边那张是整个产品的出口。</sub>
+<sub>模拟数据，没有任何真实的人。左边那张就是拿来发给她的。</sub>
 
 </div>
 
@@ -25,50 +25,61 @@
 🧊 嗯哦好指数  42 ████░░░░░░  你 93 条回复里有 52 条不超过三个字，最长一次 3 天没回
 🕰️ 不计较指数  92 █████████░  你没回的 59 次里，有 51 次是她自己先开口了下一次
 
-她：三餐监督型 🍚 ——"吃饭了吗""今天吃的什么""别老吃外卖"，她问吃饭 19 次，只有 3 次是在饭点
+她：三餐监督型 🍚 ——"吃饭了吗""今天吃的什么""别老吃外卖"，她问吃饭 19 次，3 次在饭点
 你：嗯哦好选手 🧊 ——"嗯"8 次、"好"7 次、"好的"5 次，没有一条超过两个字
 综合评级：欠一个电话 📞
 ```
 
 ---
 
+## 它是怎么工作的
+
+```
+聊天记录 ──(WeFlow 导出 / 截图转录)──▶ messages.json ──stats.py──▶ stats.json（全部数字）
+                                                AI 按写作规矩写 ──▶ narrative.json
+stats.json + narrative.json ──render.py──▶ 报告 + 两张卡片（HTML，浏览器打开就能截图）
+```
+
+分工很清楚：**数字归脚本，文字归 AI**。谁先开口、回复中位数、你发过几个"嗯"、她最常问什么、母亲节那天谁先说话——这些全部由本地 Python 脚本算出来，公式写在 [`references/metrics.md`](./references/metrics.md)，报告里每个数字都能追溯到 `stats.json` 的一个字段。AI 负责把数字写成人话：三个指数各配一句、她的类型和你的类型、她的黑话翻译表、该打电话的信号，最后给你一句带具体时间的话，复制就能发。
+
+写作有规矩（[`references/writing-rules.md`](./references/writing-rules.md)）：引用她的原话要带日期或次数，有一整页的禁用词黑名单，记录里没有的事一个字都编不得。记录里有争吵、有控制、或者她已经不在了，报告会收着写，去掉玩笑的部分。
+
 ## 先说隐私
 
-- **只吃截图。** 不解密微信数据库，不要密码，不碰你手机。
-- **不联网。** 所有脚本只用 Python 标准库，没有任何网络请求；你可以断网跑。
-- **不存原文。** 报告只引短句，转账只记次数不记金额，产物都在当前目录，随时删。
-- **一键打码。** `python scripts/redact.py 文件 --map "张小明=我" --map "李秀兰=妈妈"`，手机号、身份证、卡号、金额自动打掉。
-- 你在哪个 AI 里跑，截图就发给了谁。这一点工具管不了，你自己判断。
+- 记录在**你自己的电脑上**导出（WeFlow 这类工具本地运行），本项目的脚本不碰微信数据库、不要密码。
+- 脚本全部是 Python 标准库，没有任何网络请求，断网能跑。产物都在当前目录，随时删。
+- 报告引用原话最多一句，转账记次数、不记金额（连 `messages.json` 里都不落金额）。
+- `python scripts/redact.py 文件 --map "李秀兰=妈妈"` 一键打掉手机号、身份证、卡号、金额、邮箱。
+- 写文字那一步要经过一个 AI——你把提示词粘给谁，记录就发给了谁。这一步工具管不了，自己掂量。
 
----
+## 怎么用
 
-## 三种用法
+先拿到记录：微信 4.0+ 装个 WeFlow（本地运行，一次导全半年，格式选 JSON）；微信 3.x 用留痕 / PyWxDump；实在没有电脑再截图。分平台的步骤在[导出指南](./references/export-guide.md)。然后三条路挑一条：
 
-### 1 · 不想装任何东西
+### 1 · 什么都不装
 
-看 [`prompts/普通用户版.md`](./prompts/普通用户版.md)：三段提示词，复制进豆包 / Kimi / DeepSeek / Claude / ChatGPT，再发截图。报告版、练习版、帮你回版各一段。
+[`prompts/普通用户版.md`](./prompts/普通用户版.md) 里有三段写好的提示词（报告版、练习版、帮你回版）。整段复制进豆包 / Kimi / DeepSeek / Claude / ChatGPT，把记录发过去，等报告。适合在手机上就想跑一遍的人。
 
-### 2 · 用 Claude Code / Codex / Cursor 等支持 Agent Skill 的工具
+### 2 · Claude Code / Codex / Cursor（Agent Skill）
 
 ```bash
 git clone https://github.com/BlueSky0329/mama-message ~/.claude/skills/mama-message
 ```
 
-然后发截图说一句"分析我和我妈的聊天"，或者 `/mama-message`。其他工具把整个文件夹放进对应的 skills 目录即可，SKILL.md 格式通用。
-
-已经有导出文件（留痕 / WeChatMsg / 她不一样的 messages.json / 微信 txt）的：
+把导出文件拖进对话，说一句"分析我和我妈的聊天"，或者 `/mama-message`。AI 会自己跑这些脚本：
 
 ```bash
-python scripts/parse_export.py 导出文件 --her 记录里的名字 --call 妈妈 --out messages.json
-python scripts/validate.py messages.json        # 查格式、顺序、重复，打印条数和时间范围
-python scripts/stats.py messages.json --out stats.json --her-birthday 10-20 --my-birthday 06-03
-# AI 读 stats.json 写 narrative.json，然后：
+python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180   # WeFlow / 留痕的 JSON、CSV、TXT 都认
+python scripts/validate.py messages.json          # 查格式、时间顺序、疑似重复，打印条数让你确认
+python scripts/stats.py messages.json --out stats.json
 python scripts/render.py stats.json narrative.json --out reports/
 ```
 
-### 3 · 在浏览器里跑（不用装 Python）
+其他支持 Agent Skill 的工具把整个文件夹放进对应的 skills 目录即可，SKILL.md 格式通用。
 
-`web/index.html` 用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器。本地：仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/ 。放进导出文件或 AI 转录好的 JSON → 检查 → 算数 → 复制提示词给任意 AI 写文字 → 粘回来 → 报告和两张卡。首次打开从 CDN 下载约 10 MB 的运行时，之后断网也能用。
+### 3 · 浏览器里跑
+
+`web/index.html` 用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器。仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/ ：拖进导出文件 → 检查 → 算数 → 复制提示词给任意 AI 写文字 → 粘回来 → 报告和卡片。首次打开从 CDN 下载约 10 MB 的运行时，之后断网也能用。
 
 ---
 
@@ -76,7 +87,7 @@ python scripts/render.py stats.json narrative.json --out reports/
 
 <div align="center">
 <img src="docs/img/report-top.png" width="720" alt="报告首屏：三个指数、六个数字、成分表">
-<br><sub><a href="docs/img/report.png">看完整报告截图</a> · 或直接打开 <a href="examples/reports/mama-message-report.html">examples/reports/mama-message-report.html</a></sub>
+<br><sub><a href="docs/img/report.png">完整报告截图</a> · 或直接打开 <a href="examples/reports/mama-message-report.html">examples/reports/mama-message-report.html</a></sub>
 </div>
 
 | 模块 | 一句话 |
@@ -95,35 +106,35 @@ python scripts/render.py stats.json narrative.json --out reports/
 | 今晚就做的三件事 | 第一件 30 秒能做完 |
 | 帮你回 + 三句开场白 | 用你自己的口气写好，复制就能发；打电话不知道第一句说什么的看这里 |
 | 亲情账单 | 收款单样式：她发给你 192 条 / 你回 102 条 / 结余：欠 59 条回复、1 个电话 |
-| 发给她的一条 | "妈，我用了个软件……它说我欠你一个电话。今晚 8 点打给你。" 这是整个产品的出口 |
+| 发给她的一条 | "妈，我用了个软件……它说我欠你一个电话。今晚 8 点打给你。" 整个产品做到最后，就是为了这一条能发出去 |
 
-### 附加入口
+### 还能这么玩
 
 | 说一句 | 得到 |
 |---|---|
 | "练习模式" / "扮演我妈陪我练" | AI 用她的说话方式跟你聊 10 回合，你回"嗯"当场被标出，最后打分 |
 | "和朋友比比" | 对照组：你回朋友 3 分钟，回你妈 4 小时 12 分 |
 | "妈和爸都分析一下" | 偏心报告：你回谁更快、晾谁更久、谁更主动找你 |
-| "帮我回她" | 只要回复话术和开场白，不出整份报告 |
+| "帮我回她" | 回复话术和三句开场白，跳过整份报告 |
 | "做张卡片" | 亲情账单卡 + 发给她的卡，竖版，截图就能发 |
 
 ---
 
 ## 数据来源
 
-**推荐用导出文件，不要截图。** 半年的聊天一次拿全，时间戳完整；截图一屏才几条，几十张也只覆盖几百条，还得让 AI 逐张转录。
+导出文件比截图好得多：半年记录一次拿全，时间戳完整；截图一屏几条，三四十张也覆盖不了多少，还得让 AI 逐张转录。
 
 | 来源 | 怎么给 | 备注 |
 |---|---|---|
-| **WeFlow** 导出的 JSON / CSV / TXT | `parse_export.py` | 微信 **4.0+**，本地运行，Windows / macOS / Linux。首选 |
+| **WeFlow** 导出的 JSON / CSV / TXT | `parse_export.py` | 微信 **4.0+**，本地运行，Windows / macOS / Linux，首选 |
 | 留痕 MemoTrace / WeChatMsg / PyWxDump | CSV 或 JSON | 微信 **3.x** 走这条 |
 | 微信 / QQ 文本导出 txt | `parse_export.py` | 两行式、单行式、带方括号时间都认 |
 | 她不一样（she-love-me）的 messages.json | 直接喂 | 已经为她导出过的，换个人再跑一遍 |
-| 微信 / QQ / 短信截图 | 直接发给 AI | 只有手机、或用 Mac 时的兜底 |
+| 微信 / QQ / 短信截图 | 发给 AI 转录 | 没有电脑时的兜底 |
 
-哪个版本用哪个工具、怎么只导一个人、怎么截最近半年：[`references/export-guide.md`](./references/export-guide.md)。
+哪个微信版本用哪个工具、怎么导出一个人的记录、格式认不出来怎么办：[`references/export-guide.md`](./references/export-guide.md)。
 
-`examples/` 里是用 `make_sample.py` 生成的**模拟数据**（没有任何真实的人）跑出来的完整产物：`sample-stats.json`、`sample-narrative.json`、`reports/` 下三个 HTML。
+`examples/` 里是 `make_sample.py` 生成的**模拟数据**（没有任何真实的人）跑出来的完整产物，想先看看长什么样就打开 `examples/reports/`。
 
 ---
 
@@ -137,22 +148,22 @@ mama-message/
 │   ├── metrics.md              # 每个数字怎么算
 │   ├── types.md                # 10 + 6 个类型、五档评级
 │   ├── dictionary.md           # 黑话翻译表词典和生成规则
-│   ├── writing-rules.md        # 文字规矩、反 AI 黑名单、什么时候要收着
+│   ├── writing-rules.md        # 文字规矩、禁用词黑名单、什么时候要收着
 │   ├── report-template.md      # 报告模板、narrative.json 字段
 │   ├── practice.md             # 练习模式
 │   └── export-guide.md         # 聊天记录怎么拿出来（分平台）
-├── scripts/                    # 只用标准库，不联网
-│   ├── parse_export.py         # 各种导出 → messages.json
+├── scripts/                    # 全部标准库，无网络请求
+│   ├── parse_export.py         # 各种导出 → messages.json（--peek 自查 · --last-days 切片）
 │   ├── validate.py             # 检查 messages.json：格式、时间顺序、重复、金额
 │   ├── stats.py                # messages.json → stats.json + 终端摘要
 │   ├── render.py               # stats + narrative → 报告和两张卡
 │   ├── compare.py              # 对照组 / 偏心报告
 │   └── redact.py               # 一键打码
-├── assets/                     # report.html · card-bill.html · card-send.html
+├── assets/                     # 三个 HTML 模板
 ├── prompts/普通用户版.md        # 复制粘贴版
 ├── web/index.html              # 浏览器版（Pyodide 跑同一套脚本）
 ├── examples/                   # 模拟数据和产物
-├── docs/img/                   # README 用的截图
+├── docs/img/                   # README 截图
 ├── tests/                      # python -m unittest discover -s tests
 └── tools/                      # pack.py 打包 .skill · snapshot.py HTML → PNG
 ```
@@ -160,7 +171,7 @@ mama-message/
 ### 开发
 
 ```bash
-python -m unittest discover -s tests                 # 29 个测试，含 golden 测试
+python -m unittest discover -s tests                 # 35 个测试，含 golden 测试
 python examples/make_sample.py                       # 改了算法要重跑示例
 python scripts/stats.py examples/sample-messages.json --out examples/sample-stats.json --today 2026-08-30 --her-birthday 10-20 --my-birthday 06-03
 python scripts/render.py examples/sample-stats.json examples/sample-narrative.json --out examples/reports
@@ -168,15 +179,15 @@ python tools/snapshot.py                             # 可选：pip install play
 python tools/pack.py                                 # 打 mama-message.skill
 ```
 
-数字由脚本算，文字由 AI 写，`render.py` 合成。改指标要三处同步：`scripts/stats.py`、`references/metrics.md`、`prompts/普通用户版.md`。细则在 [`CLAUDE.md`](./CLAUDE.md)。
+改指标要三处同步：`scripts/stats.py`、`references/metrics.md`、`prompts/普通用户版.md`。细则在 [`CLAUDE.md`](./CLAUDE.md)。
 
 ---
 
-## 说明
+## 几句丑话
 
-这是一份统计，不是评判。"短回复"不是"敷衍"，"没回"不是"不孝"。评级是个章，不是判决。
+报告里管短回复叫"短回复"，管没回叫"没回"，禁止往"敷衍""不孝"上引——看见数字之后得出什么结论，是你自己的事。评级那个章（模范子女 → 欠一次回家）是给你转发用的，别当真。
 
-记录里有争吵、控制、或者她已经不在了，工具会收着写。如果它没收住，是它的错，不是你的。
+记录里有争吵、有控制、或者她已经不在了，工具会收着写。如果它没收住，是它的错，跟你没关系。
 
 ## 写在最后
 
@@ -186,9 +197,9 @@ python tools/pack.py                                 # 打 mama-message.skill
 
 这个工具做的事很简单：把"等会儿"数出来。数出来大概是四个小时，或者三天，或者一个"嗯"。
 
-数字不会让你更爱她，你本来就爱她。数字只是让你看见一件你早就知道、但从来没量过的事。
+数字不会让你更爱她，你本来就爱她。它把一件你早就知道、但一直没量过的事摆到你眼前。
 
-然后它给你一句话，你可以发出去。把责任推给软件——"它说我欠你一个电话"——这样你就不用先说"我想你了"。
+然后它给你一句话，你可以发出去。把责任推给软件是故意的——"它说我欠你一个电话"比"我想你了"容易说出口。
 
 她会笑。她可能会说"什么软件啊，乱七八糟的"。
 
