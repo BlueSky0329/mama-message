@@ -82,6 +82,7 @@
 
 ```json
 {
+  "schema": 1,
   "title": "你和妈妈的半年",
   "index_lines": {"care": "…", "short": "…", "forgive": "…"},
   "type_lines": {"mother": "…", "child": "…"},
@@ -100,13 +101,16 @@
 }
 ```
 
-`index_lines`、`forward_insight`、`bill_balance`、`send_cta`、`cta`、`footnote` 不写会用默认值（从 stats 自动拼）。其余必须写。
+`index_lines`、`forward_insight`、`bill_balance`、`send_cta`、`cta`、`footnote` 不写会用默认值（从 stats 自动拼）。其余必须写。`schema` 可不写。
+
+写完先过一遍 `python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json`：必填字段、字数、感叹号、黑名单、评判词，以及**引号里的原话必须在记录里真出现过、数字必须能在 stats.json 里找到**。有 ✗ 就改，改到过为止再 render。
 
 ## 生成命令
 
 ```bash
 python scripts/stats.py messages.json --out stats.json --today 2026-08-30 --her-birthday 10-20 --my-birthday 06-03
 # 读 stats.json，写 narrative.json
+python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json   # 过规矩
 python scripts/render.py stats.json narrative.json --out reports/
 ```
 

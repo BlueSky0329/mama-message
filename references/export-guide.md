@@ -46,6 +46,7 @@ python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180 
 - WeFlow 不导出语音秒数，语音条数照算，"最长的一条语音"会缺
 - 它的转账文案带金额（`[转账] (妈妈转账给我) ￥10.00`），`parse_export.py` 入库时只记"转账"，金额不落地
 - weclone CSV 的时间是 UTC，脚本会自动转回本地时间；发现"她最常在凌晨找你"这种反常结论，先怀疑时区
+- 时段一律按**运行脚本这台电脑**的时区算。人在国外分析国内的记录，"几点找你"会整体偏一个时差，数据说明里写一句（见 metrics.md「时区」）
 
 它还有本地 HTTP API（`http://127.0.0.1:5031`，Bearer token），以后浏览器版可以直接连它拉记录，不用手动导文件。
 
@@ -60,7 +61,7 @@ python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180 
 | PyWxDump | Windows | CSV / JSON | 列名可能不同，认不出就 `--peek` 看一眼 |
 
 - 导出时**只选这一个联系人**，不要导全部
-- 这套 CSV 列名是按公开 schema 写的，还没在真实导出上验证过（HANDOFF T2）——跑完 `validate.py` 对一下条数
+- 这套 CSV 列名是按公开 schema 写的，还没在真实导出上验证过（HANDOFF T2）——跑完 `validate.py` 对一下条数。拿到真实导出的话，打码、截前几十条放进 `tests/fixtures/`，在 `tests/test_parse_export.py` 加一行期望值
 - Mac 上这几个工具不支持，用截图
 
 ```bash
@@ -93,7 +94,9 @@ python scripts/parse_export.py 导出.csv --her 妈妈备注名 --call 妈妈 --
 python scripts/parse_export.py 文件 --peek
 ```
 
-打印前 10 条的解析结果（时间、发送者、类型、内容）和识别到的名字，一眼能看出是哪一步歪了：
+打印识别到的格式和编码、前 10 条的解析结果（时间、发送者、类型、内容）和发送者名单，一眼能看出是哪一步歪了：
+
+- 编码不用管：UTF-8 / GBK（GB18030）/ UTF-16 自动识别，老工具导出的 ANSI 文件也认；乱码的话看 `--peek` 第二行报的编码
 
 - 名字对不上 → `--her` 要和记录里显示的一模一样（含备注、空格）
 - 时间全是 `(无时间戳)` → 时间格式没认出来（Unix 秒数、UTC ISO、`2026/5/12 21:03` 都认，其他的把前几行贴给 AI 转）

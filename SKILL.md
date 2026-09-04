@@ -19,7 +19,8 @@ description: 《妈妈的消息》—— 把用户和妈妈（或爸爸、外婆
 - `references/report-template.md` — 报告模板和 narrative.json 字段
 - `references/practice.md` — 练习模式
 - `references/export-guide.md` — 分平台的导出 / 截图指南（用户问"怎么导出"看这里，先推荐截图）
-- `scripts/` — `parse_export.py` `validate.py` `stats.py` `render.py` `compare.py` `redact.py`，只用标准库，不联网
+- `scripts/` — `parse_export.py` `validate.py` `stats.py` `lint_narrative.py` `render.py` `compare.py` `redact.py`，只用标准库，不联网
+- `references/lexicon.json` — `stats.py` 的全部词表（主题关键词、收尾语、健康词……），用户问"为什么这句算身体"看这里
 - `assets/` — 报告和两张卡片的 HTML 模板
 
 ---
@@ -60,7 +61,7 @@ description: 《妈妈的消息》—— 把用户和妈妈（或爸爸、外婆
 目标是 `messages.json`：
 
 ```json
-{"me": "我", "her": "妈妈", "her_pronoun": "她", "source": "screenshots",
+{"schema": 1, "me": "我", "her": "妈妈", "her_pronoun": "她", "source": "screenshots",
  "messages": [
    {"ts": "2026-05-12T21:03:14", "sender": "her", "type": "text", "content": "吃饭了吗", "dur": null},
    {"ts": null, "sender": "me", "type": "text", "content": "吃了", "dur": null},
@@ -118,6 +119,14 @@ python scripts/stats.py messages.json --out stats.json --today 2026-08-30 --her-
 
 先在对话里按 `report-template.md` 的 Markdown 模板给出完整报告，同时把文字写进 `narrative.json`。
 
+写完跑：
+
+```bash
+python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json
+```
+
+它查必填字段、字数、感叹号、黑名单、评判词，并核对**引号里的原话是不是记录里一字不差有的**、文字里的数字能不能在 `stats.json` 里找到。有 ✗ 就改，改到过为止；⚠ 看一眼。
+
 ## 第七步：出报告和卡片
 
 ```bash
@@ -160,6 +169,7 @@ python scripts/compare.py stats.json friend-stats.json --labels 你妈 朋友 --
 
 ## 出报告前自检
 
+- `lint_narrative.py` 跑过，没有 ✗
 - 每个数字能在 `stats.json` 里找到
 - "她其实想说的是"每句判断能指到一条原话或一个数字
 - 类型那句引了原话

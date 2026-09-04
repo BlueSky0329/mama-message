@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-07C160.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8%2B%20%C2%B7%20%E6%A0%87%E5%87%86%E5%BA%93-3776AB?logo=python&logoColor=white)](./scripts)
 [![No network](https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E6%97%A0%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82-%E6%96%AD%E7%BD%91%E8%83%BD%E8%B7%91-lightgrey)](#先说隐私)
-[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](./tests)
+[![Tests](https://img.shields.io/badge/tests-77%20passing-brightgreen)](./tests)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-1B1B1B)](./SKILL.md)
 
 <img src="docs/img/card-send.png" width="300" alt="发给她的卡：妈，我用了个软件，它说我欠你一个电话。今晚 8 点打给你。">&nbsp;&nbsp;
@@ -44,6 +44,8 @@ stats.json + narrative.json ──render.py──▶ 报告 + 两张卡片（HTM
 
 写作有规矩（[`references/writing-rules.md`](./references/writing-rules.md)）：引用她的原话要带日期或次数，有一整页的禁用词黑名单，记录里没有的事一个字都编不得。记录里有争吵、有控制、或者她已经不在了，报告会收着写，去掉玩笑的部分。
 
+写完还要过一道机器检查（[`scripts/lint_narrative.py`](./scripts/lint_narrative.py)）：引号里的话必须是记录里一字不差出现过的，文字里的数字必须能在 `stats.json` 里找到，禁用词一个不能有。AI 编出来的东西过不了这一关。
+
 ## 先说隐私
 
 - 记录在**你自己的电脑上**导出（WeFlow 这类工具本地运行），本项目的脚本不碰微信数据库、不要密码。
@@ -72,6 +74,7 @@ git clone https://github.com/BlueSky0329/mama-message ~/.claude/skills/mama-mess
 python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180   # WeFlow / 留痕的 JSON、CSV、TXT 都认
 python scripts/validate.py messages.json          # 查格式、时间顺序、疑似重复，打印条数让你确认
 python scripts/stats.py messages.json --out stats.json
+python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json   # 文字过规矩
 python scripts/render.py stats.json narrative.json --out reports/
 ```
 
@@ -79,7 +82,7 @@ python scripts/render.py stats.json narrative.json --out reports/
 
 ### 3 · 浏览器里跑
 
-`web/index.html` 用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器。仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/ ：拖进导出文件 → 检查 → 算数 → 复制提示词给任意 AI 写文字 → 粘回来 → 报告和卡片。首次打开从 CDN 下载约 10 MB 的运行时，之后断网也能用。
+`web/index.html` 用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器。仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/ ：拖进导出文件 → 检查 → 算数 → 复制提示词给任意 AI 写文字 → 粘回来 → 报告和卡片。首次打开下载约 10 MB 的运行时（jsDelivr 的几个节点和 unpkg 自动选通的、失败顺延），下载过一次后由 Service Worker 缓存，断网也能用。全量导出可以只取最近 N 天。
 
 ---
 
@@ -132,7 +135,7 @@ python scripts/render.py stats.json narrative.json --out reports/
 | 她不一样（she-love-me）的 messages.json | 直接喂 | 已经为她导出过的，换个人再跑一遍 |
 | 微信 / QQ / 短信截图 | 发给 AI 转录 | 没有电脑时的兜底 |
 
-哪个微信版本用哪个工具、怎么导出一个人的记录、格式认不出来怎么办：[`references/export-guide.md`](./references/export-guide.md)。
+编码（UTF-8 / GBK / UTF-16）和格式都自动识别。哪个微信版本用哪个工具、怎么导出一个人的记录、格式认不出来怎么办：[`references/export-guide.md`](./references/export-guide.md)。
 
 `examples/` 里是 `make_sample.py` 生成的**模拟数据**（没有任何真实的人）跑出来的完整产物，想先看看长什么样就打开 `examples/reports/`。
 
@@ -145,6 +148,7 @@ mama-message/
 ├── SKILL.md                    # Skill 入口：流程、模式、隐私、自检
 ├── CLAUDE.md · CHANGELOG.md    # 给 AI 的约束 · 版本记录
 ├── references/
+│   ├── lexicon.json            # 全部词表（改词表不改代码）
 │   ├── metrics.md              # 每个数字怎么算
 │   ├── types.md                # 10 + 6 个类型、五档评级
 │   ├── dictionary.md           # 黑话翻译表词典和生成规则
@@ -153,33 +157,33 @@ mama-message/
 │   ├── practice.md             # 练习模式
 │   └── export-guide.md         # 聊天记录怎么拿出来（分平台）
 ├── scripts/                    # 全部标准库，无网络请求
-│   ├── parse_export.py         # 各种导出 → messages.json（--peek 自查 · --last-days 切片）
+│   ├── _common.py              # 共用：契约版本、类型枚举、时间、编码嗅探
+│   ├── parse_export.py         # 各种导出 → messages.json（--peek 自查 · --last-days 切片 · 编码自动识别）
 │   ├── validate.py             # 检查 messages.json：格式、时间顺序、重复、金额
 │   ├── stats.py                # messages.json → stats.json + 终端摘要
+│   ├── lint_narrative.py       # 检查 narrative.json：规矩、原话核对、数字核对
 │   ├── render.py               # stats + narrative → 报告和两张卡
 │   ├── compare.py              # 对照组 / 偏心报告
 │   └── redact.py               # 一键打码
 ├── assets/                     # 三个 HTML 模板
 ├── prompts/普通用户版.md        # 复制粘贴版
-├── web/index.html              # 浏览器版（Pyodide 跑同一套脚本）
+├── web/                        # 浏览器版（index.html + sw.js，Pyodide 跑同一套脚本）
 ├── examples/                   # 模拟数据和产物
-├── docs/img/                   # README 截图
-├── tests/                      # python -m unittest discover -s tests
-└── tools/                      # pack.py 打包 .skill · snapshot.py HTML → PNG
+├── tests/                      # python -m unittest discover -s tests；fixtures/ 是各种导出格式的样本
+├── tools/                      # refresh.py 一键验证 · pack.py 打包 .skill · snapshot.py HTML → PNG
+├── docs/                       # HANDOFF.md 交接文档 · img/ README 截图
+└── .github/workflows/          # CI（3 个系统 × Python 3.8 / 3.12）· 打 tag 自动出 Release
 ```
 
 ### 开发
 
 ```bash
-python -m unittest discover -s tests                 # 35 个测试，含 golden 测试
-python examples/make_sample.py                       # 改了算法要重跑示例
-python scripts/stats.py examples/sample-messages.json --out examples/sample-stats.json --today 2026-08-30 --her-birthday 10-20 --my-birthday 06-03
-python scripts/render.py examples/sample-stats.json examples/sample-narrative.json --out examples/reports
+python tools/refresh.py                              # 一条命令：重生成示例 → 算数 → 校验 → 渲染 → lint → 测试 → 打包同步
+python -m unittest discover -s tests                 # 77 个测试，含 golden 测试和文档口径同步测试
 python tools/snapshot.py                             # 可选：pip install playwright，用本机 Chrome 出 docs/img
-python tools/pack.py                                 # 打 mama-message.skill
 ```
 
-改指标要三处同步：`scripts/stats.py`、`references/metrics.md`、`prompts/普通用户版.md`。细则在 [`CLAUDE.md`](./CLAUDE.md)。
+词表只改 [`references/lexicon.json`](./references/lexicon.json)；公式和阈值只改 `scripts/stats.py` 顶部，再同步 `references/metrics.md`、`types.md`、`prompts/普通用户版.md`，`tests/test_docs_sync.py` 会比对数字。细则在 [`CLAUDE.md`](./CLAUDE.md)，交接文档在 [`docs/HANDOFF.md`](./docs/HANDOFF.md)。
 
 ---
 

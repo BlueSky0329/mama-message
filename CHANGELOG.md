@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## v0.5 · 2026-09-04
+
+架构整理，示例基线数字不变（同一份模拟数据，stats.json 逐字段一致，只多了 `schema` / `lexicon` 两个键）。
+
+改：
+- `stats.py` 拆成 `Ctx` + 一组 `sec_xxx(ctx, S)`，每个指标能单独算、单独测；不再改写传入的 messages；主题分类每条只算一次
+- 词表外置到 `references/lexicon.json`（主题、收尾语、追问语、健康词、停用字……），加 `exclude` 机制挡"冷静"命中"冷"这类误判；`stats.py --lexicon` 可换词表；公式和阈值收进 `FORMULA` / `*_RULES`
+- 短回复的定义写诚实了：就是"≤ 3 字"，原来代码里那个词集合每个词都不超过三个字，等于没起作用；三份文档各列一套词表（22 / 18 / 16 个）的漂移一并清掉
+- 三份契约加 `schema` 版本号（`_common.SCHEMA_VERSION`）；`render.py` 拒绝旧版 stats.json 并提示重跑；`validate.py` 拒绝更新版本的 messages.json
+- `parse_export.py` 改成适配器：按内容识别格式（.txt 里装 JSON 也认），`source_detail` 记录来源和版本（WeFlow 头里的版本号不再丢）、编码；`--her` 写错时报名字清单而不是把所有消息都算成"我"；`--pronoun` 对 messages.json 直通也生效
+- 公共模块 `scripts/_common.py`：UTF-8 输出、JSON 读写、时间解析与格式化、类型枚举（原来在四个文件里各写一份）、编码嗅探、词表加载
+- 所有脚本 `--help` 带模块说明
+- 发布副本改由 `tools/pack.py --sync-to` 一并同步 `docs/HANDOFF.md`；交接文档进仓库
+
+修：
+- GB18030 / UTF-16 编码的导出文件被 `errors="ignore"` 吞掉后解析出 0 条、还误导去改 `--her`；现在自动识别编码（`redact.py` 同样）
+- CSV 里的毫秒时间戳直接崩（JSON 路径早就处理了，CSV 没有）
+- `--her-birthday 02-29` 或 `13-45` 崩：现在非闰年跳过、非法日期给人话错误
+- `render.py` 读缺 `her_early_count` 的旧 stats.json KeyError
+- 测试里的 ResourceWarning（文件没关）
+
+加：
+- `scripts/lint_narrative.py`：narrative.json 的规矩检查——必填字段、字数、感叹号、黑名单（从 writing-rules.md 读，一处定义）、评判词，**核对引号里的原话是不是记录里真有的、数字能不能在 stats.json 里找到**。SKILL 第六步、网页第三步都接了
+- `tests/test_docs_sync.py`：metrics.md / types.md / 普通用户版 里复述的公式、阈值、词表和代码比对，"三处同步"从规矩变成测试
+- `tests/fixtures/`：WeFlow JSON / TXT / weclone CSV、留痕 CSV、两行式、单行式、GBK、UTF-16、毫秒时间戳、扩展名骗人的样本，`tests/test_parse_export.py` 逐个核对
+- `tools/refresh.py`：一条命令跑完"改完之后要做的事"，打印示例基线变化，自动改 README 里的测试数量
+- `.github/workflows/ci.yml`（ubuntu / windows / macos × Python 3.8 / 3.12，并检查示例产物没漂移）、`release.yml`（打 tag 自动出 Release 附件：.skill、三个 HTML、README、SKILL、普通用户版、HANDOFF）
+- 浏览器版：Pyodide 下载源竞速（jsDelivr 主站 / Fastly / Gcore / Quantil 节点 + unpkg，探的是 python_stdlib.zip 本身，失败顺延下一个；npmmirror 对 .zip 返回 451 所以不用），带进度提示；`web/sw.js` 缓存运行时，"断网也能用"成立；第一步加"只取最近 N 天 / 起止日期"；第三步粘回 narrative 后先 lint；文件名不再直接进 innerHTML
+- `metrics.md` 加「时区」一节：时段按运行脚本那台机器的时区，海外用户会偏
+
 ## v0.4 · 2026-08-31
 
 修：
