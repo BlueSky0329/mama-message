@@ -1,49 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-全链路和边界测试。只用标准库。
+统计引擎、渲染、校验、打码的全链路和边界测试。只用标准库。
 
   python -m unittest discover -s tests          # 在仓库根目录跑
   python -m unittest discover -s tests -v
+
+导出格式解析在 test_parse_export.py，文字 lint 在 test_lint.py，文档与代码口径一致在 test_docs_sync.py。
 """
 import copy
 import json
 import os
-import subprocess
-import sys
 import tempfile
 import unittest
 from datetime import date
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPTS = os.path.join(ROOT, "scripts")
-EXAMPLES = os.path.join(ROOT, "examples")
-sys.path.insert(0, SCRIPTS)
+from helpers import SAMPLE, SAMPLE_NARR, SAMPLE_STATS, SCRIPTS, base, load, msg, read, run, save
 
-import stats        # noqa: E402
-import validate     # noqa: E402
-import redact       # noqa: E402
-
-SAMPLE = os.path.join(EXAMPLES, "sample-messages.json")
-SAMPLE_STATS = os.path.join(EXAMPLES, "sample-stats.json")
-SAMPLE_NARR = os.path.join(EXAMPLES, "sample-narrative.json")
-ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
-
-
-def load(p):
-    return json.load(open(p, encoding="utf-8"))
-
-
-def run(script, *args, cwd=ROOT):
-    return subprocess.run([sys.executable, os.path.join(SCRIPTS, script), *args],
-                          cwd=cwd, env=ENV, capture_output=True, text=True, encoding="utf-8")
-
-
-def msg(ts, sender, content="", type_="text", dur=None):
-    return {"ts": ts, "sender": sender, "type": type_, "content": content, "dur": dur}
-
-
-def base(messages):
-    return {"me": "我", "her": "妈妈", "her_pronoun": "她", "source": "test", "messages": messages}
+import _common     # noqa: E402
+import redact      # noqa: E402
+import stats       # noqa: E402
+import validate    # noqa: E402
 
 
 class StatsOnSample(unittest.TestCase):
@@ -55,7 +31,7 @@ class StatsOnSample(unittest.TestCase):
         for k in ("care", "short", "forgive"):
             s = self.S["index"][k]["score"]
             self.assertTrue(s is None or 0 <= s <= 100, k)
-        self.assertIn(self.S["rating"]["label"], {"模范子女", "还行", "欠一个电话", "欠一顿饭", "欠一次回家"})
+        self.assertIn(self.S["rating"]["label"], {label for _, label in stats.RATING_BANDS})
 
     def test_counts_consistent(self):
         b = self.S["basics"]
@@ -69,25 +45,41 @@ class StatsOnSample(unittest.TestCase):
         self.assertAlmostEqual(sum(c["pct"] for c in self.S["composition"]), 100, delta=1.5)
         self.assertEqual(sum(self.S["hours"]["her"]), b["her"])
 
-    def test_no_private_keys_leaked(self):
+    def test_schema_and_lexicon_version(self):
+        self.assertEqual(self.S["schema"], _common.SCHEMA_VERSION)
+        self.assertEqual(self.S["lexicon"], _common.load_lexicon()["version"])
+
+    def test_input_not_mutated(self):
         data = load(SAMPLE)
+        before = json.dumps(data, ensure_ascii=False, sort_keys=True)
         stats.compute(data, today=date(2026, 8, 30))
-        for m in data["messages"]:
-            for k in ("_i", "_dt", "_chars"):
-                self.assertNotIn(k, m)
+        self.assertEqual(before, json.dumps(data, ensure_ascii=False, sort_keys=True))
+        # 缺 type / content 的消息也不会被补写回去
+        d2 = {"me": "我", "her": "妈妈", "messages": [{"ts": "2026-05-01T08:00:00", "sender": "her"}]}
+        stats.compute(d2, today=date(2026, 8, 30))
+        self.assertEqual(d2["messages"][0], {"ts": "2026-05-01T08:00:00", "sender": "her"})
 
     def test_no_transfer_amount_in_output(self):
         blob = json.dumps(self.S, ensure_ascii=False)
         self.assertNotIn("1000 元", blob)
 
     def test_examples_in_sync(self):
-        """examples/sample-stats.json 必须是当前 stats.py 对 sample-messages.json 的输出（改了算法记得重跑）"""
+        """examples/sample-stats.json 必须是当前 stats.py 对 sample-messages.json 的输出（改了算法跑 python tools/refresh.py）"""
         golden = load(SAMPLE_STATS)
         today = date.fromisoformat(golden["today"])
         S = stats.compute(load(SAMPLE), today=today, her_birthday="10-20", my_birthday="06-03")
         S["today"] = golden["today"]
         self.assertEqual(json.loads(json.dumps(S, ensure_ascii=False)), golden,
-                         "跑 python scripts/stats.py examples/sample-messages.json --out examples/sample-stats.json --today %s --her-birthday 10-20 --my-birthday 06-03" % golden["today"])
+                         "跑 python tools/refresh.py 重新生成示例（今天用 %s）" % golden["today"])
+
+    def test_sections_are_callable_alone(self):
+        """拆分后每一段可以单独算：给 Ctx 就行，不用跑完整个 compute"""
+        ctx = stats.Ctx(load(SAMPLE), _common.load_lexicon(), today=date(2026, 8, 30))
+        S = {"warnings": []}
+        S["basics"] = stats.sec_basics(ctx, S)
+        S["opens"] = stats.sec_opens(ctx, S)
+        self.assertEqual(S["opens"]["her"] + S["opens"]["me"], len(ctx.d["her_opens"]) + len(ctx.d["my_opens"]))
+        self.assertEqual(S["basics"]["total"], 294)
 
 
 class StatsEdgeCases(unittest.TestCase):
@@ -144,12 +136,12 @@ class StatsEdgeCases(unittest.TestCase):
         self.assertEqual(S["short"]["replies"], 2)      # “嗯”“在忙”；隔 3 天的“好”不算
         self.assertEqual(S["short"]["count"], 2)
 
-    def test_short_reply_exclusions(self):
-        ms = [msg("2026-05-01T08:00:00", "her", "吃饭了吗"), msg("2026-05-01T08:01:00", "me", "谢谢妈"),
-              msg("2026-05-02T08:00:00", "her", "吃饭了吗"), msg("2026-05-02T08:01:00", "me", "[OK]"),
-              msg("2026-05-03T08:00:00", "her", "吃饭了吗"), msg("2026-05-03T08:01:00", "me", "好的")]
-        S = stats.compute(base(ms), today=date(2026, 8, 30))
-        self.assertEqual(S["short"]["count"], 1)
+    def test_short_reply_rule(self):
+        """短回复 = ≤ 3 字、不是表情、不含谢/爱/想、不以妈/爸结尾；4 字就不是"""
+        lex = _common.load_lexicon()
+        for text, expect in (("嗯", True), ("好的", True), ("知道了", True), ("ok", True), ("OK！", True),
+                             ("好的好的", False), ("谢谢妈", False), ("想你", False), ("好妈", False), ("[OK]", False), ("", False)):
+            self.assertEqual(stats.is_short({"content": text}, lex), expect, text)
 
     def test_early_late_split(self):
         ms = [msg("2026-05-01T07:00:00", "her", "早"), msg("2026-05-01T23:30:00", "her", "睡了吗"),
@@ -173,6 +165,42 @@ class StatsEdgeCases(unittest.TestCase):
         self.assertNotIn("母亲节", names)
         self.assertNotIn("母亲节", {c["name"] for c in S["countdown"]})
 
+    def test_birthday_validation(self):
+        data = load(SAMPLE)
+        with self.assertRaises(ValueError):
+            stats.compute(data, today=date(2026, 8, 30), her_birthday="13-45")
+        with self.assertRaises(ValueError):
+            stats.compute(data, today=date(2026, 8, 30), her_birthday="生日")
+        S = stats.compute(data, today=date(2026, 8, 30), her_birthday="02-29")   # 非闰年跳过，不崩
+        self.assertNotIn("她的生日", {f["name"] for f in S["festivals"]})
+        r = run("stats.py", SAMPLE, "--out", os.devnull, "--her-birthday", "13-45", "--quiet")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("生日", r.stdout)
+
+    def test_lexicon_exclude_blocks_false_positive(self):
+        """“冷静”不算天气；“多穿”还是天气。词表可以整份替换"""
+        ms = [msg("2026-05-01T08:00:00", "her", "你冷静一下"), msg("2026-05-02T08:00:00", "her", "降温了 多穿点")]
+        S = stats.compute(base(ms), today=date(2026, 8, 30))
+        self.assertEqual([t for t in S["topics"] if t["topic"] == "天气"][0]["count"], 1)
+        lex = copy.deepcopy(_common.load_lexicon())
+        lex["exclude"] = {}
+        S2 = stats.compute(base(ms), today=date(2026, 8, 30), lexicon=lex)
+        self.assertEqual([t for t in S2["topics"] if t["topic"] == "天气"][0]["count"], 2)
+
+    def test_custom_lexicon_cli(self):
+        with tempfile.TemporaryDirectory() as d:
+            lex = copy.deepcopy(_common.load_lexicon())
+            lex["version"] = 99
+            lp = os.path.join(d, "lex.json")
+            save(lp, lex)
+            out = os.path.join(d, "s.json")
+            r = run("stats.py", SAMPLE, "--out", out, "--today", "2026-08-30", "--lexicon", lp, "--quiet")
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(load(out)["lexicon"], 99)
+            r = run("stats.py", SAMPLE, "--out", out, "--lexicon", os.path.join(d, "nope.json"), "--quiet")
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("词表", r.stdout)
+
 
 class RenderAndCompare(unittest.TestCase):
     def test_render_sample_complete(self):
@@ -182,7 +210,7 @@ class RenderAndCompare(unittest.TestCase):
             for name in ("report", "card-bill", "card-send"):
                 p = os.path.join(d, f"mama-message-{name}.html")
                 self.assertTrue(os.path.exists(p), p)
-                html = open(p, encoding="utf-8").read()
+                html = read(p)
                 self.assertNotIn("{{", html, f"{name} 有没替换的占位符")
                 self.assertNotIn("待写", html, f"{name} 还有待写")
             self.assertNotIn("还缺", r.stdout)
@@ -191,9 +219,25 @@ class RenderAndCompare(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             r = run("render.py", SAMPLE_STATS, "--out", d)
             self.assertEqual(r.returncode, 0, r.stderr)
-            html = open(os.path.join(d, "mama-message-report.html"), encoding="utf-8").read()
+            html = read(os.path.join(d, "mama-message-report.html"))
             self.assertIn("待写", html)
             self.assertIn("还缺", r.stdout)
+
+    def test_render_missing_narrative_file_warns(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = run("render.py", SAMPLE_STATS, os.path.join(d, "nope.json"), "--out", d)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("找不到", r.stdout)
+
+    def test_render_rejects_old_schema(self):
+        with tempfile.TemporaryDirectory() as d:
+            S = load(SAMPLE_STATS)
+            S.pop("schema")
+            sp = os.path.join(d, "old.json")
+            save(sp, S)
+            r = run("render.py", sp, "--out", d)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("重新跑", r.stdout)
 
     def test_render_edge_stats(self):
         """空记录 / 无时间戳的 stats 也要能出 HTML"""
@@ -201,9 +245,21 @@ class RenderAndCompare(unittest.TestCase):
             S = stats.compute(data, today=date(2026, 8, 30))
             with tempfile.TemporaryDirectory() as d:
                 sp = os.path.join(d, "s.json")
-                json.dump(S, open(sp, "w", encoding="utf-8"), ensure_ascii=False)
+                save(sp, S)
                 r = run("render.py", sp, "--out", d)
                 self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_render_escapes_html(self):
+        with tempfile.TemporaryDirectory() as d:
+            N = load(SAMPLE_NARR)
+            N["send_text"] = "<script>alert(1)</script> 今晚 8 点打给你"
+            np_ = os.path.join(d, "n.json")
+            save(np_, N)
+            r = run("render.py", SAMPLE_STATS, np_, "--out", d)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            html = read(os.path.join(d, "mama-message-card-send.html"))
+            self.assertNotIn("<script>alert", html)
+            self.assertIn("&lt;script&gt;", html)
 
     def test_compare(self):
         with tempfile.TemporaryDirectory() as d:
@@ -215,11 +271,20 @@ class RenderAndCompare(unittest.TestCase):
             self.assertIn("差不多", c["verdict"])
 
     def test_stats_cli_prints_utf8(self):
+        import subprocess, sys
         with tempfile.TemporaryDirectory() as d:
             r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "stats.py"), SAMPLE, "--out", os.path.join(d, "s.json"),
-                                "--today", "2026-08-30"], cwd=ROOT, capture_output=True)   # 故意不设 PYTHONIOENCODING
+                                "--today", "2026-08-30"], cwd=os.path.dirname(SCRIPTS), capture_output=True)   # 故意不设 PYTHONIOENCODING
             self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
             self.assertIn("牵挂指数".encode("utf-8"), r.stdout)
+
+    def test_every_cli_has_help_text(self):
+        """--help 要能看懂：至少带模块说明的第一句"""
+        for script, hint in (("parse_export.py", "messages.json"), ("validate.py", "stats.py"), ("stats.py", "统计引擎"),
+                             ("render.py", "HTML"), ("compare.py", "对照组"), ("redact.py", "打码"), ("lint_narrative.py", "写作规矩")):
+            r = run(script, "--help")
+            self.assertEqual(r.returncode, 0, script)
+            self.assertIn(hint, r.stdout, script)
 
 
 class Validate(unittest.TestCase):
@@ -247,160 +312,18 @@ class Validate(unittest.TestCase):
         self.assertIn("金额", wb)
         self.assertIn("dur", wb)
 
+    def test_future_schema_rejected(self):
+        data = base([msg("2026-05-01T08:00:00", "her", "吃饭了吗")])
+        data["schema"] = _common.SCHEMA_VERSION + 1
+        errors, _, _ = validate.check(data)
+        self.assertTrue(any("schema" in e for e in errors))
+
     def test_cli_exit_codes(self):
         with tempfile.TemporaryDirectory() as d:
             bad = os.path.join(d, "bad.json")
-            json.dump(base([msg("x", "me", "嗯")]), open(bad, "w", encoding="utf-8"), ensure_ascii=False)
+            save(bad, base([msg("x", "me", "嗯")]))
             self.assertEqual(run("validate.py", bad).returncode, 1)
             self.assertEqual(run("validate.py", SAMPLE).returncode, 0)
-
-
-class ParseExport(unittest.TestCase):
-    def _parse(self, text, *extra):
-        with tempfile.TemporaryDirectory() as d:
-            src, out = os.path.join(d, "chat.txt"), os.path.join(d, "m.json")
-            open(src, "w", encoding="utf-8").write(text)
-            r = run("parse_export.py", src, "--her", "妈妈", "--out", out, *extra)
-            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            return load(out)
-
-    def test_two_line_format(self):
-        data = self._parse("2026-05-12 21:03:14 妈妈\n吃饭了吗\n\n2026-05-12 21:30:00 我\n吃了\n\n2026-05-13 07:10:00 妈妈\n[语音] 23秒\n")
-        ms = data["messages"]
-        self.assertEqual([m["sender"] for m in ms], ["her", "me", "her"])
-        self.assertEqual(ms[0]["ts"], "2026-05-12T21:03:14")
-        self.assertEqual(ms[2]["type"], "voice")
-        self.assertEqual(ms[2]["dur"], 23)
-
-    def test_one_line_format(self):
-        data = self._parse("2026/5/12 21:03 妈妈: 吃饭了吗\n2026/5/12 21:30 我: [图片]\n2026/5/12 21:31 我: [转账] 转账 200 元\n")
-        ms = data["messages"]
-        self.assertEqual(ms[0]["ts"], "2026-05-12T21:03:00")
-        self.assertEqual(ms[1]["type"], "image")
-        self.assertEqual(ms[2]["type"], "transfer")
-
-    def test_native_json_passthrough(self):
-        with tempfile.TemporaryDirectory() as d:
-            out = os.path.join(d, "m.json")
-            r = run("parse_export.py", SAMPLE, "--out", out)
-            self.assertEqual(r.returncode, 0, r.stderr)
-            self.assertEqual(len(load(out)["messages"]), 294)
-
-    def test_clip_by_date(self):
-        from parse_export import clip
-        ms = [{"ts": f"2026-05-{d:02d}T08:00:00"} for d in range(1, 11)] + [{"ts": None}]
-        keep, dropped, s0, s1 = clip(ms, since="2026-05-08")
-        self.assertEqual(len(keep), 3)            # 08、09、10；没时间戳的切片时丢掉
-        self.assertEqual(dropped, 8)
-        keep, _, _, _ = clip(ms, since="2026-05-03", until="2026-05-05")
-        self.assertEqual(len(keep), 3)
-        keep, _, s0, _ = clip(ms, last_days=3)    # 相对最后一条（05-10），不是今天
-        self.assertEqual([m["ts"][:10] for m in keep], ["2026-05-08", "2026-05-09", "2026-05-10"])
-        self.assertEqual(s0, "2026-05-08")
-        keep, dropped, _, _ = clip(ms)            # 不给条件就原样返回，无时间戳的也留着
-        self.assertEqual((len(keep), dropped), (11, 0))
-
-    def test_clip_cli(self):
-        with tempfile.TemporaryDirectory() as d:
-            out = os.path.join(d, "m.json")
-            r = run("parse_export.py", SAMPLE, "--out", out, "--last-days", "30")
-            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            self.assertEqual(len(load(out)["messages"]), 44)
-            self.assertEqual(run("parse_export.py", SAMPLE, "--out", out, "--since", "2030-01-01").returncode, 1)
-            self.assertEqual(run("parse_export.py", SAMPLE, "--out", out, "--since", "abc").returncode, 1)
-
-    def test_bad_timestamp_does_not_crash(self):
-        from parse_export import norm_ts
-        self.assertIsNone(norm_ts("2026-13-45 99:99"))
-        self.assertIsNone(norm_ts("昨天"))
-        self.assertEqual(norm_ts("2026/5/1 8:05"), "2026-05-01T08:05:00")
-
-
-class WeFlowFormats(unittest.TestCase):
-    """WeFlow（863108316/WeFlow）三种导出。字段口径来自它的 exportService.ts。"""
-
-    def _cli(self, path, *args):
-        with tempfile.TemporaryDirectory() as d:
-            out = os.path.join(d, "m.json")
-            r = run("parse_export.py", path, "--call", "妈妈", "--out", out, *args)
-            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            return load(out), open(out, encoding="utf-8").read()
-
-    def test_weflow_detailed_json(self):
-        from datetime import datetime as dt
-        t0 = int(dt(2026, 5, 12, 21, 3, 14).timestamp())
-        def wf(off, is_send, lt, content, **extra):
-            d = {"localId": 1, "createTime": t0 + off, "formattedTime": "", "type": "文本消息",
-                 "localType": lt, "content": content, "isSend": is_send,
-                 "senderUsername": "wxid_x", "senderDisplayName": "我" if is_send else "妈妈"}
-            d.update(extra)
-            return d
-        payload = {"weflow": {"version": "1.0.3", "generator": "WeFlow"},
-                   "session": {"displayName": "妈妈", "type": "私聊"},
-                   "messages": [
-                       wf(0, 0, 1, "吃饭了吗"),
-                       wf(60, 1, 1, "吃了"),
-                       wf(120, 0, 34, "[语音消息]"),
-                       wf(180, 0, 47, None),
-                       wf(240, 0, 49, "[链接] 久坐伤腰 三个动作缓解\nhttps://x"),
-                       wf(300, 0, 49, "[转账] (妈妈转账给我) ￥1000.00"),
-                       wf(360, 0, 50, "[语音通话] 通话时长 03:25"),
-                       wf(420, 0, 10000, "对方撤回了一条消息"),
-                       wf(480, 0, 10000, "你已添加了妈妈"),          # 系统消息，应被跳过
-                       wf(540, 0, 49, None, linkTitle="这几种菜千万不能一起吃"),
-                   ]}
-        with tempfile.TemporaryDirectory() as d:
-            src = os.path.join(d, "私聊_妈妈.json")
-            json.dump(payload, open(src, "w", encoding="utf-8"), ensure_ascii=False)
-            data, raw = self._cli(src)
-        ms = data["messages"]
-        self.assertEqual(data["her"], "妈妈")
-        self.assertEqual(len(ms), 9)                                  # 系统消息被跳过
-        self.assertEqual(ms[0]["ts"], "2026-05-12T21:03:14")          # Unix 秒 → 本地时间
-        self.assertEqual([m["sender"] for m in ms[:2]], ["her", "me"])  # isSend
-        self.assertEqual([m["type"] for m in ms],
-                         ["text", "text", "voice", "sticker", "link", "transfer", "call_voice", "recall", "link"])
-        self.assertEqual(ms[5]["content"], "转账")                     # 金额不落地
-        self.assertNotIn("￥", raw)
-        self.assertNotIn("1000.00", raw)
-        self.assertEqual(ms[6]["dur"], 205)                           # 通话时长 03:25
-        self.assertIn("这几种菜", ms[8]["content"])                    # content 空时用 linkTitle
-
-    def test_weflow_txt(self):
-        text = ("2026-05-12 21:03:14 '妈妈'\n吃饭了吗\n\n"
-                "2026-05-12 21:30:00 '我'\n吃了\n\n"
-                "2026-05-13 08:00:00 '妈妈'\n[语音通话] 通话时长 02:00\n\n")
-        with tempfile.TemporaryDirectory() as d:
-            src = os.path.join(d, "chat.txt")
-            open(src, "w", encoding="utf-8").write(text)
-            data, _ = self._cli(src, "--her", "妈妈", "--me", "我")
-        ms = data["messages"]
-        self.assertEqual([m["sender"] for m in ms], ["her", "me", "her"])   # 引号已剥
-        self.assertEqual(ms[2]["type"], "call_voice")
-        self.assertEqual(ms[2]["dur"], 120)
-
-    def test_weclone_csv_utc_to_local(self):
-        from datetime import datetime as dt, timezone
-        rows = ('\ufeffid,MsgSvrID,type_name,is_sender,talker,msg,src,CreateTime\r\n'
-                '1,1,text,0,妈妈,吃饭了吗,,2026-05-12T13:03:14.000Z\r\n'
-                '2,2,voice,1,我,[语音消息],media/voices/a.wav,2026-05-12T13:30:00.000Z\r\n'
-                '3,3,text,0,妈妈,"[转账] (妈妈转账给我) ￥50.00",,2026-05-13T01:00:00.000Z\r\n')
-        with tempfile.TemporaryDirectory() as d:
-            src = os.path.join(d, "私聊_妈妈.csv")
-            open(src, "w", encoding="utf-8", newline="").write(rows)
-            data, raw = self._cli(src)
-        ms = data["messages"]
-        expect = dt.fromisoformat("2026-05-12T13:03:14+00:00").astimezone().strftime("%Y-%m-%dT%H:%M:%S")
-        self.assertEqual(ms[0]["ts"], expect)                          # UTC → 本地
-        self.assertEqual([m["sender"] for m in ms], ["her", "me", "her"])
-        self.assertEqual([m["type"] for m in ms], ["text", "voice", "transfer"])
-        self.assertEqual(ms[2]["content"], "转账")
-        self.assertNotIn("50.00", raw)
-
-    def test_redact_yuan_amount(self):
-        out = redact.redact("[转账] (妈妈转账给我) ￥1,000.50 和 ¥88", {}, [])
-        self.assertNotIn("1,000", out)
-        self.assertNotIn("88", out)
 
 
 class Redact(unittest.TestCase):
@@ -414,6 +337,64 @@ class Redact(unittest.TestCase):
         self.assertNotIn("a@b.com", out)
         self.assertIn("我", out)
         self.assertNotIn("张小明", out)
+
+    def test_yuan_amount(self):
+        out = redact.redact("[转账] (妈妈转账给我) ￥1,000.50 和 ¥88", {}, [])
+        self.assertNotIn("1,000", out)
+        self.assertNotIn("88", out)
+
+    def test_cli_reads_gbk_writes_utf8(self):
+        from helpers import FIXTURES
+        import shutil
+        with tempfile.TemporaryDirectory() as d:
+            src = os.path.join(d, "gbk.txt")
+            shutil.copyfile(os.path.join(FIXTURES, "gbk.txt"), src)
+            r = run("redact.py", src, "--map", "妈妈=母亲")
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn("gb18030", r.stdout)
+            out = read(os.path.join(d, "gbk.redacted.txt"))
+            self.assertIn("母亲", out)
+            self.assertNotIn("妈妈", out)
+
+
+class Common(unittest.TestCase):
+    def test_epoch_to_local_seconds_and_ms(self):
+        from datetime import datetime
+        t = int(datetime(2026, 5, 12, 21, 3, 14).timestamp())
+        self.assertEqual(_common.epoch_to_local(t), "2026-05-12 21:03:14")
+        self.assertEqual(_common.epoch_to_local(str(t * 1000)), "2026-05-12 21:03:14")
+        self.assertIsNone(_common.epoch_to_local("abc"))
+        self.assertIsNone(_common.epoch_to_local(10 ** 18))
+
+    def test_read_text_sniffs_encoding(self):
+        with tempfile.TemporaryDirectory() as d:
+            for enc, name in (("utf-8", "utf-8"), ("utf-8-sig", "utf-8-sig"), ("gb18030", "gb18030"), ("utf-16", "utf-16")):
+                p = os.path.join(d, enc + ".txt")
+                with open(p, "w", encoding=enc, newline="\n") as f:
+                    f.write("妈妈：吃饭了吗\n")
+                text, got = _common.read_text(p)
+                self.assertEqual(got, name)
+                self.assertEqual(text, "妈妈：吃饭了吗\n")
+
+    def test_parse_mmdd(self):
+        self.assertEqual(_common.parse_mmdd("10-20"), (10, 20))
+        for bad in ("13-45", "1020", "x-y", ""):
+            with self.assertRaises(ValueError):
+                _common.parse_mmdd(bad)
+        self.assertIsNone(_common.safe_date(2026, 2, 29))
+        self.assertEqual(str(_common.safe_date(2028, 2, 29)), "2028-02-29")
+
+    def test_fmt_delta(self):
+        self.assertEqual(_common.fmt_delta(None), "—")
+        self.assertEqual(_common.fmt_delta(180), "3 分钟")
+        self.assertEqual(_common.fmt_delta(5400), "1 小时 30 分")
+        self.assertEqual(_common.fmt_delta(3 * 86400), "3 天")
+
+    def test_lexicon_has_all_keys(self):
+        lex = _common.load_lexicon()
+        self.assertEqual(set(lex["care_topics"]) - set(lex["topics"]), set())
+        for topic in lex["exclude"]:
+            self.assertTrue(topic in lex["topics"] or topic in lex, topic)
 
 
 if __name__ == "__main__":
