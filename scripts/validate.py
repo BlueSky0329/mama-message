@@ -17,39 +17,22 @@ import json
 import re
 import sys
 from collections import Counter
-from datetime import datetime
 
-for _s in (sys.stdout, sys.stderr):
-    if hasattr(_s, "reconfigure"):
-        try:
-            _s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
+from _common import SCHEMA_VERSION, TYPES, parse_ts, setup_utf8
 
-TYPES = {"text", "voice", "image", "video", "sticker", "transfer", "link", "call_voice", "call_video",
-         "recall", "location", "file", "other"}
-TS_FORMATS = ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M")
+setup_utf8()
+
 AMOUNT_RE = re.compile(r"\d+(?:\.\d+)?\s*(?:元|块|万|¥|￥)|[¥￥]\s*\d")
 
 
-def parse_ts(s):
-    if s is None:
-        return None
-    if not isinstance(s, str):
-        return False
-    s = s.strip().replace("/", "-")
-    for fmt in TS_FORMATS:
-        try:
-            return datetime.strptime(s, fmt)
-        except ValueError:
-            continue
-    return False   # 有值但认不出来
-
-
 def check(data):
+    """返回 (errors, warnings, summary)。errors 非空 = stats.py 会算错或崩。"""
     errors, warnings = [], []
     if not isinstance(data, dict):
         return ["顶层不是对象（应该是 {\"me\": …, \"her\": …, \"messages\": […]}）"], [], None
+    schema = data.get("schema")
+    if isinstance(schema, int) and schema > SCHEMA_VERSION:
+        errors.append(f"这个文件是 schema {schema}，本版脚本只认到 {SCHEMA_VERSION}，更新一下仓库再跑")
     for k in ("me", "her", "messages"):
         if k not in data:
             errors.append(f"缺少顶层字段 {k}")
@@ -94,15 +77,17 @@ def check(data):
             amounts.append(i + 1)
         if t in ("voice", "call_voice", "call_video") and not m.get("dur"):
             missing_dur += 1
-        dt = parse_ts(m.get("ts"))
-        if dt is False:
-            bad_ts.append((i + 1, m.get("ts")))
-        elif dt is None:
+        ts = m.get("ts")
+        if ts is None:
             undated += 1
         else:
-            dated.append((i, dt))
-        key = (s, t, c.strip(), m.get("ts"))
-        if key == prev_key and (c.strip() or m.get("ts")):
+            dt = parse_ts(ts)
+            if dt is None:
+                bad_ts.append((i + 1, ts))
+            else:
+                dated.append((i, dt))
+        key = (s, t, c.strip(), ts)
+        if key == prev_key and (c.strip() or ts):
             dups.append(i + 1)
         prev_key = key
 
@@ -141,12 +126,13 @@ def check(data):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("path")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("path", help="messages.json")
     ap.add_argument("--strict", action="store_true", help="有警告也失败")
     a = ap.parse_args()
     try:
-        data = json.load(open(a.path, encoding="utf-8"))
+        with open(a.path, encoding="utf-8") as f:
+            data = json.load(f)
     except json.JSONDecodeError as e:
         print(f"✗ 不是合法的 JSON：{e}")
         sys.exit(1)

@@ -10,24 +10,18 @@
   reports/mama-message-card-bill.html   亲情账单卡（给自己发）
   reports/mama-message-card-send.html   发给她的卡
 
-narrative.json 缺哪个字段就留一个明显的占位，不会报错。字段说明见 references/report-template.md。
+narrative.json 缺哪个字段就留一个明显的占位，不会报错。字段说明见 references/report-template.md；
+写完先跑 scripts/lint_narrative.py 查规矩。stats.json 必须是这一版 stats.py 的输出（看 schema），旧的重新跑一遍。
+只用标准库。
 """
 import argparse
 import html
-import json
 import os
 import sys
 
-# Windows 默认控制台是 GBK，打不出 emoji；统一把输出切到 UTF-8（其他平台无影响）
-for _s in (sys.stdout, sys.stderr):
-    if hasattr(_s, "reconfigure"):
-        try:
-            _s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
+from _common import ASSETS, SCHEMA_VERSION, load_json, setup_utf8
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ASSETS = os.path.join(os.path.dirname(HERE), "assets")
+setup_utf8()
 
 
 def esc(s):
@@ -84,19 +78,15 @@ def weekly_svg(weekly):
     return "".join(parts)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("stats")
-    ap.add_argument("narrative", nargs="?", default=None)
-    ap.add_argument("--out", default="reports")
-    a = ap.parse_args()
-    S = json.load(open(a.stats, encoding="utf-8"))
-    N = json.load(open(a.narrative, encoding="utf-8")) if a.narrative and os.path.exists(a.narrative) else {}
-    os.makedirs(a.out, exist_ok=True)
+REQUIRED = ("she_means", "send_text", "dictionary", "tonight", "replies", "call_openers", "type_lines")
 
+
+def build_values(S, N):
+    """stats + narrative → 模板占位符的值。narrative 缺字段就用〔待写〕或从 stats 自动拼。"""
     p = S["pronoun"]; b = S["basics"]; ix = S["index"]
     her_name = S["her_name"]
     ph = lambda key: N.get(key) or f"〔待写：{key}〕"
+    hours = S["hours"]
 
     # 六个数字
     r = S["reply"]["me"]
@@ -107,7 +97,7 @@ def main():
         f"<li><span><b>{p}最长的一条</b> {lg.get('chars', '—')} 字：“{esc(lg.get('content', ''))}”<small>你回了 {lg.get('reply_chars') if lg.get('reply_chars') is not None else '—'} 字：“{esc(lg.get('reply') or '没有回复')}”</small></span></li>",
         f"<li><span><b>你的“嗯 / 好 / 知道了”</b> {S['short']['count']} 条，占你全部回复的 {round(100 * (S['short']['ratio'] or 0))}%<small>" + "、".join(f"{esc(t[0])}×{t[1]}" for t in S["short"]["top"][:4]) + "</small></span></li>",
         f"<li><span><b>{p}最常问的三件事</b><small>" + " ／ ".join(f"{esc(t['topic'])} {t['count']} 次“{esc(t['example'])}”" for t in S["topics"][:3]) + "</small></span></li>",
-        f"<li><span><b>{p}最常在</b> {esc(S['hours']['her_peak'] or '记录不够')} 找你<small>你最常在 {esc(S['hours']['me_peak'] or '—')} 回</small></span></li>",
+        f"<li><span><b>{p}最常在</b> {esc(hours['her_peak'] or '记录不够')} 找你<small>你最常在 {esc(hours['me_peak'] or '—')} 回</small></span></li>",
     ]
 
     comp = S["composition"][:8]
@@ -152,16 +142,19 @@ def main():
     balance = N.get("bill_balance") or f"欠 {bill['unanswered']} 条回复、1 个电话"
     countdown = "".join(f'<span>{esc(c["name"])} 还有 {c["days"]} 天</span>' for c in S["countdown"])
     cd0 = S["countdown"][0] if S["countdown"] else None
+    lines = N.get("index_lines", {})
 
-    values = {
+    return {
         "TITLE": esc(N.get("title") or f"你和{her_name}的聊天报告"),
         "PRONOUN": p,
         "RANGE_LINE": (f"{b['first']} 至 {b['last']} · {b['span_days']} 天 · " if b.get("first") else "时间范围未知（没有时间戳）· ") + f"共 {b['total']} 条（{p} {b['her']} / 你 {b['me']}）",
         "COUNTDOWN": countdown,
-        "CARE_SCORE": ix["care"]["score"], "CARE_W": bar_w(ix["care"]["score"]), "CARE_LINE": esc(N.get("index_lines", {}).get("care") or f"{p}发起了 {round(100 * (S['opens']['her_ratio'] or 0))}% 的对话，{p}有 {S['hours']['her_early_count']} 条是早上 8 点前发的、{S['hours'].get('her_late_count', 0)} 条是晚上 10 点后发的"),
-        "SHORT_SCORE": ix["short"]["score"], "SHORT_W": bar_w(ix["short"]["score"]), "SHORT_LINE": esc(N.get("index_lines", {}).get("short") or f"你 {S['short']['count']} 条回复不超过三个字，最长一次 {r['max']} 没回"),
+        "CARE_SCORE": ix["care"]["score"], "CARE_W": bar_w(ix["care"]["score"]),
+        "CARE_LINE": esc(lines.get("care") or f"{p}发起了 {round(100 * (S['opens']['her_ratio'] or 0))}% 的对话，{p}有 {hours.get('her_early_count', 0)} 条是早上 8 点前发的、{hours.get('her_late_count', 0)} 条是晚上 10 点后发的"),
+        "SHORT_SCORE": ix["short"]["score"], "SHORT_W": bar_w(ix["short"]["score"]),
+        "SHORT_LINE": esc(lines.get("short") or f"你 {S['short']['count']} 条回复不超过三个字，最长一次 {r['max']} 没回"),
         "FORGIVE_SCORE": ix["forgive"]["score"] if ix["forgive"]["score"] is not None else "—", "FORGIVE_W": bar_w(ix["forgive"]["score"]),
-        "FORGIVE_LINE": esc(N.get("index_lines", {}).get("forgive") or (f"你没回的 {S['unanswered']['count']} 次里，有 {S['unanswered']['reopened_by_her']} 次是{p}自己先开口了下一次" if S["unanswered"]["count"] else f"{p}没有被你晾过一整天")),
+        "FORGIVE_LINE": esc(lines.get("forgive") or (f"你没回的 {S['unanswered']['count']} 次里，有 {S['unanswered']['reopened_by_her']} 次是{p}自己先开口了下一次" if S["unanswered"]["count"] else f"{p}没有被你晾过一整天")),
         "SIX_ROWS": "".join(six),
         "COMPOSITION_ROWS": comp_rows, "EMOJI_LINE": emoji_line,
         "MOTHER_TYPE": esc(S["mother_type"]["primary"]), "MOTHER_TYPE_SUB": esc(f"副型：{S['mother_type']['secondary']}" if S["mother_type"]["secondary"] else ""),
@@ -172,7 +165,7 @@ def main():
         "DICT_ROWS": dict_rows, "FESTIVAL_ROWS": fest_rows, "UNANSWERED_BUBBLES": bubbles,
         "FORWARD_LINE": esc(forward_line), "FORWARD_TITLES": forward_titles,
         "SIGNAL_ROWS": sig_rows,
-        "HOURS_SVG": hours_svg(S["hours"]["her"], S["hours"]["me"]), "WEEKLY_SVG": weekly_svg(S["weekly"]),
+        "HOURS_SVG": hours_svg(hours["her"], hours["me"]), "WEEKLY_SVG": weekly_svg(S["weekly"]),
         "DAYS_SINCE_MY_OPEN": dsm, "DAYS_SINCE_HER_OPEN": dsh,
         "SHE_MEANS": "".join(f"<p>{esc(para)}</p>" for para in str(ph("she_means")).split("\n") if para.strip()),
         "TONIGHT_ROWS": tonight_rows, "REPLY_ROWS": reply_rows, "CALL_OPENERS": openers,
@@ -185,13 +178,35 @@ def main():
         "FOOTNOTE": esc(N.get("footnote") or f"基于 {b['total']} 条记录，其中 {b['with_ts']} 条有时间戳；回复间隔基于 {r['n']} 对有时间戳的消息，取中位数；语音不计字数；转账只记次数。这是一份统计，不是评判。"),
     }
 
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("stats", help="stats.py 的输出")
+    ap.add_argument("narrative", nargs="?", default=None, help="AI 写的 narrative.json（可省，先看数字版）")
+    ap.add_argument("--out", default="reports", help="输出目录")
+    a = ap.parse_args()
+    S = load_json(a.stats)
+    if S.get("schema") != SCHEMA_VERSION:
+        print(f"✗ {a.stats} 不是这一版 stats.py 的输出（schema {S.get('schema')!r}，需要 {SCHEMA_VERSION}）。"
+              "重新跑一遍：python scripts/stats.py messages.json --out stats.json")
+        sys.exit(1)
+    N = {}
+    if a.narrative:
+        if os.path.exists(a.narrative):
+            N = load_json(a.narrative)
+        else:
+            print(f"⚠ 找不到 {a.narrative}，先出数字版")
+    os.makedirs(a.out, exist_ok=True)
+    values = build_values(S, N)
     outs = {}
     for name, tpl in (("report", "report.html"), ("card-bill", "card-bill.html"), ("card-send", "card-send.html")):
-        t = open(os.path.join(ASSETS, tpl), encoding="utf-8").read()
+        with open(os.path.join(ASSETS, tpl), encoding="utf-8") as f:
+            t = f.read()
         dst = os.path.join(a.out, f"mama-message-{name}.html")
-        open(dst, "w", encoding="utf-8", newline="\n").write(fill(t, values))
+        with open(dst, "w", encoding="utf-8", newline="\n") as f:
+            f.write(fill(t, values))
         outs[name] = dst
-    missing = [k for k in ("she_means", "send_text", "dictionary", "tonight", "replies", "call_openers", "type_lines") if not N.get(k)]
+    missing = [k for k in REQUIRED if not N.get(k)]
     for k, v in outs.items():
         print(f"→ {v}")
     if missing:
