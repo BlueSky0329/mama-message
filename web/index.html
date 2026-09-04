@@ -21,7 +21,7 @@
   .status{font-size:13px;color:var(--mute);margin-top:10px}
   .status.err{color:var(--red)}
   label{display:block;font-size:13px;color:var(--mute);margin-top:10px}
-  input[type=text],input[type=date],select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:4px}
+  input[type=text],input[type=date],input[type=number],select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:4px}
   textarea{min-height:120px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
@@ -52,6 +52,7 @@
   a{color:#0B7A3E}
   details{margin-top:10px;font-size:13px}
   summary{cursor:pointer;color:var(--mute)}
+  small.hint{display:block;font-size:12px;color:var(--mute);margin-top:6px}
 </style>
 </head>
 <body>
@@ -62,15 +63,15 @@
   <h1>浏览器版</h1>
   <p class="lead">把聊天记录变成一个数字、一个标签、一句可以发出去的话。五步，不用装任何东西。</p>
   <div class="privacy">
-    所有计算都在你的浏览器里完成，页面不向任何服务器发送你的记录。首次打开会从 CDN 下载一个 Python 运行时（约 10 MB，只下载一次），之后断网也能用。
+    所有计算都在你的浏览器里完成，页面不向任何服务器发送你的记录。首次打开会下载一个 Python 运行时（约 10 MB，几个下载源自动选通的），下载过一次之后断网也能用。
     写文字那一步需要你自己把提示词粘到任意 AI 里——粘到谁那儿，记录就发给了谁，这一点页面管不了。
   </div>
-  <div class="status" id="boot">正在加载 Python 运行时…</div>
+  <div class="status" id="boot">正在准备…</div>
 </section>
 
 <section class="card" id="s1">
   <h2><span class="n">1</span>把记录放进来</h2>
-  <p class="lead">导出文件（WeFlow / 留痕 / WeChatMsg 的 JSON、CSV、TXT）、她不一样的 messages.json、或者 AI 转录好的 JSON。不知道怎么拿出来？看<a href="../references/export-guide.md" target="_blank">导出指南</a>；只有截图的话，先让 AI 按指南里的格式转录成 JSON 再贴进来。</p>
+  <p class="lead">导出文件（WeFlow / 留痕 / WeChatMsg 的 JSON、CSV、TXT）、她不一样的 messages.json、或者 AI 转录好的 JSON。编码（UTF-8 / GBK / UTF-16）自动识别。不知道怎么拿出来？看<a href="../references/export-guide.md" target="_blank">导出指南</a>；只有截图的话，先让 AI 按指南里的格式转录成 JSON 再贴进来。</p>
   <div class="drop" id="drop"><b>把文件拖到这里</b>，或点击选择<input type="file" id="file" accept=".txt,.csv,.json" hidden></div>
   <label>或者直接粘贴文本 / JSON<textarea id="paste" placeholder="2026-05-12 21:03 妈妈：吃饭了吗&#10;2026-05-12 21:30 我：吃了&#10;&#10;或者整段 messages.json"></textarea></label>
   <div class="row3">
@@ -83,6 +84,12 @@
     <label>对方生日（MM-DD，可不填）<input type="text" id="hb" placeholder="10-20"></label>
     <label>我的生日（MM-DD，可不填）<input type="text" id="mb" placeholder="06-03"></label>
   </div>
+  <div class="row3">
+    <label>只取最近 N 天（全量导出建议 180）<input type="number" id="lastdays" min="1" placeholder="留空 = 全部"></label>
+    <label>从这天起（可不填）<input type="date" id="since"></label>
+    <label>到这天止（可不填）<input type="date" id="until"></label>
+  </div>
+  <small class="hint">时间按你这台电脑的时区解释；人在国外分析国内的记录，"几点找你"会偏。</small>
   <div class="btns">
     <button class="primary" id="go1" disabled>整理并检查</button>
     <button id="sample" disabled>用模拟数据试试</button>
@@ -112,7 +119,7 @@
 
 <section class="card" id="s3" hidden>
   <h2><span class="n">3</span>写文字</h2>
-  <p class="lead">数字算完了，文字要靠 AI 写。回答三个问题（都可以跳过），复制提示词，粘到你常用的 AI（豆包 / Kimi / DeepSeek / Claude / ChatGPT），把它回的 JSON 粘回来。</p>
+  <p class="lead">数字算完了，文字要靠 AI 写。回答三个问题（都可以跳过），复制提示词，粘到你常用的 AI（豆包 / Kimi / DeepSeek / Claude / ChatGPT），把它回的 JSON 粘回来。粘回来之后会按写作规矩查一遍：引号里的话必须是记录里真说过的，数字要能在 stats.json 里找到。</p>
   <label>① 多久没回家了？上次回去是什么时候？<input type="text" id="q1"></label>
   <label>② TA 最近有没有什么事——身体、家里？<input type="text" id="q2"></label>
   <label>③ 你们上次打电话聊了什么？<input type="text" id="q3"></label>
@@ -122,7 +129,8 @@
   </div>
   <div class="status" id="st3"></div>
   <label>把 AI 回的 narrative.json 粘到这里<textarea id="narr" placeholder='{"title": "...", "she_means": "...", ...}'></textarea></label>
-  <div class="btns"><button class="primary" id="go3">用这段文字出报告</button></div>
+  <div class="btns"><button class="primary" id="go3">检查并出报告</button></div>
+  <pre class="out" id="out3" hidden></pre>
 </section>
 
 <section class="card" id="s4" hidden>
@@ -139,17 +147,28 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script>
 (function(){
 const $ = id => document.getElementById(id);
+const PYODIDE_VERSION = "0.26.4";
+// 几个下载源同时探测（探的是最大的那个包 python_stdlib.zip，拿到响应头就掐断），谁先通用谁，加载失败再换下一个。
+// jsDelivr 的 gcore / quantil 节点在国内通常可达；不用 npmmirror，它对 .zip 返回 451。Service Worker 会把下载过的运行时存起来。
+const RUNTIME_SOURCES = [
+  {name: "jsDelivr", base: "https://cdn.jsdelivr.net/pyodide/v" + PYODIDE_VERSION + "/full/"},
+  {name: "jsDelivr（Fastly）", base: "https://fastly.jsdelivr.net/pyodide/v" + PYODIDE_VERSION + "/full/"},
+  {name: "jsDelivr（Gcore）", base: "https://gcore.jsdelivr.net/pyodide/v" + PYODIDE_VERSION + "/full/"},
+  {name: "jsDelivr（Quantil）", base: "https://quantil.jsdelivr.net/pyodide/v" + PYODIDE_VERSION + "/full/"},
+  {name: "unpkg", base: "https://unpkg.com/pyodide@" + PYODIDE_VERSION + "/"},
+];
 const APP_FILES = [
-  "scripts/parse_export.py","scripts/validate.py","scripts/stats.py","scripts/render.py",
+  "scripts/_common.py","scripts/parse_export.py","scripts/validate.py","scripts/stats.py","scripts/render.py","scripts/lint_narrative.py",
   "assets/report.html","assets/card-bill.html","assets/card-send.html",
-  "references/writing-rules.md","references/dictionary.md","references/types.md","references/report-template.md",
+  "references/lexicon.json","references/writing-rules.md","references/dictionary.md","references/types.md","references/report-template.md",
 ];
 const RUNNER = `
 import sys, io, runpy, contextlib, traceback
+if "/app/scripts" not in sys.path:
+    sys.path.insert(0, "/app/scripts")      # 脚本之间 from _common import …，runpy 不会自己加这个目录
 def run(script, argv):
     buf = io.StringIO()
     sys.argv = [script] + [str(x) for x in argv]
@@ -164,7 +183,7 @@ def run(script, argv):
             code = 2
     return [code, buf.getvalue()]
 `;
-let py = null, refs = {}, stats = null, inputName = null;
+let py = null, refs = {}, stats = null;
 
 function status(id, text, err){ const el=$(id); el.textContent=text; el.className = "status" + (err ? " err" : ""); }
 function show(id, on=true){ $(id).hidden = !on; }
@@ -176,15 +195,66 @@ async function run(script, argv){
   const [code, out] = r.toJs(); r.destroy();
   return {code, out};
 }
+function blobUrl(text, name){
+  return URL.createObjectURL(new Blob([text], {type: name.endsWith(".html") ? "text/html" : "application/json"}));
+}
 function download(name, text){
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], {type: name.endsWith(".html") ? "text/html" : "application/json"}));
+  a.href = blobUrl(text, name);
   a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
 
+// ---------- 运行时：三个源竞速 + 进度提示 + Service Worker 缓存 ----------
+function probe(src, ms){
+  // ?probe=1 让 Service Worker 不把这次探测存进缓存；拿到响应头就掐断，不真的下载
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
+  return fetch(src.base + "python_stdlib.zip?probe=1", {signal: ctl.signal}).then(async r => {
+    clearTimeout(t);
+    if (!r.ok) throw new Error(String(r.status));
+    try { await r.body.cancel(); } catch (e) {}
+    return src;
+  });
+}
+function makeSourcePicker(sources, ms){
+  // 所有源同时探测；next(tried) 返回下一个探测成功且没试过的源，都失败了返回 null
+  const ready = []; let done = 0; let waiter = null;
+  const wake = () => { if (waiter) { const w = waiter; waiter = null; w(); } };
+  sources.forEach(s => probe(s, ms).then(x => ready.push(x), () => {}).finally(() => { done++; wake(); }));
+  return async function next(tried){
+    for (;;) {
+      const s = ready.find(x => !tried.has(x));
+      if (s) return s;
+      if (done >= sources.length) return null;
+      await new Promise(r => { waiter = r; });
+    }
+  };
+}
+function loadScript(url){
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = url; s.onload = res; s.onerror = () => rej(new Error("加载失败 " + url)); document.head.appendChild(s); });
+}
 async function boot(){
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || ["localhost","127.0.0.1"].includes(location.hostname))) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+  const t0 = Date.now(); let src = null;
+  const tick = setInterval(() => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    status("boot", (src ? "正在从 " + src.name + " 下载 Python 运行时（约 10 MB）" : "正在找最快的下载源") + "… " + s + " 秒" + (s > 20 ? "。慢是正常的，第二次打开就快了" : ""));
+  }, 1000);
   try {
-    py = await loadPyodide({indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/"});
+    const next = makeSourcePicker(RUNTIME_SOURCES, 15000);
+    const tried = new Set(); let lastErr = null;
+    while (!py) {
+      src = await next(tried);
+      if (!src) break;
+      tried.add(src);
+      try {
+        await loadScript(src.base + "pyodide.js");
+        py = await loadPyodide({indexURL: src.base});
+      } catch (e) { lastErr = e; py = null; console.warn("运行时从 " + src.name + " 加载失败，换下一个", e); }
+    }
+    if (!py) throw new Error(lastErr ? "运行时加载失败（" + (lastErr.message || lastErr) + "），几个下载源都试过了。检查网络，或者换个时间再试。"
+                                     : "下载源都连不上（jsDelivr 的四个节点和 unpkg）。检查网络，或者换个时间再试。");
     for (const d of ["/app/scripts","/app/assets","/app/references","/work","/work/reports"]) py.FS.mkdirTree(d);
     for (const p of APP_FILES) {
       const r = await fetch("../" + p, {cache: "no-cache"});
@@ -196,9 +266,11 @@ async function boot(){
     py.FS.chdir("/work");
     await py.runPythonAsync(RUNNER);
     $("today").value = new Date().toISOString().slice(0,10);
-    status("boot", "就绪。脚本版本和仓库里的一样，数字口径见 references/metrics.md。");
+    clearInterval(tick);
+    status("boot", "就绪（运行时来自 " + src.name + "，" + Math.round((Date.now() - t0) / 1000) + " 秒）。脚本版本和仓库里的一样，数字口径见 references/metrics.md。");
     $("go1").disabled = false; $("sample").disabled = false;
   } catch (e) {
+    clearInterval(tick);
     status("boot", "加载失败：" + e.message, true);
   }
 }
@@ -210,43 +282,44 @@ $("drop").addEventListener("dragover", e => { e.preventDefault(); $("drop").clas
 $("drop").addEventListener("dragleave", () => $("drop").classList.remove("on"));
 $("drop").addEventListener("drop", e => { e.preventDefault(); $("drop").classList.remove("on"); if (e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]); });
 $("file").addEventListener("change", e => { if (e.target.files[0]) pickFile(e.target.files[0]); });
-async function pickFile(f){
-  pendingFile = {name: f.name, text: await f.text()};
-  $("drop").innerHTML = "<b>" + f.name + "</b>（" + Math.round(f.size/1024) + " KB）· 点击换一个";
-  $("paste").value = "";
+function setDrop(name, note){
+  const d = $("drop"); d.textContent = "";
+  const b = document.createElement("b"); b.textContent = name;
+  d.append(b, document.createTextNode(note));
 }
-
-function looksNative(text){
-  try { const j = JSON.parse(text); return j && Array.isArray(j.messages) && j.messages.length && ("sender" in j.messages[0]); } catch(e){ return false; }
+async function pickFile(f){
+  // 按字节读，交给 parse_export 识别编码（GBK / UTF-16 的老导出也认）
+  pendingFile = {name: f.name, bytes: new Uint8Array(await f.arrayBuffer())};
+  setDrop(f.name, "（" + Math.round(f.size/1024) + " KB）· 点击换一个");
+  $("paste").value = "";
 }
 
 $("go1").addEventListener("click", () => step1());
 async function step1(fromSample){
-  let text, name;
-  if (fromSample) { text = fromSample.text; name = fromSample.name; }
-  else if (pendingFile) { text = pendingFile.text; name = pendingFile.name; }
-  else { text = $("paste").value.trim(); name = text.startsWith("{") ? "paste.json" : "paste.txt"; }
-  if (!text) { status("st1", "先放一个文件或粘一段文本。", true); return; }
+  let bytes, name;
+  if (fromSample) { bytes = new TextEncoder().encode(fromSample.text); name = fromSample.name; }
+  else if (pendingFile) { bytes = pendingFile.bytes; name = pendingFile.name; }
+  else { const t = $("paste").value.trim(); bytes = new TextEncoder().encode(t); name = t.startsWith("{") || t.startsWith("[") ? "paste.json" : "paste.txt"; }
+  if (!bytes.length) { status("st1", "先放一个文件或粘一段文本。", true); return; }
   const call = $("call").value.trim() || "妈妈", pronoun = $("pronoun").value;
   show("out1", false); show("s2", false); show("s3", false); show("s4", false); stats = null;
   status("st1", "整理中…");
-  if (looksNative(text)) {
-    const j = JSON.parse(text);
-    if (!fromSample) { j.her = call; j.her_pronoun = pronoun; }
-    writeFS("/work/messages.json", JSON.stringify(j, null, 1));
-  } else {
-    const ext = name.toLowerCase().endsWith(".csv") ? ".csv" : name.toLowerCase().endsWith(".json") ? ".json" : ".txt";
-    inputName = "/work/input" + ext;
-    writeFS(inputName, text);
-    const argv = [inputName, "--out", "/work/messages.json", "--pronoun", pronoun, "--call", call];
-    if ($("her").value.trim()) argv.push("--her", $("her").value.trim());
-    if ($("me").value.trim()) argv.push("--me", $("me").value.trim());
-    const r = await run("parse_export.py", argv);
-    $("out1").textContent = r.out; show("out1");
-    if (r.code !== 0) { status("st1", "没整理出来——看上面的提示。txt / csv 通常是「对方在记录里显示的名字」没填或不一致。", true); return; }
+  const ext = name.toLowerCase().endsWith(".csv") ? ".csv" : name.toLowerCase().endsWith(".json") ? ".json" : ".txt";
+  const inputName = "/work/input" + ext;
+  py.FS.writeFile(inputName, bytes);
+  const argv = [inputName, "--out", "/work/messages.json", "--pronoun", pronoun, "--call", call];
+  if ($("her").value.trim()) argv.push("--her", $("her").value.trim());
+  if ($("me").value.trim()) argv.push("--me", $("me").value.trim());
+  if (!fromSample) {
+    if (parseInt($("lastdays").value, 10) > 0) argv.push("--last-days", String(parseInt($("lastdays").value, 10)));
+    if ($("since").value) argv.push("--since", $("since").value);
+    if ($("until").value) argv.push("--until", $("until").value);
   }
+  const r = await run("parse_export.py", argv);
+  $("out1").textContent = r.out; show("out1");
+  if (r.code !== 0) { status("st1", "没整理出来——看上面的提示。txt / csv 通常是「对方在记录里显示的名字」没填或不一致。", true); return; }
   const v = await run("validate.py", ["/work/messages.json"]);
-  $("out1").textContent = ($("out1").hidden ? "" : $("out1").textContent + "\n\n") + v.out; show("out1");
+  $("out1").textContent += "\n\n" + v.out;
   if (v.code !== 0) { status("st1", "记录有问题，stats.py 会算错。按上面的提示改一下再来。", true); return; }
   status("st1", "检查通过。确认一下上面的条数和时间范围对不对，对就往下走。");
   show("s2"); $("s2").scrollIntoView({behavior:"smooth", block:"start"});
@@ -257,7 +330,8 @@ $("sample").addEventListener("click", async () => {
   const m = await (await fetch("../examples/sample-messages.json")).text();
   const n = await (await fetch("../examples/sample-narrative.json")).text();
   $("narr").value = n; $("today").value = "2026-08-30"; $("hb").value = "10-20"; $("mb").value = "06-03";
-  $("drop").innerHTML = "<b>examples/sample-messages.json</b>（模拟数据，没有任何真实的人）";
+  $("call").value = "妈妈"; $("pronoun").value = "她";
+  setDrop("examples/sample-messages.json", "（模拟数据，没有任何真实的人）");
   pendingFile = null;
   await step1({text: m, name: "sample-messages.json"});
 });
@@ -271,16 +345,17 @@ $("go2").addEventListener("click", async () => {
   if (/^\d{2}-\d{2}$/.test($("mb").value.trim())) argv.push("--my-birthday", $("mb").value.trim());
   const r = await run("stats.py", argv);
   $("out2").textContent = r.out;
-  if (r.code !== 0) { status("st2", "算数失败，看摘要里的报错。", true); show("numbers"); return; }
+  if (r.code !== 0) { status("st2", "算数失败：" + r.out.trim().split("\n").pop(), true); show("numbers"); return; }
   stats = JSON.parse(readFS("/work/stats.json"));
   const ix = stats.index, p = stats.pronoun;
   $("i_care").textContent = ix.care.score; $("l_care").textContent = p + "发起了 " + Math.round(100*(stats.opens.her_ratio||0)) + "% 的对话";
   $("i_short").textContent = ix.short.score; $("l_short").textContent = "短回复 " + stats.short.count + " 条，占你 " + stats.short.replies + " 条回复的 " + Math.round(100*(stats.short.ratio||0)) + "%";
   $("i_forgive").textContent = ix.forgive.score ?? "—"; $("l_forgive").textContent = stats.unanswered.count ? ("你没回的 " + stats.unanswered.count + " 次里，" + stats.unanswered.reopened_by_her + " 次是" + p + "自己先开口了下一次") : (p + "没有被你晾过一整天");
-  $("types").innerHTML = '<span class="tag">' + p + "：" + stats.mother_type.primary + (stats.mother_type.secondary ? "（副：" + stats.mother_type.secondary + "）" : "") + '</span>'
-    + '<span class="tag">你：' + stats.child_type.primary + '</span>'
-    + '<br><span class="stamp">' + stats.rating.label + '</span>'
-    + (stats.warnings.length ? '<div class="warn">⚠ ' + stats.warnings.join("<br>⚠ ") + '</div>' : "");
+  const types = $("types"); types.textContent = "";
+  const tag = t => { const s = document.createElement("span"); s.className = "tag"; s.textContent = t; return s; };
+  types.append(tag(p + "：" + stats.mother_type.primary + (stats.mother_type.secondary ? "（副：" + stats.mother_type.secondary + "）" : "")), tag("你：" + stats.child_type.primary), document.createElement("br"));
+  const stamp = document.createElement("span"); stamp.className = "stamp"; stamp.textContent = stats.rating.label; types.append(stamp);
+  if (stats.warnings.length) { const w = document.createElement("div"); w.className = "warn"; w.textContent = stats.warnings.map(x => "⚠ " + x).join("\n"); w.style.whiteSpace = "pre-wrap"; types.append(w); }
   show("numbers");
   status("st2", "这些数字全部来自 stats.json，报告里每个数字都能在里面找到。");
   show("s3"); $("s3").scrollIntoView({behavior:"smooth", block:"start"});
@@ -307,6 +382,7 @@ function buildPrompt(){
 
 要求：**只输出一个 JSON 对象**，不要解释，不要 markdown 围栏以外的任何文字。字段按下面的 narrative.json 说明，必填字段一个都不能缺。
 对方是用户的「${call}」，用「${p}」。用户平时怎么称呼${call}，发给${p}的那条就怎么称呼。
+引号里的话必须是记录里一字不差出现过的原话（会用脚本核对），编的一律不要加引号。
 
 用户回答的三个问题（可以用，但要标"你说"）：
 ${answers}
@@ -334,32 +410,37 @@ $("copy").addEventListener("click", async () => {
   catch(e) { download("prompt.txt", t); status("st3", "剪贴板不可用，已下载 prompt.txt。"); }
 });
 $("skip").addEventListener("click", () => render(null));
-$("go3").addEventListener("click", () => {
+$("go3").addEventListener("click", async () => {
   let t = $("narr").value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   if (!t) { status("st3", "还没粘 narrative.json。", true); return; }
   let j; try { j = JSON.parse(t); } catch(e) { status("st3", "不是合法的 JSON：" + e.message + "。让 AI 只输出 JSON 再试。", true); return; }
-  render(JSON.stringify(j, null, 1));
+  writeFS("/work/narrative.json", JSON.stringify(j, null, 1));
+  const l = await run("lint_narrative.py", ["/work/narrative.json", "--stats", "/work/stats.json", "--messages", "/work/messages.json"]);
+  $("out3").textContent = l.out; show("out3");
+  if (l.code === 0) status("st3", "文字部分过了规矩。"); else status("st3", "文字部分有问题（见上）：引号里的话记录里没有、或用了禁用词。报告先出了，建议把问题贴回给 AI 改一版再发。", true);
+  await render(true);
 });
 
 // ---------- 第 4 步 ----------
-async function render(narr){
+async function render(withNarr){
   if (!stats) { status("st3", "先算数。", true); return; }
-  if (narr) writeFS("/work/narrative.json", narr); else if (exists("/work/narrative.json")) py.FS.unlink("/work/narrative.json");
-  const argv = ["/work/stats.json"]; if (narr) argv.push("/work/narrative.json"); argv.push("--out", "/work/reports");
+  if (!withNarr && exists("/work/narrative.json")) py.FS.unlink("/work/narrative.json");
+  const argv = ["/work/stats.json"]; if (withNarr) argv.push("/work/narrative.json"); argv.push("--out", "/work/reports");
   const r = await run("render.py", argv);
   if (r.code !== 0) { status("st3", "出图失败：" + r.out, true); return; }
   show("s4");
   status("st4", r.out.includes("还缺") ? r.out.split("\n").filter(x => x.includes("还缺")).join("") : "三个文件都好了。");
   const items = [["mama-message-card-send.html", "发给" + stats.pronoun + "的一条", 640], ["mama-message-card-bill.html", "亲情账单卡", 900], ["mama-message-report.html", "完整报告", 1400]];
-  $("frames").innerHTML = "";
+  $("frames").textContent = "";
   for (const [f, title, h] of items) {
     const html = readFS("/work/reports/" + f);
     const div = document.createElement("div"); div.className = "frame";
-    const head = document.createElement("h3");
-    head.innerHTML = title + "<span></span>";
+    const head = document.createElement("h3"); head.textContent = title;
+    const span = document.createElement("span");
     const a1 = document.createElement("a"); a1.href = "#"; a1.textContent = "下载 HTML"; a1.onclick = e => { e.preventDefault(); download(f, html); };
-    const a2 = document.createElement("a"); a2.href = URL.createObjectURL(new Blob([html], {type:"text/html"})); a2.target = "_blank"; a2.textContent = "新标签打开（截图用）";
-    head.querySelector("span").append(a1, a2);
+    const a2 = document.createElement("a"); a2.href = "#"; a2.textContent = "新标签打开（截图用）";
+    a2.onclick = e => { e.preventDefault(); const u = blobUrl(html, f); window.open(u, "_blank"); setTimeout(() => URL.revokeObjectURL(u), 60000); };
+    span.append(a1, a2); head.append(span);
     const fr = document.createElement("iframe"); fr.srcdoc = html; fr.style.height = h + "px"; fr.setAttribute("sandbox", "");
     div.append(head, fr); $("frames").append(div);
   }
