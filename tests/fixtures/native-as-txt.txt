@@ -1,0 +1,22 @@
+{
+ "me": "我",
+ "her": "妈妈",
+ "her_pronoun": "她",
+ "source": "manual",
+ "messages": [
+  {
+   "ts": "2026-05-12T21:03:14",
+   "sender": "her",
+   "type": "text",
+   "content": "吃饭了吗",
+   "dur": null
+  },
+  {
+   "ts": null,
+   "sender": "me",
+   "type": "text",
+   "content": "吃了",
+   "dur": null
+  }
+ ]
+}

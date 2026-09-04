@@ -1,0 +1,123 @@
+{
+ "weflow": {
+  "version": "1.0.3",
+  "generator": "WeFlow"
+ },
+ "session": {
+  "displayName": "妈妈",
+  "type": "私聊"
+ },
+ "messages": [
+  {
+   "localId": 1,
+   "createTime": 1778590994,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 1,
+   "content": "吃饭了吗",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591054,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 1,
+   "content": "吃了",
+   "isSend": 1,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "我"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591114,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 34,
+   "content": "[语音消息]",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591174,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 47,
+   "content": null,
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591234,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 49,
+   "content": "[链接] 久坐伤腰 三个动作缓解\nhttps://x",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591294,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 49,
+   "content": "[转账] (妈妈转账给我) ￥1000.00",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591354,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 50,
+   "content": "[语音通话] 通话时长 03:25",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591414,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 10000,
+   "content": "对方撤回了一条消息",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591474,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 10000,
+   "content": "你已添加了妈妈",
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈"
+  },
+  {
+   "localId": 1,
+   "createTime": 1778591534,
+   "formattedTime": "",
+   "type": "文本消息",
+   "localType": 49,
+   "content": null,
+   "isSend": 0,
+   "senderUsername": "wxid_x",
+   "senderDisplayName": "妈妈",
+   "linkTitle": "这几种菜千万不能一起吃"
+  }
+ ]
+}

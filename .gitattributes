@@ -1,3 +1,7 @@
 * text=auto eol=lf
 *.png binary
 *.skill binary
+# 测试样本要保持原始字节：GBK / UTF-16 不能被转码，weclone CSV 的 BOM 和 CRLF 要留着
+tests/fixtures/gbk.txt binary
+tests/fixtures/utf16.txt binary
+tests/fixtures/*.csv -text

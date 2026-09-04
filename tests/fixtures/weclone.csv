@@ -1,0 +1,4 @@
+﻿id,MsgSvrID,type_name,is_sender,talker,msg,src,CreateTime
+1,1,text,0,妈妈,吃饭了吗,,2026-05-12T13:03:14.000Z
+2,2,voice,1,我,[语音消息],media/voices/a.wav,2026-05-12T13:30:00.000Z
+3,3,text,0,妈妈,"[转账] (妈妈转账给我) ￥50.00",,2026-05-13T01:00:00.000Z
