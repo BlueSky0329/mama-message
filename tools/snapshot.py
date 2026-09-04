@@ -21,18 +21,15 @@ import argparse
 import os
 import sys
 
-for _s in (sys.stdout, sys.stderr):
-    if hasattr(_s, "reconfigure"):
-        try:
-            _s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
+from _common import setup_utf8  # noqa: E402
+
+setup_utf8()
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--reports", default=os.path.join(ROOT, "examples", "reports"))
     ap.add_argument("--out", default=os.path.join(ROOT, "docs", "img"))
     ap.add_argument("--scale", type=int, default=2, help="设备像素比，2 = 高清")

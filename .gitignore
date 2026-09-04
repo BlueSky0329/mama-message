@@ -7,3 +7,4 @@ reports/
 !examples/reports/
 *.redacted.*
 __pycache__/
+dist/

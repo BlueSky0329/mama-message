@@ -1,0 +1,27 @@
+# 打 tag（v0.5、v1.0 …）就自动出 Release：mama-message.skill、README、SKILL、普通用户版、三个示例 HTML、HANDOFF。
+# 这些就是以前手工同步到上级目录的"发布副本"，以后从 Release 页面拿。
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 测试
+        run: python -m unittest discover -s tests
+      - name: 打包发布物
+        run: python tools/pack.py --sync-to dist
+      - name: 创建 Release 并上传
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes

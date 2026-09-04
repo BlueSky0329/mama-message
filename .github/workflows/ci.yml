@@ -1,0 +1,33 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, python: "3.8" }
+          - { os: ubuntu-latest, python: "3.12" }
+          - { os: windows-latest, python: "3.8" }
+          - { os: windows-latest, python: "3.12" }
+          - { os: macos-latest, python: "3.12" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: 单元测试
+        run: python -m unittest discover -s tests -v
+      - name: 示例全链路（重生成 → 算数 → 校验 → 渲染 → lint → 测试）
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        run: python tools/refresh.py --no-sync
+      - name: 提交的示例产物和 README 测试数没有漂移
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        run: git diff --exit-code -- examples README.md
