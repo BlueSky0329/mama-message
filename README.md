@@ -10,11 +10,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-07C160.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8%2B%20%C2%B7%20%E6%A0%87%E5%87%86%E5%BA%93-3776AB?logo=python&logoColor=white)](./scripts)
 [![No network](https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E6%97%A0%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82-%E6%96%AD%E7%BD%91%E8%83%BD%E8%B7%91-lightgrey)](#先说隐私)
-[![Tests](https://img.shields.io/badge/tests-116%20passing-brightgreen)](./tests)
+[![Tests](https://img.shields.io/badge/tests-122%20passing-brightgreen)](./tests)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-1B1B1B)](./SKILL.md)
 
 <img src="docs/img/card-send.png" width="300" alt="发给她的卡：妈，我用了个软件，它说我欠你一个电话。今晚 8 点打给你。">&nbsp;&nbsp;
-<img src="docs/img/card-bill.png" width="300" alt="亲情账单卡：她发给你 192 条 / 你回她 102 条 / 结余：欠 59 条回复、1 个电话">
+<img src="docs/img/card-bill.png" width="300" alt="亲情账单卡：她发给你 192 条 / 你回她 102 条 / 结余：欠 30 条回复、1 个电话">
 
 <sub>模拟数据，没有任何真实的人。左边那张就是拿来发给她的。</sub>
 
@@ -22,8 +22,8 @@
 
 ```
 💛 牵挂指数    57 ██████░░░░  她发起了 67% 的对话，有 28 条是早上 8 点前发的
-🧊 嗯哦好指数  42 ████░░░░░░  你 93 条回复里有 52 条不超过三个字，最长一次 3 天没回
-🕰️ 不计较指数  92 █████████░  你没回的 59 次里，有 51 次是她自己先开口了下一次
+🧊 嗯哦好指数  35 ████░░░░░░  你 93 条回复里有 52 条不超过三个字，最长一次 3 天没回
+🕰️ 不计较指数  94 █████████░  你没回的 30 次里，有 27 次是她自己先开口了下一次
 
 她：三餐监督型 🍚 ——"吃饭了吗""今天吃的什么""别老吃外卖"，她问吃饭 19 次，11 次不在饭点
 你：嗯哦好选手 🧊 ——"嗯"8 次、"好"7 次、"好的"5 次，没有一条超过两个字
@@ -58,7 +58,7 @@ stats.json + narrative.json ──render.py──▶ 报告 + 两张卡片（HTM
 
 ## 怎么用
 
-先拿到记录：微信 4.0+ 装个 WeFlow（本地运行，一次导全半年，格式选 JSON）；微信 3.x 用留痕 / PyWxDump；实在没有电脑再截图，让 AI 照截图抄成"她：/ 我："的转录稿，相邻截图重叠的消息和"昨天 21:30"这种时间脚本会处理。分平台的步骤在[导出指南](./references/export-guide.md)。然后三条路挑一条：
+先拿到记录。电脑上开着 Alpha（本机微信的只读服务）的话什么都不用导，Agent 直接读：`mama.py run --wechat 妈`。否则微信 4.0+ 装个 WeFlow（本地运行，一次导全半年，格式选 JSON）；微信 3.x 用留痕 / PyWxDump；实在没有电脑再截图，让 AI 照截图抄成"她：/ 我："的转录稿，相邻截图重叠的消息和"昨天 21:30"这种时间脚本会处理。分平台的步骤在[导出指南](./references/export-guide.md)。然后三条路挑一条：
 
 ### 1 · 什么都不装
 
@@ -77,13 +77,19 @@ python scripts/mama.py run 私聊_妈妈.json --call 妈妈 --last-days 180   # 
 python scripts/mama.py finish --png                                     # 文字过规矩 → 报告和两张卡（HTML + PNG）
 ```
 
-中间它读 `mama-out/brief.md` 写文字。你问"这个怎么算的"，它会用 `mama.py explain 没回` 把背后那几条消息列给你看。
+电脑上开着 Alpha 的话连导出都省了：说"看看我和我妈的聊天"，它先列出微信里名字带"妈"的私聊让你确认，然后直接读——
+
+```bash
+python scripts/mama.py run --wechat 妈 --call 妈妈 --last-days 365    # 只连本机 127.0.0.1，只读私聊，读不了发消息的接口
+```
+
+中间它读 `mama-out/brief.md` 写文字——聊天正文由脚本在你电脑上读和算，AI 看到的只有素材包。你问"这个怎么算的"，它会用 `mama.py explain 没回` 把背后那几条消息列给你看。
 
 其他支持 Agent Skill 的工具把整个文件夹放进对应的 skills 目录即可，SKILL.md 格式通用。
 
 ### 3 · 浏览器里跑
 
-`web/index.html` 用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器。仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/ ：拖进导出文件或粘贴截图转录稿 → 检查 → 算数 → 复制提示词（带写作素材包）给任意 AI 写文字 → 粘回来 → 报告和卡片。首次打开下载约 10 MB 的运行时（jsDelivr 的几个节点和 unpkg 自动选通的、失败顺延），下载过一次后由 Service Worker 缓存，断网也能用。全量导出可以只取最近 N 天；报告口吻可以选。
+打开 **https://bluesky0329.github.io/mama-message/** （`web/index.html`，用 [Pyodide](https://pyodide.org) 在浏览器里跑同一套脚本，记录不离开浏览器；想离线用就在仓库根目录 `python -m http.server 8000`，打开 http://localhost:8000/web/）：拖进导出文件或粘贴截图转录稿 → 检查 → 算数 → 复制提示词（带写作素材包）给任意 AI 写文字 → 粘回来 → 报告和卡片。首次打开下载约 10 MB 的运行时（jsDelivr 的几个节点和 unpkg 自动选通的、失败顺延），下载过一次后由 Service Worker 缓存，断网也能用。全量导出可以只取最近 N 天；报告口吻可以选。
 
 ---
 
@@ -109,7 +115,7 @@ python scripts/mama.py finish --png                                     # 文字
 | 她其实想说的是 | 120–220 字，每句能指到一条原话，不抒情不说教 |
 | 今晚就做的三件事 | 第一件 30 秒能做完 |
 | 帮你回 + 三句开场白 | 用你自己的口气写好，复制就能发；打电话不知道第一句说什么的看这里 |
-| 亲情账单 | 收款单样式：她发给你 192 条 / 你回 102 条 / 结余：欠 59 条回复、1 个电话 |
+| 亲情账单 | 收款单样式：她发给你 192 条 / 你回 102 条 / 结余：欠 30 条回复、1 个电话 |
 | 发给她的一条 | "妈，我用了个软件……它说我欠你一个电话。今晚 8 点打给你。" 整个产品做到最后，就是为了这一条能发出去 |
 
 ### 还能这么玩
@@ -131,7 +137,8 @@ python scripts/mama.py finish --png                                     # 文字
 
 | 来源 | 怎么给 | 备注 |
 |---|---|---|
-| **WeFlow** 导出的 JSON / CSV / TXT | `parse_export.py` | 微信 **4.0+**，本地运行，Windows / macOS / Linux，首选 |
+| **本机微信直接读**（Alpha） | `mama.py run --wechat 妈` | 不用导出；只连本机、只读私聊，语音秒数和通话时长都有 |
+| **WeFlow** 导出的 JSON / CSV / TXT | `parse_export.py` | 微信 **4.0+**，本地运行，Windows / macOS / Linux，没有 Alpha 时首选 |
 | 留痕 MemoTrace / WeChatMsg / PyWxDump | CSV 或 JSON | 微信 **3.x** 走这条 |
 | 微信 / QQ 文本导出 txt | `parse_export.py` | 两行式、单行式、带方括号时间都认 |
 | 她不一样（she-love-me）的 messages.json | 直接喂 | 已经为她导出过的，换个人再跑一遍 |
@@ -158,8 +165,9 @@ mama-message/
 │   ├── report-template.md      # 报告模板、narrative.json 字段
 │   ├── practice.md             # 练习模式
 │   └── export-guide.md         # 聊天记录怎么拿出来（分平台）、截图转录格式
-├── scripts/                    # 全部标准库，无网络请求
+├── scripts/                    # 全部标准库；唯一的连接是 wechat_live 连本机 127.0.0.1
 │   ├── mama.py                 # 一条命令：run / finish / explain / compare / practice / status
+│   ├── wechat_live.py          # 不导出，直接读本机微信（Alpha 的只读接口）
 │   ├── _common.py              # 共用：契约版本、口吻表、类型枚举、时间和时区、编码嗅探
 │   ├── parse_export.py         # 各种导出和截图转录稿 → messages.json（--peek 自查 · --last-days 切片 · --tz）
 │   ├── validate.py             # 检查 messages.json：格式、时间顺序、重复、金额
@@ -185,7 +193,7 @@ mama-message/
 
 ```bash
 python tools/refresh.py                              # 一条命令：重生成示例 → 算数 → 校验 → 渲染 → lint → 素材包 → 对照卡 → 测试 → 打包同步
-python -m unittest discover -s tests                 # 116 个测试，含 golden 测试和文档口径同步测试
+python -m unittest discover -s tests                 # 122 个测试，含 golden 测试和文档口径同步测试
 python tools/snapshot.py                             # 可选：pip install playwright，用本机 Chrome 出 docs/img（单张卡用 scripts/snap.py 就行）
 ```
 
@@ -215,6 +223,6 @@ python tools/snapshot.py                             # 可选：pip install play
 
 然后她会等你的电话。她一直在等。
 
-中秋在九月底。
+下一个节日还有几天，报告开头写着。
 
 <div align="center"><sub><a href="./LICENSE">MIT License</a></sub></div>

@@ -8,7 +8,7 @@
 
 ## 不能破的约束
 
-1. 脚本只用标准库，无网络请求；不解密数据库；转账不写金额；产物只在当前目录（`mama.py` 默认 `mama-out/`）。`snap.py` 出图调本机已装的 Chrome / Edge，关掉后台联网，临时目录用完即删。
+1. 脚本只用标准库，无网络请求——唯一的例外是 `wechat_live.py` 连本机 127.0.0.1 上的 Alpha（只读工具白名单、不走代理、非本机地址直接拒绝）；不自己解密数据库；转账不写金额；产物只在当前目录（`mama.py` 默认 `mama-out/`）。`snap.py` 出图调本机已装的 Chrome / Edge，关掉后台联网，临时目录用完即删。
 2. 称呼跟人走：`her_pronoun` 决定她/他，母亲节/父亲节按人选。测试里必须保留爸爸用例。lint 会查称呼串没串。
 3. 不评判：面向用户的字符串里叫"短回复"不叫"敷衍"，"没回"不叫"不孝"。黑名单在 `references/writing-rules.md`，`lint_narrative.py` 会查。
 4. 数字可追溯：报告里每个数字在 `stats.json` 有字段，定义在 `references/metrics.md`；引号里的原话必须在记录里真出现过（lint 会核对）。brief.md 里 “” 只引记录原话，说明文字用「」。
@@ -38,7 +38,7 @@ python tools/pack.py --sync-to ../..            # 重打 .skill 并同步上级�
 
 ## 目录
 
-- `scripts/` mama（入口）· `_common`（契约版本、口吻表 MODES、类型枚举、时间和时区、编码嗅探、词表加载）· parse_export（含截图转录稿）· validate · stats · brief · lint_narrative · render · snap · compare · redact（CLI，`--help` 带说明）
+- `scripts/` mama（入口）· wechat_live（直接读本机微信）· `_common`（契约版本、口吻表 MODES、类型枚举、时间和时区、编码嗅探、词表加载）· parse_export（含截图转录稿）· validate · stats · brief · lint_narrative · render · snap · compare · redact（CLI，`--help` 带说明）
 - `references/` lexicon.json（词表）、指标、类型、词典、写作规矩（含口吻表）、报告模板、练习模式、导出指南（含截图转录格式）
 - `assets/` 四个 HTML 模板（报告里 `<!--#版块-->…<!--/版块-->` 包起来的部分按口吻去掉）；`web/` 浏览器版（Pyodide 跑同一套脚本，`sw.js` 缓存运行时）
 - `examples/` 模拟数据（`make_sample.py`，没有真实的人）、示例 brief、示例报告和卡片；`tests/fixtures/` 各种导出格式的最小样本

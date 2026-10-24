@@ -10,7 +10,7 @@
 
 - **产品**：把用户和妈妈（或爸爸/外婆）的聊天截图算成一份报告 + 两张卡 + 一句可以直接发给她的话。Agent Skill 形态，另有普通用户复制粘贴版提示词和浏览器版。
 - **已完成**：SKILL.md、7 份 references + 词表、11 个脚本（全标准库、不联网；入口 `mama.py`）、4 个 HTML 模板、普通用户版提示词、README、模拟数据端到端跑通、测试、CI、浏览器版。
-- **未完成**：真实数据校准（含"没回"口径的决定，T23）、导出格式在真实样本上验证、Skill 触发测试（测试集已备好）、普通用户版实测、网页版部署。见第 6 节 P0。
+- **未完成**：真实数据校准（T1）、导出格式在真实样本上验证、Skill 触发测试（测试集已备好）、普通用户版实测、网页版部署。见第 6 节 P0。
 - **v0.4（2026-08-31）补**：测试、validate.py、农历表、Windows 兼容、短回复口径修正、导出指南、浏览器版 MVP、CLAUDE.md、CHANGELOG。见 2.4 节。
 - **v0.5（2026-09-04）补**：stats 拆分、词表外置、契约版本号、输入层适配器 + fixtures + 编码嗅探、narrative lint、文档口径同步测试、refresh.py、CI / Release、网页版 CDN 竞速 + 离线缓存。见 2.5 节。
 - **v0.6（2026-10-24）补**：写作素材包 `brief.py`、截图转录稿（自动去重叠 / 排顺序 / 换算相对时间）、口吻表 `MODES`（渲染和 lint 都照它去掉版块）、`mama.py` 一条命令、lint 加称呼 / 金额 / 道歉 / 更严的数字核对、卡片直接出 PNG、对照卡、`--tz`、练习打分、触发测试集。示例基线数字不变。见 2.6 节。
@@ -26,7 +26,7 @@
 
 1. **你以为你了解，但你从来没数过。** 没人故意敷衍妈妈，但 38 个"嗯"加起来是另一回事。AI 做的是计数，不是分析——把一件一直感觉到但从没量过的事变成数字。
 2. **愧疚没有台阶。** 想打电话的人比打了的多得多，卡在"突然打过去说什么"。报告给一个借口："妈，我用了个软件，它说我欠你一个电话。"把主动示好的尴尬转嫁给软件。所以**最后一屏是发给她的，不是给用户看的**。
-3. **晒愧疚 = 晒良心。** "我欠我妈 59 条回复"发出去，大家看到的是在乎。它是设计出来让人发的。
+3. **晒愧疚 = 晒良心。** "我欠我妈 30 条回复"发出去，大家看到的是在乎。它是设计出来让人发的。
 
 推论：
 - 情绪 → 动作。情绪是愧疚，动作是打电话，中间每个模块都在缩短这段距离。
@@ -100,7 +100,7 @@ mama-message/
 ### 2.2 已验证
 
 v0.6 新增：
-- 示例基线（第 7 节）不变；`examples/sample-stats.json` 只多了 `source_detail`、`basics.tz`、`meal`、`self`、`voice`、`sensitivity`、`unanswered.was_her_reply / ended_with_closer`、`phrases.self_shrink_after_*`、几处 `i`（消息下标）。
+- 示例基线只因"没回"口径变了一次（T23，见第 7 节），其余逐项不变；`examples/sample-stats.json` 多了 `source_detail`、`basics.tz`、`meal`、`self`、`voice`、`sensitivity`、`unanswered.natural_end`、`phrases.self_shrink_after_*`、几处 `i`（消息下标）。
 - 用新字段核对了示例 narrative，改掉了三处和模拟数据对不上的话："只有 3 次是在饭点"（实际饭点 8 次、不在饭点 11 次）、"这 8 次里有 6 次前一条是她问的问题"（6 对，但前一条是你的短回复）、"你 3 月 13 日咳嗽之后她转的三篇和这个有关"（记录里没有）；"早点睡 别熬夜"她是 12:25 和 21:47 发的，按 dictionary.md 第 4 条改译。
 - 截图转录稿：倒序给的三张截图 + 两处重叠 + 星期五 / 昨天 下午 / 只写几点 / 跨年的"12月30日"，有无 `--shot-date` 两种都核对过；聊天 AI 常见的代码块包裹、"她（妈妈）："、续行带冒号也认。
 - 五种口吻各渲染一遍，逐个版块核对去掉没有；memorial 会删掉上次留下的卡片（含 PNG）。
@@ -138,10 +138,11 @@ v0.5 及以前：
 | 13 | ~~时段按运行脚本那台机器的时区算~~ v0.6 `parse_export --tz +08:00`，messages.json 记 `tz`，报告数据说明自动写时区。本来就是本地时间的 txt / 留痕 StrTime 只能记、不能换算 | parse_export.py | 低 |
 | 14 | ~~GBK / UTF-16 导出解析出 0 条；CSV 毫秒时间戳崩；02-29 生日崩；旧 stats.json KeyError；--help 没说明~~ v0.5 全修 | — | 已修 |
 | 15 | ~~HANDOFF 不在仓库里，CLAUDE.md 的指引对 clone 者失效~~ v0.5 进 `docs/`，上级目录的是同步副本 | — | 已修 |
-| 16 | **"没回"的口径偏宽**：她在回你的话、说完对话自然结束，第二天她又开口，也算"没回"。示例 59 段里 38 段是这种（朋友样本 15 段全是）。v0.6 只加了诊断字段（`was_her_reply` / `ended_with_closer`）并让 brief / 写作规矩别说过头，**没改口径**——改了会动"欠 59 条回复"这个招牌数字，等 T23 作者决定 | stats.py `sec_unanswered` | 高 |
+| 16 | ~~"没回"的口径偏宽：她在回你的话、说完对话自然结束也算没回~~ v0.6 定了（T23）：她在回你、又没问你什么的段不算没回，记在 `unanswered.natural_end`。作者真实记录里旧口径 491 段有 438 段是这种 | stats.py `sec_unanswered` | 已修 |
 | 17 | 截图转录格式只在自造样本上验证过，没拿真实截图让豆包 / Kimi / Claude 转一遍看格式守不守得住 | parse_export.py `parse_transcript` | 中 |
 | 18 | "她说起自己的事"用 self_words + "我……≥ 6 字" + 不是问句 + 不含"你"判断，会漏（"今天去体检了"没有"我"也没有词表词时）也会误报；词表在 lexicon.json，随 T1 校准 | lexicon.json `self_words` | 中 |
-| 19 | GitHub Pages 没开，网页版只能本地 `python -m http.server` 用；普通用户版 ④ 转录版因此还要靠电脑 | — | 中 |
+| 19 | ~~GitHub Pages 没开~~ v0.6 加了 `pages.yml`，Pages 已设成"由 Actions 发布"；v0.6 合进 main 推上去那一刻网页上线（https://bluesky0329.github.io/mama-message/） | `.github/workflows/pages.yml` | 等合并 |
+| 20 | 直接读微信只认 Alpha 的 MCP 接口；WeFlow 自己的 HTTP API（同端口、接口不同）、chatlog 这类没适配。Alpha 的通话不分语音 / 视频，全记成 `call_voice` | wechat_live.py | 中 |
 
 ### 2.4 v0.4 增量（2026-08-31）
 
@@ -158,6 +159,9 @@ v0.5 及以前：
 - **lint**：口吻和必填、金额（错误）、发给她的那条道歉（提醒）、称呼串了（分析爸爸时冒出"她 / 母亲节"，提醒）；数字核对不再拿时段分布、每周条数、类型打分、消息下标作证（以前几乎任何小数字都能"找到"）。
 - **出图和对照卡**：`snap.py` 用本机 Chrome / Edge 无头模式把卡片截成 PNG（render / compare / finish 的 `--png`）；`card-compare.html` 是视频开头那一帧（T11）。
 - **其他**：`parse_export --tz`（T21）、`mama.py practice`（T14）、`evals/triggers.json`（T6 备料）、普通用户版 ④ 截图转录版（T22 的第一步）、`compute_with_ctx()`、`parse_export.convert()`、`render.render_all()` 把核心和 CLI 拆开。
+- **直接读本机微信**：`wechat_live.py` 连 Alpha（作者机器 `E:\weflow\Alpha`，只读 MCP 在 `127.0.0.1:5031/mcp`，令牌在用户环境变量）：按名字找私聊 → 按页读完 → 转成 messages.json；`mama.py run --wechat 妈`。只连本机、不走代理、工具白名单只有读会话 / 读消息（`send_text`、`exports.start` 调不了）、只读私聊；转账去金额、没接通的通话不算、系统消息跳过；语音秒数和通话时长比 WeFlow 导出全。正文不经过写文字的 AI。作者机器实测：和妈妈 5 年 16,489 条，约 80 秒读完。测试用一个假的本机 Alpha（`tests/test_wechat_live.py`），走真的 HTTP / SSE / 分页。
+- **"没回"口径定了**（T23）：她在回你、又没问你什么的段不算没回（`unanswered.natural_end`）。示例没回 59 → 30 段，嗯哦好 42 → 35，不计较 92 → 94，评级不变。README 首屏、示例 narrative、本文件第 7 节的数字由 `test_docs_sync.ShowcaseNumbers` 和示例数据比对，口径再变会红。
+- **网页版上线走 Actions**：`.github/workflows/pages.yml`，main 有推送就把 web / scripts / assets / references / examples 发到 Pages（根目录跳 `web/`）；不用"从分支发布"，因为 Jekyll 会丢掉 `_common.py`。
 - 网页版在本机 Chrome 里（Playwright 驱动，Pyodide 真下载）实测过：模拟数据 normal 口吻 lint 通过、出三个文件；改成 memorial 只出报告、状态行写明没出哪两张卡、"发给她"那句提示隐藏；粘贴三段截图转录稿 + 截图日期，倒序、去重、星期五换算都对；复制出的提示词约 1.85 万字，含素材包和口吻，不含分布数组。手机浏览器没测（T15）。
 
 ### 2.5 v0.5 增量（2026-09-04，Claude Code）
@@ -207,7 +211,7 @@ mama.py run = 解析 + 校验 + 算数 + 素材包；mama.py finish = lint + ren
 
 ### 3.2 stats.json（关键字段，完整见 `references/metrics.md`）
 
-`schema` `lexicon`（词表版本，v0.6 是 2）`her_name` `pronoun` `source_detail` `warnings` `basics`（含 `tz`）`opens` `reply.me/her` `longest` `short` `topics` `meal` `care_ratio` `hours` `unanswered`（含 `was_her_reply` `ended_with_closer`）`phrases`（含 `self_shrink_after_my_short / _her`）`self` `extras` `composition` `emoji` `catchphrases` `voice` `forwards` `weekly` `trend` `festivals` `countdown` `signals` `index.care/short/forgive` `mother_type` `child_type` `rating` `bill` `sensitivity` `today`。列表里的 `i` 是这条消息在 messages.json 里的下标，brief.py 按它取上下文。
+`schema` `lexicon`（词表版本，v0.6 是 2）`her_name` `pronoun` `source_detail` `warnings` `basics`（含 `tz`）`opens` `reply.me/her` `longest` `short` `topics` `meal` `care_ratio` `hours` `unanswered`（含 `natural_end`）`phrases`（含 `self_shrink_after_my_short / _her`）`self` `extras` `composition` `emoji` `catchphrases` `voice` `forwards` `weekly` `trend` `festivals` `countdown` `signals` `index.care/short/forgive` `mother_type` `child_type` `rating` `bill` `sensitivity` `today`。列表里的 `i` 是这条消息在 messages.json 里的下标，brief.py 按它取上下文。
 
 三个指数的公式在 `metrics.md`，权重在 `stats.py` 的 `FORMULA`。**改公式或阈值必须同步四处**：`stats.py` 常量、`references/metrics.md`、`references/types.md`、`prompts/普通用户版.md`，`tests/test_docs_sync.py` 会红。改词表只改 `references/lexicon.json`（`version` +1），跑 `tools/refresh.py` 看基线变化。
 
@@ -220,6 +224,8 @@ mama.py run = 解析 + 校验 + 算数 + 素材包；mama.py finish = lint + ren
 ### 3.4 CLI
 
 ```bash
+python scripts/mama.py run --wechat 妈 [--wechat-id wxid_…] [其余同下]       # 不导出，直接读本机微信（Alpha）
+python scripts/wechat_live.py find 妈  ·  python scripts/wechat_live.py pull 妈 [--id] [--call] [--since/--until/--last-days] [--tz] [--out]   # 令牌：MAMA_ALPHA_TOKEN
 python scripts/mama.py run 文件 [--call/--her/--me/--pronoun/--since/--until/--last-days/--tz/--shot-date/--her-birthday/--my-birthday/--today/--lexicon] [--dir mama-out]
 python scripts/mama.py finish [--dir] [--png] [--force]
 python scripts/mama.py explain 短回复|没回|开口|回复|自己|收尾|没事|追问|信号|节日|主题 吃饭 [--dir] [--all]
@@ -311,12 +317,12 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 - description 已加"不用于：恋人 / 伴侣 / 朋友之间的关系分析，群聊统计，单纯写节日祝福，单纯问微信怎么导出"。
 - 跑法：skill-creator 的 `run_loop.py --eval-set evals/triggers.json --skill-path .`（会调很多次 `claude -p`，花钱，作者决定什么时候跑）。调 description 直到正例全触发、反例不触发（"女朋友"那条尤其要不触发）。
 
-**T23 "没回"的口径**（v0.6 新增，作者决定）
-- 现状：她在回你的话、说完对话自然结束（你"妈我到了"→ 她"好 到了就好"→ 第二天她又开口），算"没回"。示例 59 段里 38 段是这种。
-- 选项 A：不改，报告里如实写"段"，brief 提醒 AI 别说过头（v0.6 现状）。
-- 选项 B：`was_her_reply` 的那些段不算没回（示例会从 59 降到 21 左右，嗯哦好指数、评级、账单、README 首屏、视频文案都要跟着改）。
-- 选项 C：只排除"她在回你、并且最后一句是收尾"的（两个诊断字段的交集）。
-- 拿 T1 的真实数据看哪种让作者说"这是我"，再定。改了按第 5 节第 8 条同步四处。
+**T23 "没回"的口径**（v0.6 已定）
+- 定了：她在回你的话（段前一条是你的、24 小时内）、这一段又没有问句的，是对话自然说完了，不算没回（`unanswered.natural_end`）。算没回的 = 她先开口没人接的 + 她回你时问了你、你没接的。
+- 依据：作者本机微信里和妈妈 5 年的真实记录（`wechat_live.py` 直接读，只看计数），6307 段里旧口径算出 491 段没回，438 段是她在回你、说完就停了；B（凡是回你的都不算）53 段，C（回你且收尾的不算）219 段，现在的口径 89 段、近半年 11 段。B 会把"她回你时问了一句你没接"也放过去，C 留下的大多还是自然结束。
+- 示例数据：没回 59 → 30 段（另 29 段自然结束），嗯哦好 42 → 35，不计较 92 → 94，评级分 62 → 55，评级和类型鉴定不变。
+- 剩下的局限：问句靠词表认（`lexicon.json` 的 `question`），"你那边冷不"这种漏掉的会被当成自然结束；随 T1 校准。
+
 
 **T7 普通用户版实测**（和 T22 一起做）
 - 在豆包、Kimi、DeepSeek、Claude 各跑一次报告版提示词 + 10 张模拟截图。
@@ -327,7 +333,7 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 
 ### P1 · 首发后一周
 
-**T24 网页版上线**：GitHub Pages 开仓库根目录（Settings → Pages → main / root），之后 README、普通用户版 ④ 才能给手机用户一个能点的链接。公开发布动作，作者来开。
+**T24 网页版上线**（v0.6 备好）：`.github/workflows/pages.yml` + 仓库 Pages 设成"GitHub Actions"。v0.6 合进 main、推上去就自动发布到 https://bluesky0329.github.io/mama-message/ ；README 已经写了这个链接。之后把链接写进普通用户版 ④。
 
 **T9 `.claude/commands/`** 三个快捷命令：`mama-practice.md` `mama-reply.md` `mama-compare.md`，内容是"读 SKILL.md，进入 X 模式"。验证 Claude Code 当前版本的 commands 目录规范。
 
@@ -387,17 +393,17 @@ python -m http.server 8000                                     # 然后开 http:
 
 Windows 上 `python` 而不是 `python3`；脚本已自带 UTF-8 输出。改了算法忘了重跑示例，golden 测试会红并告诉你命令。
 
-当前 sample 的基线数字（v0.4 起不变，v0.5、v0.6 重构后逐项一致；改词典/公式后 `refresh.py` 会列出变化，变了要能解释）：
+当前 sample 的基线数字（v0.4 到 v0.5 不变；v0.6 定了"没回"口径，没回 / 不计较 / 嗯哦好 / 评级分跟着变，其余逐项一致；改词典 / 公式后 `refresh.py` 会列出变化，变了要能解释）：
 ```
 她 192 条 / 你 102 条 · 181 天
 谁先开口 她 86 / 你 42 · 你回她中位 1 小时 30 分 · 短回复 52 条 / 93 条回复 56%（v0.3 是 53/100，口径变了）
-没回 59 / 139 段 · 之后她先开口 51 · 早上 8 点前 28 条 · 晚上 10 点后 51 条
-牵挂 57 · 嗯哦好 42（v0.3 41）· 不计较 92 · 评级分 62（欠一个电话）
+没回 30 / 139 段（另 29 段是她在回你、说完自然停了，不算）· 之后她先开口 27 · 早上 8 点前 28 条 · 晚上 10 点后 51 条
+牵挂 57 · 嗯哦好 35（v0.5 是 42）· 不计较 94（v0.5 是 92）· 评级分 55（欠一个电话）
 她 三餐监督型（副 语音轰炸型）· 你 嗯哦好选手 · 评级 欠一个电话
 信号：🔴 腰不好回了4字 · 🔴 8 次打扰你了收尾 · 🟡 通话时长降 · 🟡 9 次没事
 ```
 
-v0.6 的写作素材（不进基线比对，narrative 里用到了）：问吃饭 19 次，饭点 8 / 不在饭点 11 · 她说起自己的事 1 次（08-14 腰，你 11 小时 47 分后回"注意休息"，之后都没再提）· 收尾 8 次里 6 次前一条是你的短回复 · 没回 59 段里 38 段是她在回你、25 段以收尾结束 · 对照组：回朋友 3 分钟 / 回妈 1 小时 30 分，30 倍。
+v0.6 的写作素材（不进基线比对，narrative 里用到了）：问吃饭 19 次，饭点 8 / 不在饭点 11 · 她说起自己的事 1 次（08-14 腰，你 11 小时 47 分后回"注意休息"，之后都没再提）· 收尾 8 次里 6 次前一条是你的短回复 · 对照组：回朋友 3 分钟 / 回妈 1 小时 30 分，30 倍。
 
 ---
 
@@ -424,7 +430,7 @@ v0.6 的写作素材（不进基线比对，narrative 里用到了）：问吃�
 | 写作素材包 brief.md（v0.6） | lint 要求原话一字不差，但 AI 拿不到原话（网页只给 stats.json；Skill 里几万条读不完）；素材包把"写得准"要的原话和数字摆在一处，篇幅有上限 | 多一个脚本和一份产物 |
 | 截图走"转录稿"而不是 JSON（v0.6） | AI 抄文字比写合法 JSON 稳；去重叠、排顺序、换算"昨天 / 星期二"是机械活，归脚本 | 多一个适配器；格式要在真实截图上验证（已知问题 17） |
 | 口吻做成脚本行为（v0.6） | "收着"只写在提示词里时，render 照样盖"欠一次回家"的章、出"发给她"的卡——对她已经不在的用户是伤害 | 模板多了版块标记 |
-| "没回"只加诊断不改口径（v0.6） | 改口径会动招牌数字和视频文案，需要真实数据和作者拍板 | 报告里的"没回"仍偏宽（已知问题 16，T23） |
+| "没回"不算她在回你、没问你什么的（v0.6） | 旧口径把"你说到了、她说好、对话结束"也算你没回，作者真实记录里九成是这种，报告会冤枉人 | 招牌数字从"欠 59 条"降到"欠 30 条"，没那么扎眼 |
 | 出图调本机浏览器而不是加依赖（v0.6） | 标准库约束不变；Windows 11 自带 Edge，大多数人有 Chrome；没有就退回 HTML | 版面依赖本机字体；浏览器本身的行为不归我们管（已关后台联网） |
 
 ---
@@ -432,7 +438,7 @@ v0.6 的写作素材（不进基线比对，narrative 里用到了）：问吃�
 ## 9. 给 Claude Code 的工作方式
 
 1. 先跑第 7 节的 `python tools/refresh.py`，确认全绿、基线没变。
-2. 按 P0 顺序做，T1 需要作者数据（T23 跟着 T1 定），没有就先做 T2、T6、T7/T22、T24（要作者开）。
+2. 按 P0 顺序做，T1 需要作者数据，没有就先做 T2、T6、T7/T22、T24（要作者开）。
 3. 改词表只改 `lexicon.json`（`version` +1）；改公式或阈值改 `stats.py` 顶部常量，再同步 `metrics.md` / `types.md` / `普通用户版.md`，`test_docs_sync` 过了才算；改契约字段 `SCHEMA_VERSION` +1（第 5 节第 8、9 条）。基线变了更新第 7 节和 CHANGELOG。
 4. 改任何面向用户的字符串：过一遍 `writing-rules.md` 的黑名单和"不评判"；写 narrative 一律跑 `lint_narrative.py`。
 5. 新脚本：标准库、Python 3.8 语法、中文注释、`from _common import …`、`argparse(description=__doc__)`、失败时输出人话 exit 1、核心逻辑写成函数（mama.py 和测试直接调）、网页要用就加进 `web/index.html` 的 `APP_FILES`。

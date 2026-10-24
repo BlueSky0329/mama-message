@@ -8,6 +8,8 @@ lint_narrative / render / compare 那几个脚本，单独跑也行。
                          [--tz +08:00] [--shot-date YYYY-MM-DD] [--dir mama-out]
       解析 → 校验 → 算数 → 写作素材包。产出 mama-out/ 下的 messages.json、stats.json、brief.md。
       （然后 AI 读 brief.md，按 references/writing-rules.md 写 mama-out/narrative.json）
+  python scripts/mama.py run --wechat 妈 --call 妈妈 [--last-days 365] [其余同上]
+      不导出：直接读本机微信（Alpha 的只读接口，见 wechat_live.py），其余步骤一样。
   python scripts/mama.py finish [--dir mama-out] [--png] [--force]
       检查 narrative.json（lint）→ 出报告和卡片到 mama-out/reports/。lint 有 ✗ 就不出（--force 硬出）。
   python scripts/mama.py explain 短回复|没回|开口|自己|收尾|没事|追问|信号|节日|主题 吃饭 [--dir mama-out] [--all]
@@ -19,7 +21,7 @@ lint_narrative / render / compare 那几个脚本，单独跑也行。
   python scripts/mama.py status [--dir mama-out]
       做到哪一步了，下一步干什么。
 
-产物都在 --dir（默认 ./mama-out）里，删掉这个文件夹就什么都不剩。只用标准库，不联网。
+产物都在 --dir（默认 ./mama-out）里，删掉这个文件夹就什么都不剩。只用标准库；唯一的连接是 --wechat 连本机 127.0.0.1。
 """
 import argparse
 import json
@@ -55,13 +57,18 @@ def cmd_run(a):
     import stats
     import validate
     P = paths(a.dir)
+    live = bool(a.wechat or a.wechat_id)
+    if live == bool(a.path):
+        die("给一个导出文件，或者用 --wechat 妈 直接读本机微信（二选一）")
     os.makedirs(a.dir, exist_ok=True)
+    # 记录从哪来：文件用绝对路径，本机微信记成 wechat:会话
+    source = f"wechat:{a.wechat_id or a.wechat}" if live else os.path.abspath(a.path)
     # 上一次跑的是另一份记录：它的 narrative.json 不能拿来配这次的数字，改名留着
     prev = load_json(P["run"]).get("input") if os.path.exists(P["run"]) else None
-    same = prev and os.path.abspath(a.path) in (prev, os.path.abspath(P["messages"]))
+    same = prev and source in (prev, os.path.abspath(P["messages"]))
     if os.path.exists(P["narrative"]) and prev and not same:
         os.replace(P["narrative"], P["narrative"][:-5] + ".old.json")
-        print(f"（{a.dir} 里上一次的 narrative.json 是给 {os.path.basename(prev)} 写的，已改名成 narrative.old.json）")
+        print(f"（{a.dir} 里上一次的 narrative.json 是给 {prev if prev.startswith('wechat:') else os.path.basename(prev)} 写的，已改名成 narrative.old.json）")
     try:
         today = date.fromisoformat(a.today) if a.today else date.today()
     except ValueError:
@@ -73,10 +80,17 @@ def cmd_run(a):
                 date.fromisoformat(v)
             except ValueError:
                 die(f"--{f} 要写成 2026-01-01 这样的日期，现在是 {v!r}")
-    print("① 解析")
+    print("① 读本机微信" if live else "① 解析")
     try:
-        data, report = parse_export.convert(a.path, her=a.her, me=a.me, call=a.call, pronoun=a.pronoun, since=a.since,
-                                            until=a.until, last_days=a.last_days, tz=a.tz, shot_date=a.shot_date)
+        if live:
+            import wechat_live
+            data, report = wechat_live.fetch(a.wechat, a.wechat_id, call=a.call, me=a.me, pronoun=a.pronoun, since=a.since,
+                                             until=a.until, last_days=a.last_days, tz=a.tz,
+                                             progress=lambda k: print(f"\r  已读 {k} 条", end="", flush=True))
+            print()
+        else:
+            data, report = parse_export.convert(a.path, her=a.her, me=a.me, call=a.call, pronoun=a.pronoun, since=a.since,
+                                                until=a.until, last_days=a.last_days, tz=a.tz, shot_date=a.shot_date)
     except parse_export.ParseError as e:
         die(str(e))
     for line in report:
@@ -109,7 +123,7 @@ def cmd_run(a):
     text = brief.make_brief(S, data, lex)
     with open(P["brief"], "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
-    dump_json({"schema": SCHEMA_VERSION, "input": prev if same else os.path.abspath(a.path), "at": datetime.now().isoformat(timespec="seconds"),
+    dump_json({"schema": SCHEMA_VERSION, "input": prev if same else source, "at": datetime.now().isoformat(timespec="seconds"),
                "today": today.isoformat(), "her_birthday": a.her_birthday, "my_birthday": a.my_birthday,
                "lexicon": os.path.abspath(a.lexicon) if a.lexicon else None}, P["run"])
     sug = S["sensitivity"].get("suggest")
@@ -224,7 +238,8 @@ def cmd_explain(a):
         listing(D["shorts"], fmt)
     elif what == "unanswered":
         print(f"没回 {S['unanswered']['count']} / {S['unanswered']['turns']} 段。一段 = {p}连着发的（相邻隔不到 {stats.OPEN_GAP_H} 小时）；"
-              f"之后没人说话且过了一天、或者下一条还是{p}、或者你 {stats.REPLY_WINDOW_H} 小时以后才回，算没回。\n")
+              f"之后没人说话且过了一天、或者下一条还是{p}、或者你 {stats.REPLY_WINDOW_H} 小时以后才回，算没接上；"
+              f"没接上的段里，{p}本来是在回你、又没问你什么的（{S['unanswered'].get('natural_end', 0)} 段），是对话自然说完了，不算没回。\n")
 
         def fmt(m):
             nxt = msgs[m["_i"] + 1] if m["_i"] + 1 < len(msgs) else None
@@ -416,7 +431,9 @@ def main():
     sub = ap.add_subparsers(dest="cmd")
 
     r = sub.add_parser("run", help="解析 → 校验 → 算数 → 写作素材包")
-    r.add_argument("path", help="导出文件 / 截图转录稿 / messages.json")
+    r.add_argument("path", nargs="?", default=None, help="导出文件 / 截图转录稿 / messages.json（用 --wechat 时不填）")
+    r.add_argument("--wechat", default=None, help="不导出，直接读本机微信（Alpha 服务）：她在你微信里的备注，如 妈")
+    r.add_argument("--wechat-id", default=None, help="同名的私聊有好几个时，用会话 id（wxid_…）")
     for k, h in (("--her", "对方在记录里的名字"), ("--me", "你在记录里的名字"), ("--call", "报告里怎么称呼对方（妈妈 / 老爸 / 外婆）"),
                  ("--pronoun", "她 / 他"), ("--since", "YYYY-MM-DD"), ("--until", "YYYY-MM-DD"), ("--her-birthday", "MM-DD"),
                  ("--my-birthday", "MM-DD"), ("--today", "YYYY-MM-DD，默认今天"), ("--tz", "如 +08:00"),

@@ -93,7 +93,7 @@
   "tonight": ["…", "…", "…"],
   "replies": [{"to": "08-25 “中秋回来吗”", "draft": "…"}],
   "call_openers": ["“…”——为什么", "…", "…"],
-  "bill_balance": "欠 59 条回复、1 个电话",
+  "bill_balance": "欠 30 条回复、1 个电话",
   "send_text": "妈，我用了个软件……今晚 8 点打给你。",
   "send_cta": "中秋还有 26 天",
   "child_call": "的儿子",

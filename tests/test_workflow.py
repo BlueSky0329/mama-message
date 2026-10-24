@@ -62,13 +62,16 @@ class WritingMaterial(unittest.TestCase):
     def test_shrink_context_and_unanswered_diagnostics(self):
         ph, u = self.S["phrases"], self.S["unanswered"]
         self.assertEqual((ph["self_shrink"], ph["self_shrink_after_my_short"]), (8, 6))
-        self.assertLessEqual(u["was_her_reply"], u["count"])
-        self.assertLessEqual(u["ended_with_closer"], u["count"])
-        # 我说“妈我到了”，她回“好 到了就好”，第二天她又开口：算没回，但口径诊断要认出这是她在回我
+        self.assertEqual((u["count"], u["natural_end"]), (30, 29))
+        # 我说“妈我到了”，她回“好 到了就好”，第二天她又开口：对话自然说完了，不算没回
         ms = [msg("2026-05-01T20:00:00", "me", "妈 我到了"), msg("2026-05-01T20:01:00", "her", "好 到了就好"),
               msg("2026-05-02T08:00:00", "her", "吃饭了吗")]
         S = stats.compute(base(ms), today=TODAY)
-        self.assertEqual(S["unanswered"]["was_her_reply"], 1)
+        self.assertEqual((S["unanswered"]["natural_end"], S["unanswered"]["count"]), (1, 1))   # 算没回的是 08:00 那条（最后一条、已过一天）
+        # 她回我时问了一句、我没接：算没回
+        ms[1] = msg("2026-05-01T20:01:00", "her", "好 到了就好 吃饭没")
+        S = stats.compute(base(ms), today=TODAY)
+        self.assertEqual((S["unanswered"]["natural_end"], S["unanswered"]["count"]), (0, 2))
 
     def test_voice_profile(self):
         v = self.S["voice"]["her"]

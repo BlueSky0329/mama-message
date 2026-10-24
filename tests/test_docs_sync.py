@@ -204,5 +204,33 @@ class Lexicon(unittest.TestCase):
             self.assertNotIn("属于集合", doc)
 
 
+class ShowcaseNumbers(unittest.TestCase):
+    """README 首屏、示例 narrative、HANDOFF 基线里写的数字必须等于示例数据算出来的——口径一变这里就红，不会悄悄过时"""
+
+    def test_readme_and_narrative_match_sample_stats(self):
+        import json
+        from helpers import SAMPLE_NARR, SAMPLE_STATS
+        S = json.loads(read(SAMPLE_STATS))
+        N = json.loads(read(SAMPLE_NARR))
+        readme = read(os.path.join(ROOT, "README.md"))
+        handoff = read(os.path.join(ROOT, "docs", "HANDOFF.md"))
+        ix, u, bill = S["index"], S["unanswered"], S["bill"]
+        self.assertIn(f"嗯哦好指数  {ix['short']['score']} ", readme)
+        self.assertIn(f"不计较指数  {ix['forgive']['score']} ", readme)
+        self.assertIn(f"牵挂指数    {ix['care']['score']} ", readme)
+        self.assertIn(f"你没回的 {u['count']} 次里，有 {u['reopened_by_her']} 次", readme)
+        self.assertIn(f"你没回的 {u['count']} 次里，有 {u['reopened_by_her']} 次", N["index_lines"]["forgive"])
+        balance = f"欠 {bill['unanswered']} 条回复"
+        self.assertIn(balance, N["bill_balance"])
+        self.assertEqual(readme.count(balance), readme.count("条回复、"))
+        self.assertIn(f"没回 {u['count']} / {u['turns']} 段", handoff)
+        self.assertIn(f"评级分 {S['rating']['score']}（{S['rating']['label']}）", handoff)
+
+    def test_readme_has_no_dated_line(self):
+        """README 里不写"中秋在九月底"这种过几个月就过时的话；日子交给报告里的倒计时"""
+        readme = read(os.path.join(ROOT, "README.md"))
+        self.assertIsNone(re.search(r"(春节|元宵|清明|端午|七夕|中秋|重阳|母亲节|父亲节)在[一二三四五六七八九十]+月", readme))
+
+
 if __name__ == "__main__":
     unittest.main()

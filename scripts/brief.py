@@ -113,10 +113,9 @@ class Brief:
         fg = ix["forgive"]
         self.add(f"- 🕰️ 不计较 {fg['score'] if fg['score'] is not None else '—'}：你没回的 {u['count']} 次里，{p}自己先开口 {u['reopened_by_her']} 次"
                  f" · {p}追问「怎么不回」这类 {S['phrases']['chase']} 次")
-        if "was_her_reply" in u:
-            self.add(f"- 「没回」的口径提醒：{u['count']} 段里有 {u['was_her_reply']} 段本来是{p}在回你的话、说完对话就停了，"
-                     f"{u['ended_with_closer']} 段最后一句本来就是收尾（表情、「你忙吧」、两三个字）。写「{p}发了你没回」时说「{u['count']} 段」可以，"
-                     f"别说成「{u['count']} 个问题你都没回」")
+        if u.get("natural_end"):
+            self.add(f"- 「没回」只算{p}先开口没人接的、和{p}回你时问了你你没接的。另有 {u['natural_end']} 段是{p}在回你、没问什么，"
+                     f"说完对话自然停了，不算没回，也别写成没回")
         self.add(f"- 谁先开口：{p} {o['her']} / 你 {o['me']}"
                  + (f" · 你上一次主动开口 {o['days_since_my_last_open']} 天前" if o.get("days_since_my_last_open") is not None else "")
                  + (f" · {p}上一次主动 {o['days_since_her_last_open']} 天前" if o.get("days_since_her_last_open") is not None else ""))

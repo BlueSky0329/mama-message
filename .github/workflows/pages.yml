@@ -1,0 +1,41 @@
+# 网页版上线：main 有推送就把浏览器版发布到 GitHub Pages
+#   https://bluesky0329.github.io/mama-message/  （根目录跳到 web/）
+# 只发网页用得到的目录：web/ 页面本身，scripts/ assets/ references/ 是它 fetch 的，examples/ 是"用示例数据试试"。
+# 用 Actions 发布而不是"从分支发布"：不经过 Jekyll（它会丢掉 _common.py 这种下划线开头的文件）。
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 组装站点
+        run: |
+          mkdir -p _site
+          cp -r web scripts assets references examples _site/
+          find _site -name '__pycache__' -prune -exec rm -rf {} +
+          printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=web/"><title>妈妈的消息</title><a href="web/">打开网页版</a>\n' > _site/index.html
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

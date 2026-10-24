@@ -2,11 +2,14 @@
 
 ## v0.6 · 2026-10-24
 
-让写文字的 AI 写得准、让"收着"的规矩真的生效、让 Agent 少走错步。示例基线数字不变（stats.json 只多了写作素材字段）。
+让写文字的 AI 写得准、让"收着"的规矩真的生效、让 Agent 少走错步。示例基线只因"没回"口径变了一次：没回 59 → 30 段，嗯哦好 42 → 35，不计较 92 → 94，评级分 62 → 55，评级和类型鉴定不变。
 
 加：
+- `scripts/wechat_live.py` 和 `mama.py run --wechat 妈`：**不用导出，直接读本机微信**。连本机 Alpha 的只读 MCP 接口（`127.0.0.1:5031/mcp`），按名字找私聊、按页读完、转成 messages.json。只连本机、不走代理、工具白名单里只有读会话和读消息、只读私聊；转账去金额，没接通的通话不算；语音秒数和通话时长都有。正文由脚本本地读和算，写文字的 AI 只看 brief.md
+- `.github/workflows/pages.yml`：main 有推送就把网页版发到 GitHub Pages（T24）
+- `test_docs_sync.ShowcaseNumbers`：README 首屏、示例 narrative、HANDOFF 基线里的数字和示例数据比对；README 不再写"中秋在九月底"这种会过时的话
 - `scripts/brief.py`：写作素材包。把关键数字和对应的原话整理成 brief.md——她说起自己的事和你当时的回复、没回清单带上下文、她最常问的原话、她说过不止一次的话和几点说的、节日那天、她转给你的、她和你的说话方式、要不要收着、narrative.json 骨架。篇幅有上限，记录再长也读得完。网页版提示词从"整份 stats.json"换成"素材包 + 精简 stats"，AI 终于看得到原话
-- `stats.py` 写作素材字段（不进指数）：`self`（她说起自己的事 + 你的回复 + 之后有没有再提）、`meal`（问吃饭几次在饭点）、`voice`（说话方式）、`sensitivity`（冲突字眼 / 催婚占比 / 最后一条多久以前 → 建议口吻）、`phrases.self_shrink_after_my_short / _her`、`unanswered.was_her_reply / ended_with_closer`（"没回"口径诊断）、`basics.tz`、`source_detail`、各处消息下标 `i`；`compute_with_ctx()`
+- `stats.py` 写作素材字段（不进指数）：`self`（她说起自己的事 + 你的回复 + 之后有没有再提）、`meal`（问吃饭几次在饭点）、`voice`（说话方式）、`sensitivity`（冲突字眼 / 催婚占比 / 最后一条多久以前 → 建议口吻）、`phrases.self_shrink_after_my_short / _her`、`unanswered.natural_end`、`basics.tz`、`source_detail`、各处消息下标 `i`；`compute_with_ctx()`
 - 截图转录稿：AI 照截图抄成"她：/ 我："+ `-- 时间 --` + `=== 截图 N ===`，`parse_export.py` 去相邻截图的重叠、把倒序给的截图顺过来、按 `--shot-date` 换算"昨天 / 星期二 / 下午 3:05 / 只写几点"，换算不了的留空不编；容忍代码块包裹、"她（妈妈）："、续行带冒号。粘贴的"妈妈：… / 我：…"也认（以前 0 条）
 - 口吻表 `_common.MODES`（normal / gentle / neutral / memorial / third）：`render.py` 按 narrative.json 的 `mode` 去掉版块和卡片（模板里 `<!--#版块-->` 标记），换口吻时删掉上次留下的卡；`lint_narrative.py` 按它算必填字段
 - `scripts/mama.py`：run（解析 → 校验 → 算数 → 素材包）/ finish（lint → 报告和卡）/ explain（列出某个数字背后的消息）/ compare / practice（练习打分，T14）/ status，产物都在 `mama-out/`
@@ -30,7 +33,7 @@
 - writing-rules.md、types.md 的例子同步改成和示例数据一致
 - 账单卡上"嗯 / 好 / 知道了"的引号方向
 
-已知、没改（见 HANDOFF 已知问题 16 / T23）：没回的口径偏宽——她在回你、说完对话自然结束也算没回，示例 59 段里 38 段是这种。改口径会动"欠 59 条回复"这个招牌数字，等真实数据和作者决定。
+定了（T23）："没回"不再算她在回你、又没问你什么的段——那是对话自然说完了（`unanswered.natural_end`）。算没回的只剩她先开口没人接的、和她回你时问了你你没接的。依据是作者真实记录：5 年 6307 段里旧口径 491 段没回，438 段是这种。
 
 ## v0.5 · 2026-09-04
 

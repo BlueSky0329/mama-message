@@ -39,10 +39,10 @@ def write(p, text, encoding="utf-8", newline="\n"):
         f.write(text)
 
 
-def run(script, *args, cwd=ROOT):
-    """跑 scripts/ 下的脚本，返回 CompletedProcess（stdout/stderr 都是 UTF-8 文本）。"""
+def run(script, *args, cwd=ROOT, env=None):
+    """跑 scripts/ 下的脚本，返回 CompletedProcess（stdout/stderr 都是 UTF-8 文本）。env 是在 ENV 上额外加的变量。"""
     return subprocess.run([sys.executable, os.path.join(SCRIPTS, script), *args],
-                          cwd=cwd, env=ENV, capture_output=True, text=True, encoding="utf-8", errors="replace")
+                          cwd=cwd, env=dict(ENV, **(env or {})), capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
 def msg(ts, sender, content="", type_="text", dur=None):

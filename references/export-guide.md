@@ -13,6 +13,8 @@
 | 只有手机、Intel Mac、或不想在电脑上装东西 | 截图（见下） |
 | QQ / 短信 / iMessage | 见对应小节 |
 
+**不导出（最省事）**：电脑上开着 Alpha（本机微信的只读服务，和 WeFlow 装在一起）的话，脚本可以直接读，见下面「直接读本机微信」。
+
 任何一条路拿到文件之后都是同一条命令（解析 → 校验 → 算数 → 写作素材包，产物在 `mama-out/`）：
 
 ```bash
@@ -46,7 +48,24 @@ python scripts/parse_export.py 私聊_妈妈.json --call 妈妈 --last-days 180 
 - weclone CSV 的时间是 UTC、详细 JSON 的是 Unix 秒，脚本会换算成本地时间；发现"她最常在凌晨找你"这种反常结论，先怀疑时区
 - 默认按**运行脚本这台电脑**的时区换算。人在国外分析国内的记录，加 `--tz +08:00`，"几点找你"才对（见 metrics.md「时区」）
 
-它还有本地 HTTP API（`http://127.0.0.1:5031`，Bearer token），以后浏览器版可以直接连它拉记录，不用手动导文件。
+## 直接读本机微信（Alpha，不用导出）
+
+Alpha 在本机开了一个只读的 MCP 接口（默认 `http://127.0.0.1:5031/mcp`，Bearer 令牌），读的是这台电脑上已登录微信的记录。`scripts/wechat_live.py` 直接连它：
+
+1. Alpha 里打开「HTTP API」，复制令牌，设成用户环境变量 `MAMA_ALPHA_TOKEN`（Windows：`setx MAMA_ALPHA_TOKEN 令牌`，不要带尖括号）
+2. `python scripts/wechat_live.py find 妈` 看名字带"妈"的私聊有哪些
+3. `python scripts/mama.py run --wechat 妈 --call 妈妈 --last-days 365`——读、算、出素材包一条命令
+
+它做和不做的：
+
+- 只连 127.0.0.1 / localhost，不走系统代理；地址写成别的直接拒绝
+- 只调读会话、读消息的工具；发消息（`wechat.chat.send_text`）、写文件（`alpha.exports.start`）在代码白名单之外，调不了
+- 只读私聊；群聊、公众号不读
+- 转账只记"转账"不记金额；没接通的通话（取消、未接）不算通话；系统消息跳过
+- Alpha 给的语音带秒数（`[语音 5秒]`），通话带时长，这两项比 WeFlow 导出的文件全
+- 正文由脚本在本地读完、算完，写文字的 AI 只看 brief.md。实测：5 年 1.6 万条，读一遍约 80 秒
+
+WeFlow 本身也有本地 HTTP API（同一个端口），接口和 Alpha 不同，还没适配；用 WeFlow 的话先按上面导出 JSON。
 
 ## 留痕 / WeChatMsg / PyWxDump（微信 3.x）
 

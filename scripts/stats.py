@@ -338,7 +338,9 @@ def sec_hours(ctx, S):
 
 def sec_unanswered(ctx, S):
     """她发了你没回（turn 级）。turn = 她连续发的一段（相邻间隔 < OPEN_GAP_H 小时）。
-    没回：turn 之后没人再说话且已过了一天；或下一条还是她自己隔了 6 小时以上又开的口；或你 24 小时后才回。"""
+    没接上：turn 之后没人再说话且已过了一天；或下一条还是她自己隔了 6 小时以上又开的口；或你 24 小时后才回。
+    没接上的段里，她本来是在回你的话（段前一条是你的、24 小时内）、又没问你什么的，是对话自然说完了，不算没回（natural_end）。
+    算没回的 = 她先开口没人接的 + 她回你时问了你、你没接的。"""
     msgs = ctx.msgs
     turns, i = [], 0
     while i < len(msgs):
@@ -351,37 +353,28 @@ def sec_unanswered(ctx, S):
             i = j + 1
         else:
             i += 1
-    unanswered, reopen_her = [], 0
+    lex, window = ctx.lex, timedelta(hours=REPLY_WINDOW_H)
+    unanswered, natural, reopen_her = [], [], 0
     for (a, b) in turns:
         lastm = msgs[b]
         nxt = msgs[b + 1] if b + 1 < len(msgs) else None
         if nxt is None:
-            if lastm["_dt"] and ctx.today and (ctx.today - lastm["_dt"].date()).days >= 1:
-                unanswered.append(lastm)
+            if not (lastm["_dt"] and ctx.today and (ctx.today - lastm["_dt"].date()).days >= 1):
+                continue
+        elif nxt["sender"] != "her" and not (lastm["_dt"] and nxt["_dt"] and nxt["_dt"] - lastm["_dt"] >= window):
             continue
-        if nxt["sender"] == "her":
-            unanswered.append(lastm)
-            reopen_her += 1
-        elif lastm["_dt"] and nxt["_dt"] and nxt["_dt"] - lastm["_dt"] >= timedelta(hours=REPLY_WINDOW_H):
-            unanswered.append(lastm)
-    ctx.d.update(unanswered=unanswered, turns=turns)
-    # 口径诊断（不进指数，T1 校准用，也让写文字的 AI 别把"没回"说过头）：
-    # 这一段是她在回你的话（段前一条是你的、24 小时内），说完对话就自然结束了；或者最后一句本来就是收尾（表情、"你忙吧"、≤ 4 字且不是问句）
-    lex, ex = ctx.lex, ctx.lex.get("exclude", {})
-    first_of = {b: a for a, b in turns}
-    was_reply, closer = 0, 0
-    for m in unanswered:
-        a = first_of.get(m["_i"], m["_i"])
         prev = msgs[a - 1] if a else None
-        if prev and prev["sender"] == "me" and (not (prev["_dt"] and msgs[a]["_dt"]) or msgs[a]["_dt"] - prev["_dt"] < timedelta(hours=REPLY_WINDOW_H)):
-            was_reply += 1
-        c = m["content"]
-        if m["type"] == "sticker" or (m["type"] == "text" and not is_question(c, lex) and (
-                has_any(c, lex["self_shrink"], ex.get("self_shrink")) or has_any(c, lex["nothing"], ex.get("nothing"))
-                or m["_chars"] <= SIGNAL_RULES["health_reply_chars"])):
-            closer += 1
-    return {"count": len(unanswered), "turns": len(turns),
-            "was_her_reply": was_reply, "ended_with_closer": closer,
+        was_reply = prev is not None and prev["sender"] == "me" and (
+            not (prev["_dt"] and msgs[a]["_dt"]) or msgs[a]["_dt"] - prev["_dt"] < window)
+        asked = any(m["type"] == "text" and is_question(m["content"], lex) for m in msgs[a:b + 1])
+        if was_reply and not asked:
+            natural.append(lastm)
+            continue
+        unanswered.append(lastm)
+        if nxt is not None and nxt["sender"] == "her":
+            reopen_her += 1
+    ctx.d.update(unanswered=unanswered, natural_end=natural, turns=turns)
+    return {"count": len(unanswered), "turns": len(turns), "natural_end": len(natural),
             "ratio": round(len(unanswered) / len(turns), 3) if turns else None,
             "items": [{"i": m["_raw"], "date": m["_dt"].strftime("%m-%d %H:%M") if m["_dt"] else "—",
                        "content": type_label(m), "type": m["type"]} for m in unanswered[-8:]],

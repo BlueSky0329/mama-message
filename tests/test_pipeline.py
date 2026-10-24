@@ -282,7 +282,8 @@ class RenderAndCompare(unittest.TestCase):
         """--help 要能看懂：至少带模块说明的第一句"""
         for script, hint in (("parse_export.py", "messages.json"), ("validate.py", "stats.py"), ("stats.py", "统计引擎"),
                              ("render.py", "HTML"), ("compare.py", "对照组"), ("redact.py", "打码"), ("lint_narrative.py", "写作规矩"),
-                             ("brief.py", "写作素材包"), ("mama.py", "一条命令"), ("snap.py", "PNG")):
+                             ("brief.py", "写作素材包"), ("mama.py", "一条命令"), ("snap.py", "PNG"),
+                             ("wechat_live.py", "本机的微信")):
             r = run(script, "--help")
             self.assertEqual(r.returncode, 0, script)
             self.assertIn(hint, r.stdout, script)

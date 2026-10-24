@@ -216,16 +216,27 @@
   "me_late_ratio": 0.314
  },
  "unanswered": {
-  "count": 59,
+  "count": 30,
   "turns": 139,
-  "was_her_reply": 38,
-  "ended_with_closer": 25,
-  "ratio": 0.424,
+  "natural_end": 29,
+  "ratio": 0.216,
   "items": [
    {
-    "i": 262,
-    "date": "08-07 12:32",
-    "content": "好 到了就好",
+    "i": 231,
+    "date": "07-14 07:45",
+    "content": "[表情包]",
+    "type": "sticker"
+   },
+   {
+    "i": 238,
+    "date": "07-19 18:21",
+    "content": "[语音]",
+    "type": "voice"
+   },
+   {
+    "i": 244,
+    "date": "07-26 00:20",
+    "content": "发烧了？多少度 喝水了吗 去医院了没",
     "type": "text"
    },
    {
@@ -241,12 +252,6 @@
     "type": "text"
    },
    {
-    "i": 276,
-    "date": "08-19 20:30",
-    "content": "打扰你了 你忙吧",
-    "type": "text"
-   },
-   {
     "i": 278,
     "date": "08-20 22:22",
     "content": "[表情包]",
@@ -259,20 +264,14 @@
     "type": "text"
    },
    {
-    "i": 292,
-    "date": "08-27 02:26",
-    "content": "没事 就是问问",
-    "type": "text"
-   },
-   {
     "i": 293,
     "date": "08-28 06:08",
     "content": "你那边台风大不大",
     "type": "text"
    }
   ],
-  "reopened_by_her": 51,
-  "reopen_ratio": 0.864
+  "reopened_by_her": 27,
+  "reopen_ratio": 0.9
  },
  "phrases": {
   "chase": 0,
@@ -765,17 +764,17 @@
    }
   },
   "short": {
-   "score": 42,
+   "score": 35,
    "parts": {
     "short_ratio": 0.559,
-    "unanswered_ratio": 0.424,
+    "unanswered_ratio": 0.216,
     "latency_score": 0.125
    }
   },
   "forgive": {
-   "score": 92,
+   "score": 94,
    "parts": {
-    "reopen_ratio": 0.864,
+    "reopen_ratio": 0.9,
     "chase_ratio": 0.0
    }
   }
@@ -800,19 +799,18 @@
   "primary": "嗯哦好选手",
   "all": [
    "嗯哦好选手",
-   "已读不回选手",
    "深夜忏悔型"
   ]
  },
  "rating": {
   "label": "欠一个电话",
-  "score": 62
+  "score": 55
  },
  "bill": {
   "her_sent": 192,
   "me_sent": 102,
   "balance": 90,
-  "unanswered": 59,
+  "unanswered": 30,
   "calls": 3
  },
  "sensitivity": {
