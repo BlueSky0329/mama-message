@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-scripts/ 共用的小工具：UTF-8 输出、JSON 读写、时间解析与格式化、消息类型枚举、
-契约版本号、词表加载、文本编码嗅探。只用标准库，不联网。
+scripts/ 共用的小工具：UTF-8 输出、JSON 读写、时间解析与格式化、时区、消息类型枚举、
+契约版本号、报告口吻（MODES）、词表加载、文本编码嗅探。只用标准库，不联网。
 
 其他脚本都 `from _common import ...`。`python scripts/xxx.py` 时 scripts/ 自动在 sys.path 里；
 用 runpy 或从别的目录 import 时要先把 scripts/ 加进 sys.path（web/index.html 的 RUNNER、tests/ 都加了）。
 """
 import json
 import os
+import re
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 
 # 三份契约（messages.json / stats.json / narrative.json）共用的版本号。字段改到不兼容时 +1，
 # render.py 会拒绝旧版 stats.json 并提示重跑；messages.json / narrative.json 缺这个字段也能用。
@@ -29,6 +30,40 @@ TYPE_CN = {"sticker": "表情包", "image": "图片", "voice": "语音", "link":
            "other": "其他"}
 
 TS_FORMATS = ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M")
+
+# 金额：转账只记次数不记金额。validate 查 messages.json，lint 查 narrative.json，用同一个口径。
+AMOUNT_RE = re.compile(r"\d+(?:\.\d+)?\s*(?:元|块|万|¥|￥)|[¥￥]\s*\d")
+
+# narrative.json 的必填字段，和它们落在报告的哪个版块。版块被当前口吻藏掉时，对应字段就不必填。
+NARRATIVE_REQUIRED = ("she_means", "send_text", "dictionary", "tonight", "replies", "call_openers", "type_lines")
+FIELD_BLOCK = {"send_text": "send", "tonight": "tonight", "replies": "replies", "call_openers": "openers"}
+
+# 报告的口吻。writing-rules.md「什么时候要收着」是规矩，这里是执行：render.py 按 hide 去掉报告里的版块
+# 和卡片（card-bill / card-send），lint_narrative.py 按它算必填字段。文档里的表格是复述，test_docs_sync 比对。
+#   版块：rating 评级章 · countdown 节日倒计时 · unanswered 没回清单 · signals 该打电话了 · gap 多久没主动找
+#         tonight 今晚三件事 · replies 帮你回 · openers 开场白 · bill 亲情账单 · send 发给她的一条
+MODES = {
+    "normal":   {"cn": "正常", "when": "默认", "hide": (), "unanswered_max": 5},
+    "gentle":   {"cn": "放轻", "when": "用户说了内疚、难受，或者和家里闹僵了", "hide": ("rating",), "unanswered_max": 2},
+    "neutral":  {"cn": "中性", "when": "记录里有明显的冲突、辱骂、控制，或者持续的催婚、要钱压力",
+                 "hide": ("rating", "tonight", "openers", "send", "bill", "card-bill", "card-send"), "unanswered_max": 5},
+    "memorial": {"cn": "怀念", "when": "她已经不在了，用户想再看看她说过的话",
+                 "hide": ("rating", "countdown", "unanswered", "signals", "gap", "tonight", "replies", "openers", "send", "bill",
+                          "card-bill", "card-send"), "unanswered_max": 0},
+    "third":    {"cn": "替别人看", "when": "用户在替别人分析",
+                 "hide": ("tonight", "send", "card-bill", "card-send"), "unanswered_max": 5},
+}
+
+
+def mode_of(narrative):
+    """narrative 里的 mode，缺省 normal。认不出来的原样返回，由调用方报错。"""
+    return (narrative or {}).get("mode") or "normal"
+
+
+def required_fields(mode):
+    """这个口吻下 narrative.json 必须写的字段。"""
+    hide = set(MODES.get(mode, MODES["normal"])["hide"])
+    return tuple(f for f in NARRATIVE_REQUIRED if FIELD_BLOCK.get(f) not in hide)
 
 
 def setup_utf8():
@@ -79,9 +114,34 @@ def fmt_delta(seconds):
     return f"{d} 天 {h} 小时" if h else f"{d} 天"
 
 
-def epoch_to_local(t):
-    """Unix 时间（秒或毫秒，int / float / 纯数字字符串）→ 本地时间 "YYYY-MM-DD HH:MM:SS"；认不出来 → None。
-    毫秒按数量级判断（> 1e11 就是毫秒）。用的是本机时区，海外用户见 metrics.md「时区」。"""
+_TZ_RE = re.compile(r"^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$", re.I)
+
+
+def parse_tz(s):
+    """"+08:00" / "+0800" / "UTC+8" / "-5" → datetime.timezone；空 → None（表示用本机时区）。写错给人话错误。"""
+    if s is None or str(s).strip() == "":
+        return None
+    t = str(s).strip()
+    if t.upper() in ("UTC", "GMT", "Z"):
+        return timezone.utc
+    m = _TZ_RE.match(t)
+    if not m or int(m.group(2)) > 14 or int(m.group(3) or 0) >= 60:
+        raise ValueError(f"时区要写成 +08:00 这样（UTC+8 也行），现在是 {s!r}")
+    sign = 1 if m.group(1) == "+" else -1
+    return timezone(sign * timedelta(hours=int(m.group(2)), minutes=int(m.group(3) or 0)))
+
+
+def tz_label(tz=None):
+    """时区 → "+08:00"。不给就是运行脚本这台机器现在的时区。"""
+    off = (datetime.now(tz) if tz else datetime.now().astimezone()).utcoffset() or timedelta(0)
+    mins = int(off.total_seconds() // 60)
+    sign = "-" if mins < 0 else "+"
+    return f"{sign}{abs(mins) // 60:02d}:{abs(mins) % 60:02d}"
+
+
+def epoch_to_local(t, tz=None):
+    """Unix 时间（秒或毫秒，int / float / 纯数字字符串）→ "YYYY-MM-DD HH:MM:SS"；认不出来 → None。
+    毫秒按数量级判断（> 1e11 就是毫秒）。tz 不给用本机时区（海外用户见 metrics.md「时区」，或 parse_export --tz）。"""
     try:
         v = float(t)
     except (TypeError, ValueError):
@@ -89,7 +149,8 @@ def epoch_to_local(t):
     if v > 1e11:
         v /= 1000.0
     try:
-        return datetime.fromtimestamp(v).strftime("%Y-%m-%d %H:%M:%S")
+        dt = datetime.fromtimestamp(v, tz) if tz else datetime.fromtimestamp(v)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
     except (OverflowError, OSError, ValueError):
         return None
 
@@ -132,7 +193,7 @@ def safe_date(y, m, d):
 
 
 _LEXICON_KEYS = ("topics", "care_topics", "self_shrink", "chase", "nothing", "health_red", "health_link",
-                 "news_link", "my_negative", "stopwords", "short_reply_exclude", "exclude")
+                 "news_link", "my_negative", "self_words", "question", "conflict", "stopwords", "short_reply_exclude", "exclude")
 
 
 def load_lexicon(path=None):

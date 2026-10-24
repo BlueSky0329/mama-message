@@ -15,7 +15,14 @@ import stats     # noqa: E402
 METRICS = read(os.path.join(REFERENCES, "metrics.md"))
 TYPES = read(os.path.join(REFERENCES, "types.md"))
 PROMPT = read(os.path.join(ROOT, "prompts", "普通用户版.md"))
+RULES = read(os.path.join(REFERENCES, "writing-rules.md"))
+SKILL = read(os.path.join(ROOT, "SKILL.md"))
+TEMPLATE = read(os.path.join(REFERENCES, "report-template.md"))
 LEX = _common.load_lexicon()
+
+# MODES 的版块名 → 文档里的叫法
+BLOCK_CN = {"rating": "评级", "countdown": "倒计时", "unanswered": "没回", "signals": "信号", "gap": "多久没主动找",
+            "tonight": "今晚三件事", "replies": "帮你回", "openers": "开场白", "bill": "账单", "send": "发给她的一条"}
 
 
 def line_with(text, marker):
@@ -112,6 +119,56 @@ class Thresholds(unittest.TestCase):
         R = stats.MOTHER_RULES
         self.assertIn(f"她开启 < {pct(R['wait_open_ratio'])} 但回你 < {R['wait_fast_s'] // 60} 分钟", TYPES)
         self.assertIn(f"> {R['secondary_min']}", TYPES)
+
+
+class Modes(unittest.TestCase):
+    """口吻表：SKILL.md 和 writing-rules.md 各有一张，和 _common.MODES 逐行比"""
+    def _table(self, doc):
+        rows = {}
+        for line in doc.split("\n"):
+            m = re.match(r"^\| `(\w+)`[^|]*\|([^|]*)\|([^|]*)\|$", line)
+            if m:
+                rows[m.group(1)] = (m.group(2).strip(), m.group(3).strip())
+        return rows
+
+    def test_mode_tables_match_code(self):
+        for name, doc in (("SKILL.md", SKILL), ("writing-rules.md", RULES)):
+            rows = self._table(doc)
+            self.assertEqual(set(rows), set(_common.MODES), name)
+            for mode, spec in _common.MODES.items():
+                when, hidden = rows[mode]
+                self.assertEqual(when, spec["when"], f"{name} {mode} 的“什么时候”")
+                blocks = [b for b in spec["hide"] if not b.startswith("card-")]
+                for b in blocks:
+                    self.assertIn(BLOCK_CN[b], hidden, f"{name} {mode} 没写去掉 {b}")
+                for b, cn in BLOCK_CN.items():
+                    if b not in spec["hide"] and cn in hidden and not (b == "unanswered" and spec["unanswered_max"] < 5):
+                        self.fail(f"{name} {mode} 写了去掉“{cn}”，代码里没去掉")
+                cards_off = {"card-bill", "card-send"} <= set(spec["hide"])
+                self.assertEqual(cards_off, "两张卡都不出" in hidden or "只出报告" in hidden, f"{name} {mode} 的卡片")
+                if spec["unanswered_max"] not in (0, 5):
+                    self.assertIn(f"只列 {spec['unanswered_max']} 条", hidden, f"{name} {mode}")
+
+    def test_template_lists_modes_and_required(self):
+        self.assertIn(" / ".join(_common.MODES), TEMPLATE)
+        for mode in ("neutral", "memorial", "third"):
+            dropped = [f for f in _common.NARRATIVE_REQUIRED if f not in _common.required_fields(mode)]
+            line = line_with(TEMPLATE, f"`{mode}` ")
+            for f in dropped:
+                self.assertIn(f"`{f}`", line, f"report-template 里 {mode} 不用写的字段")
+
+
+class WritingMaterial(unittest.TestCase):
+    def test_material_thresholds(self):
+        self.assertIn("、".join(f"{a}–{b}" for a, b in stats.MEAL_HOURS) + " 点", METRICS)
+        self.assertIn(f'≥ {stats.SELF_MIN_CHARS} 字的"我……"', METRICS)
+        self.assertIn(f"最近 {stats.SELF_ITEMS_MAX} 条", METRICS)
+        R = stats.SENSITIVITY_RULES
+        self.assertIn(f"≥ {R['conflict_min']} 条建议 `neutral`", METRICS)
+        self.assertIn(f"≥ {pct(R['marriage_ratio'])}", METRICS)
+        self.assertIn(f"≥ {R['stale_days']} 天", METRICS)
+        for key in ("self_words", "question", "conflict"):
+            self.assertIn(f"`{key}`", METRICS, key)
 
 
 class Lexicon(unittest.TestCase):

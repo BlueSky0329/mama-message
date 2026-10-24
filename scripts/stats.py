@@ -25,7 +25,7 @@ from collections import Counter, defaultdict
 from datetime import date, timedelta
 
 from _common import (SCHEMA_VERSION, TYPE_CN, dump_json, fmt_delta, has_any, load_json, load_lexicon,
-                     parse_mmdd, parse_ts, safe_date, setup_utf8)
+                     parse_mmdd, parse_ts, safe_date, setup_utf8, strip_excluded)
 
 setup_utf8()
 
@@ -56,7 +56,17 @@ CHILD_RULES = {"short_ratio": 0.4, "unanswered_ratio": 0.3, "fast_h": 10 / 60, "
 SIGNAL_RULES = {"health_reply_chars": 4, "self_shrink_min": 2, "sticker_mult": 1.8, "sticker_min": 0.3,
                 "opens_drop_pct": -35, "call_drop_ratio": 0.5, "nothing_min": 3, "my_open_gap_days": 14}
 
+# 写作素材用的细节（不进指数和评级，只给"她其实想说的是"和类型那句提供能核对的数字）
+MEAL_HOURS = ((7, 9), (11, 13), (17, 19))   # 饭点：7–9、11–13、17–19 点（左闭右开）
+SELF_MIN_CHARS = 6     # 她说"我……"至少 6 个字才算在说自己的事（"我知道了"不算）
+SELF_ITEMS_MAX = 10    # 她说起自己的事最多列 10 条（最近的）
+# 要不要收着：只给提醒，不替 AI 决定
+SENSITIVITY_RULES = {"conflict_min": 3, "marriage_ratio": 0.25, "stale_days": 180}
+
 EMOJI_RE = re.compile(r"\[([^\[\]]{1,6})\]")
+KIN_RE = re.compile(r"你(?:爸|妈|哥|姐|弟|妹|奶奶|爷爷|外婆|外公|姥姥|姥爷|舅|姑|姨|叔|婶|表|堂)")   # "你爸住院了"说的是家里的事
+PUNCT_RE = re.compile(r"[，。！？、；：,.!?;:…~～]")
+CJK_SPACE_RE = re.compile(r"[一-鿿]\s+[一-鿿]")
 
 # 固定日期表（农历节日没法用标准库算，先查表；表外年份进 warnings）
 LUNAR = {
@@ -110,12 +120,33 @@ def is_short(m, lex):
     return 0 < len(c) <= SHORT_MAX_CHARS and not EMOJI_RE.search(c)
 
 
+def is_question(text, lex):
+    """问句：带问句标记（吗 / ？/ 怎么 / 什么……，lexicon.json 的 question），"疼不疼"这种 X不X，或者"好点没"这种以"没"收尾的。"""
+    return any(q in text for q in lex["question"]) or bool(re.search(r"(.)不\1|没有?\s*$", text))
+
+
+def mm_dd(m, with_time=False):
+    return (m["_dt"].strftime("%m-%d %H:%M" if with_time else "%m-%d") if m.get("_dt") else None)
+
+
+def first_reply(ctx, m, window=5):
+    """她这条之后你的第一条（往后看 window 条、不超过 REPLY_WINDOW_H 小时）；没有 → None。"""
+    for x in ctx.msgs[m["_i"] + 1:m["_i"] + 1 + window]:
+        if m["_dt"] and x["_dt"] and x["_dt"] - m["_dt"] >= timedelta(hours=REPLY_WINDOW_H):
+            return None
+        if x["sender"] == "me":
+            return x
+    return None
+
+
 class Ctx:
     """整理好的输入。sec_xxx() 只读它；段与段之间要传的中间量放在 ctx.d 里。"""
 
     def __init__(self, data, lex, today=None, her_birthday=None, my_birthday=None):
         self.her_name = data.get("her", "妈妈")
         self.pronoun = data.get("her_pronoun", "她")
+        self.tz = data.get("tz")               # parse_export 写的时区（"+08:00"）；手工转录的可能没有
+        self.source_detail = data.get("source_detail") or data.get("source")
         self.lex = lex
         self.today = today
         self.her_birthday = her_birthday      # (月, 日) 或 None
@@ -123,13 +154,14 @@ class Ctx:
         raw = data.get("messages") or []
         self.n_unknown = sum(1 for m in raw if m.get("sender") not in ("her", "me"))
         self.msgs = []
-        for m in raw:
+        for ri, m in enumerate(raw):
             if m.get("sender") not in ("her", "me"):
                 continue
             c = dict(m)                        # 复制一份，不改写调用方的数据
             c["type"] = c.get("type") or "text"
             c["content"] = c.get("content") or ""
-            c["_i"] = len(self.msgs)
+            c["_i"] = len(self.msgs)           # 在 ctx.msgs 里的位置
+            c["_raw"] = ri                     # 在 messages.json 的 messages 里的位置（stats.json 里的 "i"，brief.py 按它取上下文）
             c["_dt"] = parse_ts(c.get("ts"))
             c["_chars"] = len(c["content"].strip()) if c["type"] == "text" else 0
             c["_topics"] = topic_of(c["content"], lex) if (c["sender"] == "her" and c["type"] == "text") else []
@@ -171,7 +203,7 @@ def sec_basics(ctx, S):
             "first": first.strftime("%Y-%m-%d") if first else None,
             "last": last.strftime("%Y-%m-%d") if last else None,
             "span_days": span_days, "active_days": active_days,
-            "with_ts": len(dated), "without_ts": len(ctx.msgs) - len(dated)}
+            "with_ts": len(dated), "without_ts": len(ctx.msgs) - len(dated), "tz": ctx.tz}
 
 
 def sec_opens(ctx, S):
@@ -233,7 +265,7 @@ def sec_longest(ctx, S):
         between = [m for m in msgs[longest["_i"] + 1:reply["_i"]] if m["sender"] == "her"]
         if len(between) > 2:
             reply = None
-    return {"chars": longest["_chars"], "content": longest["content"][:60],
+    return {"i": longest["_raw"], "chars": longest["_chars"], "content": longest["content"][:60],
             "date": longest["_dt"].strftime("%m-%d") if longest["_dt"] else None,
             "reply_chars": reply["_chars"] if reply and reply["type"] == "text" else (0 if reply is None else None),
             "reply": (reply["content"][:40] if reply and reply["type"] == "text"
@@ -255,6 +287,7 @@ def sec_short(ctx, S):
         prev = m
     me_replies = [m for m in ctx.me_text if reply_flag.get(m["_i"])]
     shorts = [m for m in me_replies if is_short(m, ctx.lex)]
+    ctx.d.update(me_replies=me_replies, shorts=shorts, short_ids={m["_i"] for m in shorts})
     return {"count": len(shorts), "replies": len(me_replies),
             "ratio": round(len(shorts) / len(me_replies), 3) if me_replies else None,
             "top": Counter(m["content"].strip() for m in shorts).most_common(5)}
@@ -331,10 +364,26 @@ def sec_unanswered(ctx, S):
             reopen_her += 1
         elif lastm["_dt"] and nxt["_dt"] and nxt["_dt"] - lastm["_dt"] >= timedelta(hours=REPLY_WINDOW_H):
             unanswered.append(lastm)
-    ctx.d["unanswered"] = unanswered
+    ctx.d.update(unanswered=unanswered, turns=turns)
+    # 口径诊断（不进指数，T1 校准用，也让写文字的 AI 别把"没回"说过头）：
+    # 这一段是她在回你的话（段前一条是你的、24 小时内），说完对话就自然结束了；或者最后一句本来就是收尾（表情、"你忙吧"、≤ 4 字且不是问句）
+    lex, ex = ctx.lex, ctx.lex.get("exclude", {})
+    first_of = {b: a for a, b in turns}
+    was_reply, closer = 0, 0
+    for m in unanswered:
+        a = first_of.get(m["_i"], m["_i"])
+        prev = msgs[a - 1] if a else None
+        if prev and prev["sender"] == "me" and (not (prev["_dt"] and msgs[a]["_dt"]) or msgs[a]["_dt"] - prev["_dt"] < timedelta(hours=REPLY_WINDOW_H)):
+            was_reply += 1
+        c = m["content"]
+        if m["type"] == "sticker" or (m["type"] == "text" and not is_question(c, lex) and (
+                has_any(c, lex["self_shrink"], ex.get("self_shrink")) or has_any(c, lex["nothing"], ex.get("nothing"))
+                or m["_chars"] <= SIGNAL_RULES["health_reply_chars"])):
+            closer += 1
     return {"count": len(unanswered), "turns": len(turns),
+            "was_her_reply": was_reply, "ended_with_closer": closer,
             "ratio": round(len(unanswered) / len(turns), 3) if turns else None,
-            "items": [{"date": m["_dt"].strftime("%m-%d %H:%M") if m["_dt"] else "—",
+            "items": [{"i": m["_raw"], "date": m["_dt"].strftime("%m-%d %H:%M") if m["_dt"] else "—",
                        "content": type_label(m), "type": m["type"]} for m in unanswered[-8:]],
             "reopened_by_her": reopen_her,
             "reopen_ratio": round(reopen_her / len(unanswered), 3) if unanswered else None}
@@ -346,8 +395,12 @@ def sec_phrases(ctx, S):
     shrink = [m for m in ctx.her_text if has_any(m["content"], lex["self_shrink"], ex.get("self_shrink"))]
     nothing = [m for m in ctx.her_text if has_any(m["content"], lex["nothing"], ex.get("nothing"))]
     ctx.d.update(chase=chase, shrink=shrink, nothing=nothing)
+    # 她收尾之前的那一条：是你的短回复（你回了"嗯"，她说"那你忙吧"），还是她自己的（你没接话，她替你收了）
+    prev = [ctx.msgs[m["_i"] - 1] if m["_i"] else None for m in shrink]
     return {"chase": len(chase), "self_shrink": len(shrink),
-            "self_shrink_examples": [m["content"][:30] for m in shrink[-3:]], "nothing": len(nothing)}
+            "self_shrink_examples": [m["content"][:30] for m in shrink[-3:]], "nothing": len(nothing),
+            "self_shrink_after_my_short": sum(1 for p in prev if p and p["sender"] == "me" and p["type"] == "text" and is_short(p, lex)),
+            "self_shrink_after_her": sum(1 for p in prev if p and p["sender"] == "her")}
 
 
 def sec_extras(ctx, S):
@@ -507,7 +560,7 @@ def sec_festivals(ctx, S):
                 continue
             f = day_msgs[0]
             other = next((m for m in day_msgs if m["sender"] != f["sender"]), None)
-            board.append({"name": name, "date": dd.isoformat(),
+            board.append({"name": name, "date": dd.isoformat(), "i": f["_raw"],
                           "first": "her" if f["sender"] == "her" else "me",
                           "time": f["_dt"].strftime("%H:%M"),
                           "content": type_label(f, 20),
@@ -665,16 +718,122 @@ def sec_bill(ctx, S):
             "unanswered": len(ctx.d["unanswered"]), "calls": len(ctx.d["calls"])}
 
 
+# ---------- 写作素材（不进指数：给"她其实想说的是"、类型那句、练习模式提供能核对的原话和数字） ----------
+
+def sec_self(ctx, S):
+    """她说起自己和家里的事：不是在问你（question 词表、X不X），也不是在叮嘱你（不含"你"；"你爸 / 你表姐"这类
+    家里人除外），并且含 self_words（身体、心情、一个人……）或者是 ≥ SELF_MIN_CHARS 字的"我……"。
+    附你的回复（她这条之后 5 条内、24 小时内你的第一条），以及之后你有没有再提过同一个词、她有没有再说起。"""
+    lex, ex = ctx.lex, ctx.lex.get("exclude", {})
+    found = []
+    for m in ctx.her_text:
+        c = strip_excluded(m["content"], ex.get("self_words"))
+        if "你" in KIN_RE.sub("", c) or is_question(c, lex):
+            continue
+        words = [w for w in lex["self_words"] if w in c]
+        if words or ("我" in c and m["_chars"] >= SELF_MIN_CHARS):
+            found.append((m, words))
+    ctx.d["self"] = [m for m, _ in found]
+    replies = [first_reply(ctx, m) for m, _ in found]
+    items = []
+    for k, ((m, words), r) in enumerate(zip(found, replies)):
+        if k < len(found) - SELF_ITEMS_MAX:
+            continue
+        later_self = [x for x, w2 in found[k + 1:] if set(w2) & set(words)]
+        items.append({
+            "i": m["_raw"], "date": mm_dd(m, True), "content": m["content"][:80], "words": words,
+            "reply": None if r is None else {
+                "i": r["_raw"], "content": type_label(r, 40), "chars": r["_chars"],
+                "after": fmt_delta((r["_dt"] - m["_dt"]).total_seconds()) if (r["_dt"] and m["_dt"]) else None},
+            "i_mentioned_again": sum(1 for x in ctx.me_text if x["_i"] > m["_i"] and any(w in x["content"] for w in words)) if words else None,
+            "she_mentioned_again": len(later_self) if words else None})
+    lim = SIGNAL_RULES["health_reply_chars"]
+    return {"count": len(found),
+            "short_or_none": sum(1 for r in replies if r is None or r["_chars"] <= lim),
+            "items": items}
+
+
+def sec_meal(ctx, S):
+    """她问吃饭（"吃饭"主题）的消息里，几条是在饭点（MEAL_HOURS）发的。类型那句"只有 3 次是在饭点"从这里来。"""
+    asks = [m for m in ctx.her_text if "吃饭" in m["_topics"]]
+    dated = [m for m in asks if m["_dt"]]
+    off = [m for m in dated if not any(a <= m["_dt"].hour < b for a, b in MEAL_HOURS)]
+    return {"asks": len(asks), "at_meal": len(dated) - len(off), "off_meal": len(off),
+            "off_meal_examples": [{"i": m["_raw"], "date": mm_dd(m, True), "content": m["content"][:30]} for m in off[-3:]]}
+
+
+def sec_voice(ctx, S):
+    """说话方式：她（和你）每条几个字、用不用标点、用不用空格断句、一次连发几条、怎么开口、怎么收尾、
+    你回了短回复之后她通常接什么。练习模式照着学，"帮你回"照着对你的口气。"""
+    def side(texts):
+        n = len(texts)
+        if not n:
+            return {"text_n": 0}
+        ch = [m["_chars"] for m in texts]
+        return {"text_n": n, "avg_chars": round(sum(ch) / n, 1), "median_chars": statistics.median(ch),
+                "punct_ratio": round(sum(1 for m in texts if PUNCT_RE.search(m["content"])) / n, 3),
+                "space_ratio": round(sum(1 for m in texts if CJK_SPACE_RE.search(m["content"])) / n, 3),
+                "emoji_ratio": round(sum(1 for m in texts if EMOJI_RE.search(m["content"])) / n, 3)}
+
+    def top(ms, k=3):
+        return [[c, n] for c, n in Counter(m["content"].strip() for m in ms if m["type"] == "text" and m["content"].strip()).most_common(k)]
+
+    msgs, turns, short_ids = ctx.msgs, ctx.d["turns"], ctx.d["short_ids"]
+    her, me = side(ctx.her_text), side(ctx.me_text)
+    her["burst"] = round(sum(b - a + 1 for a, b in turns) / len(turns), 1) if turns else None
+    her["openers"] = top(ctx.d["her_opens"])
+    closers = []
+    for m in ctx.her_text:
+        nxt = msgs[m["_i"] + 1] if m["_i"] + 1 < len(msgs) else None
+        if nxt is None or (m["_dt"] and nxt["_dt"] and nxt["_dt"] - m["_dt"] >= timedelta(hours=OPEN_GAP_H)):
+            closers.append(m)
+    her["closers"] = top(closers)
+    her["after_my_short"] = top([m for m in ctx.her_text if m["_i"] and (m["_i"] - 1) in short_ids])
+    if ctx.me_text:
+        lg = max(ctx.me_text, key=lambda m: m["_chars"])
+        me["longest"] = {"i": lg["_raw"], "date": mm_dd(lg), "chars": lg["_chars"], "content": lg["content"][:60]}
+    return {"her": her, "me": me}
+
+
+def sec_sensitivity(ctx, S):
+    """要不要收着（writing-rules「什么时候要收着」）。只给提醒和建议的口吻，不替 AI 决定——用户的语气比记录更重要。"""
+    R, p, lex = SENSITIVITY_RULES, ctx.pronoun, ctx.lex
+    hits = [m for m in ctx.msgs if m["type"] == "text" and has_any(m["content"], lex["conflict"], lex.get("exclude", {}).get("conflict"))]
+    tc = ctx.d["topic_counter"]
+    marriage = round(tc.get("对象结婚", 0) / len(ctx.her_text), 3) if ctx.her_text else 0
+    last = ctx.d["last"]
+    stale = (ctx.today - last.date()).days if (ctx.today and last) else None
+    reasons, suggest = [], None
+    if len(ctx.msgs) < MIN_MSGS:
+        reasons.append(f"记录不到 {MIN_MSGS} 条：只出数字，“{p}其实想说的是”写“记录太少，我不想瞎猜”")
+    if len(hits) >= R["conflict_min"]:
+        suggest = "neutral"
+        reasons.append(f"有 {len(hits)} 条消息带冲突的字眼——先看是不是吵过架，是的话用 neutral，中性描述两边")
+    if marriage >= R["marriage_ratio"]:
+        reasons.append(f"{p}的文字里 {round(100 * marriage)}% 在说对象结婚——用户要是有压力，考虑 neutral")
+    if stale is not None and stale >= R["stale_days"]:
+        reasons.append(f"最后一条消息是 {stale} 天前——先问一句用户现在的情况再定口吻（{p}要是已经不在了，用 memorial）")
+    return {"conflict": len(hits),
+            "conflict_examples": [{"i": m["_raw"], "date": mm_dd(m), "sender": m["sender"], "content": m["content"][:30]} for m in hits[:3]],
+            "marriage_ratio": marriage, "stale_days": stale, "suggest": suggest, "reasons": reasons}
+
+
 # ---------- 组装 ----------
 
 def compute(data, today=None, her_birthday=None, my_birthday=None, lexicon=None):
     """messages.json 的内容 → stats 字典。today 是 date；生日是 "MM-DD"；lexicon 不给就读 references/lexicon.json。
     不改写传入的 data。"""
+    return compute_with_ctx(data, today, her_birthday, my_birthday, lexicon)[0]
+
+
+def compute_with_ctx(data, today=None, her_birthday=None, my_birthday=None, lexicon=None):
+    """同 compute()，另外返回 ctx：ctx.d 里有每个数字背后的那些消息（mama.py explain 用）。"""
     lex = lexicon or load_lexicon()
     ctx = Ctx(data, lex, today=today,
               her_birthday=parse_mmdd(her_birthday) if her_birthday else None,
               my_birthday=parse_mmdd(my_birthday) if my_birthday else None)
-    S = {"schema": SCHEMA_VERSION, "lexicon": lex.get("version"), "her_name": ctx.her_name, "pronoun": ctx.pronoun, "warnings": []}
+    S = {"schema": SCHEMA_VERSION, "lexicon": lex.get("version"), "her_name": ctx.her_name, "pronoun": ctx.pronoun,
+         "source_detail": ctx.source_detail, "warnings": []}
     S["warnings"].extend(sec_warnings(ctx, S))
     S["basics"] = sec_basics(ctx, S)
     S["opens"] = sec_opens(ctx, S)
@@ -685,14 +844,17 @@ def compute(data, today=None, her_birthday=None, my_birthday=None, lexicon=None)
     S["longest_voice_s"] = max((m.get("dur") or 0) for m in ctx.her if m["type"] == "voice") if any(m["type"] == "voice" for m in ctx.her) else 0
     S["short"] = sec_short(ctx, S)
     S["topics"] = sec_topics(ctx, S)
+    S["meal"] = sec_meal(ctx, S)
     S["care_ratio"] = sec_care_ratio(ctx, S)
     S["hours"] = sec_hours(ctx, S)
     S["unanswered"] = sec_unanswered(ctx, S)
     S["phrases"] = sec_phrases(ctx, S)
+    S["self"] = sec_self(ctx, S)
     S["extras"] = sec_extras(ctx, S)
     S["composition"] = sec_composition(ctx, S)
     S["emoji"] = sec_emoji(ctx, S)
     S["catchphrases"] = sec_catchphrases(ctx, S)
+    S["voice"] = sec_voice(ctx, S)
     S["forwards"] = sec_forwards(ctx, S)
     S["weekly"] = sec_weekly(ctx, S)
     S["trend"] = sec_trend(ctx, S)
@@ -704,7 +866,8 @@ def compute(data, today=None, her_birthday=None, my_birthday=None, lexicon=None)
     S["child_type"] = sec_child_type(ctx, S)
     S["rating"] = sec_rating(ctx, S)
     S["bill"] = sec_bill(ctx, S)
-    return S
+    S["sensitivity"] = sec_sensitivity(ctx, S)
+    return S, ctx
 
 
 # ---------- Markdown 摘要 ----------
@@ -741,6 +904,11 @@ def summary_md(S):
     L.append(f"- 鉴定：{p} {S['mother_type']['primary']}" + (f"（副：{S['mother_type']['secondary']}）" if S['mother_type']['secondary'] else "") + f" / 你 {S['child_type']['primary']} / 评级 {S['rating']['label']}")
     for s in S["signals"]:
         L.append(f"- {'🔴' if s['level']=='red' else '🟡'} {s['text']}")
+    sf = S["self"]
+    L.append(f"- {p}说起自己的事：{sf['count']} 次，其中你没回或回了不超过 4 个字 {sf['short_or_none']} 次"
+             + (f"（最近一次 {sf['items'][-1]['date']}“{sf['items'][-1]['content'][:20]}”）" if sf["items"] else ""))
+    for r in S["sensitivity"]["reasons"]:
+        L.append(f"- 🤍 {r}")
     for w in S["warnings"]:
         L.append(f"- ⚠️ {w}")
     return "\n".join(L)

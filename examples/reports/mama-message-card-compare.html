@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对照组</title>
+<style>
+  :root{--bg:#EDEDED;--paper:#FFFFFF;--ink:#1B1B1B;--mute:#7A7A7A;--line:#DCDCDC;--green:#07C160;--red:#E0502A;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;--sans:"PingFang SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#D6D6D6;font-family:var(--sans);color:var(--ink);display:flex;justify-content:center;padding:24px}
+  .card{width:390px;min-height:640px;background:var(--bg);padding:40px 24px 28px;display:flex;flex-direction:column;gap:18px}
+  .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mute)}
+  .vs{display:flex;flex-direction:column;gap:10px}
+  .vs > div{background:var(--paper);border-radius:12px;padding:16px 18px}
+  .vs .k{font-size:14px;color:var(--mute)}
+  .vs .n{font-family:var(--serif);font-size:38px;font-weight:600;line-height:1.2;margin-top:4px}
+  .vs .slow .n{color:var(--red)}
+  .headline{font-family:var(--serif);font-size:22px;font-weight:600;text-align:center}
+  table{width:100%;border-collapse:collapse;background:var(--paper);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px dashed var(--line)}
+  th{color:var(--mute);font-weight:400}
+  td:first-child,th:first-child{text-align:left;color:var(--mute)}
+  tr:last-child td{border-bottom:0}
+  td b{font-family:var(--serif);font-size:15px}
+  .verdict{font-size:14px;line-height:1.8;color:var(--ink)}
+  .foot{margin-top:auto;font-size:11px;color:var(--mute);text-align:center}
+</style>
+</head>
+<body>
+<article class="card">
+  <div class="eyebrow">妈妈的消息 · 对照组</div>
+  <div class="vs">
+    <div class=""><div class="k">你回朋友，通常要</div><div class="n">3 分钟</div></div>
+    <div class="slow"><div class="k">你回你妈，通常要</div><div class="n">1 小时 30 分</div></div>
+  </div>
+  <p class="headline">差了 30 倍</p>
+  <table><tr><th></th><th>朋友</th><th>你妈</th></tr><tr><td>你的短回复占比</td><td><b>0%</b></td><td><b>56%</b></td></tr><tr><td> 发了你没回</td><td><b>15 次</b></td><td><b>59 次</b></td></tr><tr><td>你主动开口次数</td><td><b>16 次</b></td><td><b>42 次</b></td></tr></table>
+  <p class="verdict">你回朋友要 3 分钟，回你妈要 1 小时 30 分，差了 30 倍。短回复：对你妈 56%，对朋友 0%。</p>
+  <p class="foot">回复间隔取中位数 · 这是一份统计，不是评判</p>
+</article>
+</body>
+</html>

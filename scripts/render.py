@@ -3,25 +3,32 @@
 把 stats.json（数字）和 narrative.json（AI 写的文字）合成 HTML 报告和两张卡片。
 
 用法:
-  python scripts/render.py stats.json narrative.json [--out reports/]
+  python scripts/render.py stats.json narrative.json [--out reports/] [--png]
 
 产出:
   reports/mama-message-report.html      完整报告
   reports/mama-message-card-bill.html   亲情账单卡（给自己发）
   reports/mama-message-card-send.html   发给她的卡
+  --png 时两张卡再各出一张 PNG（用本机的 Chrome / Edge 无头模式截图，见 scripts/snap.py；没装就跳过）
 
 narrative.json 缺哪个字段就留一个明显的占位，不会报错。字段说明见 references/report-template.md；
-写完先跑 scripts/lint_narrative.py 查规矩。stats.json 必须是这一版 stats.py 的输出（看 schema），旧的重新跑一遍。
-只用标准库。
+写完先跑 scripts/lint_narrative.py 查规矩。narrative.json 的 mode（口吻）决定去掉哪些版块和卡片，
+定义在 _common.MODES：比如 memorial（她已经不在了）不出评级、没回清单、发给她的卡。
+stats.json 的 warnings 会自动带进报告末尾的数据说明。
+stats.json 必须是这一版 stats.py 的输出（看 schema），旧的重新跑一遍。只用标准库。
 """
 import argparse
 import html
 import os
+import re
 import sys
 
-from _common import ASSETS, SCHEMA_VERSION, load_json, setup_utf8
+from _common import ASSETS, MODES, SCHEMA_VERSION, load_json, mode_of, required_fields, setup_utf8
 
 setup_utf8()
+
+OUTPUTS = (("report", "report.html"), ("card-bill", "card-bill.html"), ("card-send", "card-send.html"))
+BLOCK_RE = re.compile(r"<!--#([\w-]+)-->(.*?)<!--/\1-->", re.S)
 
 
 def esc(s):
@@ -32,6 +39,11 @@ def fill(template, values):
     for k, v in values.items():
         template = template.replace("{{" + k + "}}", str(v))
     return template
+
+
+def strip_blocks(template, hide):
+    """去掉 <!--#名字-->…<!--/名字--> 里名字在 hide 里的版块，其余只去掉标记。"""
+    return BLOCK_RE.sub(lambda m: "" if m.group(1) in hide else strip_blocks(m.group(2), hide), template)
 
 
 def bar_w(score):
@@ -78,7 +90,15 @@ def weekly_svg(weekly):
     return "".join(parts)
 
 
-REQUIRED = ("she_means", "send_text", "dictionary", "tonight", "replies", "call_openers", "type_lines")
+def footnote(S, N, r):
+    """数据说明：AI 写的 footnote（或默认一句）+ stats.json 里还没写进去的 warnings + 时区。"""
+    b = S["basics"]
+    base = N.get("footnote") or (f"基于 {b['total']} 条记录，其中 {b['with_ts']} 条有时间戳；回复间隔基于 {r['n']} 对有时间戳的消息，"
+                                 "取中位数；语音不计字数；转账只记次数。这是一份统计，不是评判。")
+    extra = [w for w in S.get("warnings") or [] if w[:12] not in base]
+    if b.get("tz") and "时区" not in base and "UTC" not in base:
+        extra.append(f"时段按 UTC{b['tz']} 算。")
+    return base + ("".join(" " + w for w in extra) if extra else "")
 
 
 def build_values(S, N):
@@ -87,6 +107,7 @@ def build_values(S, N):
     her_name = S["her_name"]
     ph = lambda key: N.get(key) or f"〔待写：{key}〕"
     hours = S["hours"]
+    mode = MODES.get(mode_of(N), MODES["normal"])
 
     # 六个数字
     r = S["reply"]["me"]
@@ -121,7 +142,8 @@ def build_values(S, N):
     if not fest_rows:
         fest_rows = '<tr><td class="none">记录范围里没有赶上节日</td></tr>'
 
-    ua = S["unanswered"]["items"][-5:]
+    n_ua = mode["unanswered_max"]
+    ua = S["unanswered"]["items"][-n_ua:] if n_ua else []
     bubbles = "".join(f'<div class="bubble"><time>{esc(u["date"])}</time>{esc(u["content"])}</div>' for u in ua) or '<div class="bubble">没有——你每条都回了</div>'
 
     fw = S["forwards"]
@@ -175,8 +197,47 @@ def build_values(S, N):
         "SEND_CTA": esc(N.get("send_cta") or (f"{cd0['name']}还有 {cd0['days']} 天" if cd0 else "")),
         "CHILD_CALL": esc(N.get("child_call") or "的孩子"),
         "CTA": esc(N.get("cta") or (tonight[0] if tonight else (f"{cd0['name']}还有 {cd0['days']} 天，先打个电话" if cd0 else "今晚回一条"))),
-        "FOOTNOTE": esc(N.get("footnote") or f"基于 {b['total']} 条记录，其中 {b['with_ts']} 条有时间戳；回复间隔基于 {r['n']} 对有时间戳的消息，取中位数；语音不计字数；转账只记次数。这是一份统计，不是评判。"),
+        "FOOTNOTE": esc(footnote(S, N, r)),
     }
+
+
+def render_all(S, N, out_dir, png=False):
+    """写出报告和卡片。返回 {"files": {名字: 路径}, "missing": [缺的必填字段], "skipped": [口吻去掉的卡片], "png": {...}, "png_error": str|None}。
+    口吻去掉的卡片不写，out_dir 里上次留下的同名旧文件也删掉（免得把旧卡发出去）。"""
+    if S.get("schema") != SCHEMA_VERSION:
+        raise ValueError(f"stats.json 不是这一版 stats.py 的输出（schema {S.get('schema')!r}，需要 {SCHEMA_VERSION}）。"
+                         "重新跑一遍：python scripts/stats.py messages.json --out stats.json")
+    mode = mode_of(N)
+    if mode not in MODES:
+        raise ValueError(f"narrative.json 的 mode 是 {mode!r}，只能是 " + " / ".join(MODES))
+    hide = set(MODES[mode]["hide"])
+    os.makedirs(out_dir, exist_ok=True)
+    values = build_values(S, N)
+    res = {"files": {}, "missing": [k for k in required_fields(mode) if not N.get(k)], "skipped": [], "png": {}, "png_error": None}
+    for name, tpl in OUTPUTS:
+        dst = os.path.join(out_dir, f"mama-message-{name}.html")
+        if name in hide:
+            res["skipped"].append(name)
+            for stale in (dst, dst[:-5] + ".png"):
+                if os.path.exists(stale):
+                    os.remove(stale)
+            continue
+        with open(os.path.join(ASSETS, tpl), encoding="utf-8") as f:
+            t = f.read()
+        with open(dst, "w", encoding="utf-8", newline="\n") as f:
+            f.write(fill(strip_blocks(t, hide), values))
+        res["files"][name] = dst
+    if png:
+        import snap
+        for name, path in res["files"].items():
+            if not name.startswith("card-"):
+                continue
+            try:
+                res["png"][name] = snap.html_to_png(path, path[:-5] + ".png")
+            except snap.SnapError as e:
+                res["png_error"] = str(e)
+                break
+    return res
 
 
 def main():
@@ -184,33 +245,30 @@ def main():
     ap.add_argument("stats", help="stats.py 的输出")
     ap.add_argument("narrative", nargs="?", default=None, help="AI 写的 narrative.json（可省，先看数字版）")
     ap.add_argument("--out", default="reports", help="输出目录")
+    ap.add_argument("--png", action="store_true", help="两张卡再各出一张 PNG（要本机装了 Chrome 或 Edge）")
     a = ap.parse_args()
     S = load_json(a.stats)
-    if S.get("schema") != SCHEMA_VERSION:
-        print(f"✗ {a.stats} 不是这一版 stats.py 的输出（schema {S.get('schema')!r}，需要 {SCHEMA_VERSION}）。"
-              "重新跑一遍：python scripts/stats.py messages.json --out stats.json")
-        sys.exit(1)
     N = {}
     if a.narrative:
         if os.path.exists(a.narrative):
             N = load_json(a.narrative)
         else:
             print(f"⚠ 找不到 {a.narrative}，先出数字版")
-    os.makedirs(a.out, exist_ok=True)
-    values = build_values(S, N)
-    outs = {}
-    for name, tpl in (("report", "report.html"), ("card-bill", "card-bill.html"), ("card-send", "card-send.html")):
-        with open(os.path.join(ASSETS, tpl), encoding="utf-8") as f:
-            t = f.read()
-        dst = os.path.join(a.out, f"mama-message-{name}.html")
-        with open(dst, "w", encoding="utf-8", newline="\n") as f:
-            f.write(fill(t, values))
-        outs[name] = dst
-    missing = [k for k in REQUIRED if not N.get(k)]
-    for k, v in outs.items():
+    try:
+        res = render_all(S, N, a.out, png=a.png)
+    except ValueError as e:
+        print(f"✗ {e}")
+        sys.exit(1)
+    for v in res["files"].values():
         print(f"→ {v}")
-    if missing:
-        print("narrative.json 还缺：" + "、".join(missing) + "（报告里显示为〔待写〕）")
+    for v in res["png"].values():
+        print(f"→ {v}")
+    if res["skipped"]:
+        print(f"{MODES[mode_of(N)]['cn']}口吻，没出：" + "、".join(f"mama-message-{x}.html" for x in res["skipped"]))
+    if res["png_error"]:
+        print(f"⚠ 没出 PNG：{res['png_error']}（HTML 已经好了，浏览器打开截图也一样）")
+    if res["missing"]:
+        print("narrative.json 还缺：" + "、".join(res["missing"]) + "（报告里显示为〔待写〕）")
 
 
 if __name__ == "__main__":

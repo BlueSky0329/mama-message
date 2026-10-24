@@ -71,9 +71,9 @@
 
 <section class="card" id="s1">
   <h2><span class="n">1</span>把记录放进来</h2>
-  <p class="lead">导出文件（WeFlow / 留痕 / WeChatMsg 的 JSON、CSV、TXT）、她不一样的 messages.json、或者 AI 转录好的 JSON。编码（UTF-8 / GBK / UTF-16）自动识别。不知道怎么拿出来？看<a href="../references/export-guide.md" target="_blank">导出指南</a>；只有截图的话，先让 AI 按指南里的格式转录成 JSON 再贴进来。</p>
+  <p class="lead">导出文件（WeFlow / 留痕 / WeChatMsg 的 JSON、CSV、TXT）、她不一样的 messages.json，或者截图转录稿。编码（UTF-8 / GBK / UTF-16）自动识别。不知道怎么拿出来？看<a href="../references/export-guide.md" target="_blank">导出指南</a>。只有截图的话，让 AI 照指南里的「截图转录格式」逐张抄成“她：/ 我：”贴进来——相邻截图重叠的消息、“昨天 21:30”这种时间，这里会自动处理。</p>
   <div class="drop" id="drop"><b>把文件拖到这里</b>，或点击选择<input type="file" id="file" accept=".txt,.csv,.json" hidden></div>
-  <label>或者直接粘贴文本 / JSON<textarea id="paste" placeholder="2026-05-12 21:03 妈妈：吃饭了吗&#10;2026-05-12 21:30 我：吃了&#10;&#10;或者整段 messages.json"></textarea></label>
+  <label>或者直接粘贴文本 / JSON<textarea id="paste" placeholder="=== 截图 1 ===&#10;-- 昨天 21:03 --&#10;她：吃饭了吗&#10;我：吃了&#10;&#10;或者 2026-05-12 21:03 妈妈：吃饭了吗，或者整段 messages.json"></textarea></label>
   <div class="row3">
     <label>对方是谁（报告里的称呼）<input type="text" id="call" value="妈妈"></label>
     <label>她 / 他<select id="pronoun"><option value="她">她</option><option value="他">他</option></select></label>
@@ -89,7 +89,11 @@
     <label>从这天起（可不填）<input type="date" id="since"></label>
     <label>到这天止（可不填）<input type="date" id="until"></label>
   </div>
-  <small class="hint">时间按你这台电脑的时区解释；人在国外分析国内的记录，"几点找你"会偏。</small>
+  <div class="row3">
+    <label>截图是哪天截的（转录稿用，可不填）<input type="date" id="shot"></label>
+    <label>时区（可不填，国内 +08:00）<input type="text" id="tz" placeholder="留空 = 这台电脑的时区"></label>
+  </div>
+  <small class="hint">“昨天 / 星期二 / 只写了 21:30”这种截图上的时间，按“截图是哪天截的”换算；不填的话这些消息不带时间（不会编）。人在国外分析国内的记录，时区填 +08:00，“几点找你”才对。</small>
   <div class="btns">
     <button class="primary" id="go1" disabled>整理并检查</button>
     <button id="sample" disabled>用模拟数据试试</button>
@@ -113,7 +117,7 @@
     </div>
     <div id="types"></div>
     <details><summary>终端摘要（全部数字在 stats.json 里）</summary><pre class="out" id="out2"></pre></details>
-    <div class="btns"><button id="dl_stats">下载 stats.json</button><button id="dl_msgs">下载 messages.json</button></div>
+    <div class="btns"><button id="dl_stats">下载 stats.json</button><button id="dl_msgs">下载 messages.json</button><button id="dl_brief">下载写作素材包 brief.md</button></div>
   </div>
 </section>
 
@@ -123,6 +127,13 @@
   <label>① 多久没回家了？上次回去是什么时候？<input type="text" id="q1"></label>
   <label>② TA 最近有没有什么事——身体、家里？<input type="text" id="q2"></label>
   <label>③ 你们上次打电话聊了什么？<input type="text" id="q3"></label>
+  <label>报告的口吻（记录里看出来的会自动选上，你知道的情况比记录更准）<select id="mode">
+    <option value="normal">正常</option>
+    <option value="gentle">放轻：我挺难受的 / 和家里闹僵了（去掉评级章）</option>
+    <option value="neutral">中性：记录里有争吵、控制、持续的催婚要钱（不出"发给她"和账单卡）</option>
+    <option value="memorial">怀念：TA 已经不在了，我想再看看 TA 说过的话（只出报告，不出卡）</option>
+    <option value="third">替别人看（不出今晚三件事和两张卡）</option>
+  </select></label>
   <div class="btns">
     <button class="primary" id="copy">复制提示词</button>
     <button id="skip">跳过文字，先看数字版</button>
@@ -135,7 +146,7 @@
 
 <section class="card" id="s4" hidden>
   <h2><span class="n">4</span>报告和两张卡</h2>
-  <p class="lead">卡片是竖版的，截图就能发。<b>发给她的那张是这个产品真正的出口</b>——如果只发一张，发它。</p>
+  <p class="lead" id="lead4">卡片是竖版的，截图就能发。<b>发给她的那张是这个产品真正的出口</b>——如果只发一张，发它。</p>
   <div class="status" id="st4"></div>
   <div class="frames" id="frames"></div>
 </section>
@@ -161,7 +172,7 @@ const RUNTIME_SOURCES = [
   {name: "unpkg", base: "https://unpkg.com/pyodide@" + PYODIDE_VERSION + "/"},
 ];
 const APP_FILES = [
-  "scripts/_common.py","scripts/parse_export.py","scripts/validate.py","scripts/stats.py","scripts/render.py","scripts/lint_narrative.py",
+  "scripts/_common.py","scripts/parse_export.py","scripts/validate.py","scripts/stats.py","scripts/render.py","scripts/lint_narrative.py","scripts/brief.py",
   "assets/report.html","assets/card-bill.html","assets/card-send.html",
   "references/lexicon.json","references/writing-rules.md","references/dictionary.md","references/types.md","references/report-template.md",
 ];
@@ -314,6 +325,8 @@ async function step1(fromSample){
     if (parseInt($("lastdays").value, 10) > 0) argv.push("--last-days", String(parseInt($("lastdays").value, 10)));
     if ($("since").value) argv.push("--since", $("since").value);
     if ($("until").value) argv.push("--until", $("until").value);
+    if ($("shot").value) argv.push("--shot-date", $("shot").value);
+    if ($("tz").value.trim()) argv.push("--tz", $("tz").value.trim());
   }
   const r = await run("parse_export.py", argv);
   $("out1").textContent = r.out; show("out1");
@@ -347,6 +360,10 @@ $("go2").addEventListener("click", async () => {
   $("out2").textContent = r.out;
   if (r.code !== 0) { status("st2", "算数失败：" + r.out.trim().split("\n").pop(), true); show("numbers"); return; }
   stats = JSON.parse(readFS("/work/stats.json"));
+  const b = await run("brief.py", ["/work/stats.json", "/work/messages.json", "--out", "/work/brief.md"]);
+  if (b.code !== 0) { status("st2", "写作素材包没出来：" + b.out.trim().split("\n").pop(), true); }
+  const sug = (stats.sensitivity && stats.sensitivity.suggest) || "normal";
+  $("mode").value = sug;
   const ix = stats.index, p = stats.pronoun;
   $("i_care").textContent = ix.care.score; $("l_care").textContent = p + "发起了 " + Math.round(100*(stats.opens.her_ratio||0)) + "% 的对话";
   $("i_short").textContent = ix.short.score; $("l_short").textContent = "短回复 " + stats.short.count + " 条，占你 " + stats.short.replies + " 条回复的 " + Math.round(100*(stats.short.ratio||0)) + "%";
@@ -355,13 +372,15 @@ $("go2").addEventListener("click", async () => {
   const tag = t => { const s = document.createElement("span"); s.className = "tag"; s.textContent = t; return s; };
   types.append(tag(p + "：" + stats.mother_type.primary + (stats.mother_type.secondary ? "（副：" + stats.mother_type.secondary + "）" : "")), tag("你：" + stats.child_type.primary), document.createElement("br"));
   const stamp = document.createElement("span"); stamp.className = "stamp"; stamp.textContent = stats.rating.label; types.append(stamp);
-  if (stats.warnings.length) { const w = document.createElement("div"); w.className = "warn"; w.textContent = stats.warnings.map(x => "⚠ " + x).join("\n"); w.style.whiteSpace = "pre-wrap"; types.append(w); }
+  const notes = stats.warnings.map(x => "⚠ " + x).concat(((stats.sensitivity || {}).reasons || []).map(x => "· " + x));
+  if (notes.length) { const w = document.createElement("div"); w.className = "warn"; w.textContent = notes.join("\n"); w.style.whiteSpace = "pre-wrap"; types.append(w); }
   show("numbers");
   status("st2", "这些数字全部来自 stats.json，报告里每个数字都能在里面找到。");
   show("s3"); $("s3").scrollIntoView({behavior:"smooth", block:"start"});
 });
 $("dl_stats").addEventListener("click", () => download("stats.json", readFS("/work/stats.json")));
 $("dl_msgs").addEventListener("click", () => download("messages.json", readFS("/work/messages.json")));
+$("dl_brief").addEventListener("click", () => { if (exists("/work/brief.md")) download("brief.md", readFS("/work/brief.md")); });
 
 // ---------- 第 3 步 ----------
 function narrativeSpec(){
@@ -378,11 +397,15 @@ function buildPrompt(){
   const call = stats.her_name, p = stats.pronoun;
   const answers = [["多久没回家了", $("q1").value], [call + "最近有没有什么事", $("q2").value], ["上次打电话聊了什么", $("q3").value]]
     .filter(x => x[1].trim()).map(x => "- " + x[0] + "：" + x[1].trim()).join("\n") || "（用户跳过了，只用记录里的证据）";
-  return `你是《妈妈的消息》的写手。数字已经由脚本算好在下面的 stats.json 里，你不要重新算、不要心算，报告里每个数字直接引用它。你的任务是写文字部分，输出一个 narrative.json。
+  const mode = $("mode").value;
+  const compact = JSON.parse(JSON.stringify(stats));
+  delete compact.hours.her; delete compact.hours.me; delete compact.weekly; delete compact.mother_type.scores;
+  return `你是《妈妈的消息》的写手。数字已经由脚本算好，原话也已经从记录里挑出来放进了下面的「写作素材包」。你不要重新算、不要心算，报告里每个数字直接引用素材包或 stats.json；引号里的原话从素材包里一字不差地复制。你的任务是写文字部分，输出一个 narrative.json。
 
 要求：**只输出一个 JSON 对象**，不要解释，不要 markdown 围栏以外的任何文字。字段按下面的 narrative.json 说明，必填字段一个都不能缺。
 对方是用户的「${call}」，用「${p}」。用户平时怎么称呼${call}，发给${p}的那条就怎么称呼。
 引号里的话必须是记录里一字不差出现过的原话（会用脚本核对），编的一律不要加引号。
+这份报告的口吻是 ${mode}：narrative.json 里写 "mode": "${mode}"，按写作规矩里「什么时候要收着」那一节写；这个口吻去掉的版块，对应字段不用写。
 
 用户回答的三个问题（可以用，但要标"你说"）：
 ${answers}
@@ -399,8 +422,11 @@ ${refs["references/dictionary.md"] || ""}
 == 类型那一句怎么写 ==
 ${typeRules()}
 
-== stats.json ==
-${readFS("/work/stats.json")}
+== 写作素材包（brief.md） ==
+${exists("/work/brief.md") ? readFS("/work/brief.md") : "（没出来，只用下面的 stats.json）"}
+
+== stats.json（去掉了分布数组） ==
+${JSON.stringify(compact)}
 `;
 }
 $("copy").addEventListener("click", async () => {
@@ -425,12 +451,16 @@ $("go3").addEventListener("click", async () => {
 async function render(withNarr){
   if (!stats) { status("st3", "先算数。", true); return; }
   if (!withNarr && exists("/work/narrative.json")) py.FS.unlink("/work/narrative.json");
+  for (const f of ["mama-message-card-send.html", "mama-message-card-bill.html"]) if (exists("/work/reports/" + f)) py.FS.unlink("/work/reports/" + f);
   const argv = ["/work/stats.json"]; if (withNarr) argv.push("/work/narrative.json"); argv.push("--out", "/work/reports");
   const r = await run("render.py", argv);
   if (r.code !== 0) { status("st3", "出图失败：" + r.out, true); return; }
   show("s4");
-  status("st4", r.out.includes("还缺") ? r.out.split("\n").filter(x => x.includes("还缺")).join("") : "三个文件都好了。");
-  const items = [["mama-message-card-send.html", "发给" + stats.pronoun + "的一条", 640], ["mama-message-card-bill.html", "亲情账单卡", 900], ["mama-message-report.html", "完整报告", 1400]];
+  const items = [["mama-message-card-send.html", "发给" + stats.pronoun + "的一条", 640], ["mama-message-card-bill.html", "亲情账单卡", 900], ["mama-message-report.html", "完整报告", 1400]]
+    .filter(x => exists("/work/reports/" + x[0]));
+  const notes = r.out.split("\n").filter(x => x.includes("还缺") || x.includes("没出"));
+  status("st4", notes.length ? notes.join(" ") : (items.length + " 个文件都好了。"));
+  $("lead4").hidden = !exists("/work/reports/mama-message-card-send.html");
   $("frames").textContent = "";
   for (const [f, title, h] of items) {
     const html = readFS("/work/reports/" + f);

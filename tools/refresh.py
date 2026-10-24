@@ -2,7 +2,7 @@
 """
 一条命令把"改完算法之后要做的事"全跑一遍，并告诉你哪些示例数字变了、哪些文档要手工改。
 
-  python tools/refresh.py              # 重生成示例 → 算数 → 校验 → 渲染 → lint → 测试 → 打包并同步上级目录
+  python tools/refresh.py              # 重生成示例 → 算数 → 校验 → 渲染 → lint → 素材包 → 对照卡 → 测试 → 打包并同步上级目录
   python tools/refresh.py --no-sync    # 不打包不同步（只在仓库里跑，CI 用）
   python tools/refresh.py --snapshot   # 顺便用 Chrome 重出 docs/img（要 playwright）
 
@@ -95,6 +95,10 @@ def main():
             sys.exit(1)
     run("检查文字规矩", "scripts/lint_narrative.py", "examples/sample-narrative.json",
         "--stats", "examples/sample-stats.json", "--messages", "examples/sample-messages.json")
+    run("写作素材包", "scripts/brief.py", "examples/sample-stats.json", "examples/sample-messages.json", "--out", "examples/sample-brief.md")
+    run("对照卡", "scripts/compare.py", "examples/sample-messages.json", "examples/sample-friend-messages.json",
+        "--labels", "你妈", "朋友", "--mode", "friend", "--today", "2026-08-30",
+        "--out", "examples/reports/sample-compare.json", "--card", "examples/reports/mama-message-card-compare.html")
     r = run("跑测试", "-m", "unittest", "discover", "-s", "tests")
     m = re.search(r"Ran (\d+) tests", r.stdout + r.stderr)
     if m:

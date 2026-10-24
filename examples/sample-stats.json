@@ -1,8 +1,9 @@
 {
  "schema": 1,
- "lexicon": 1,
+ "lexicon": 2,
  "her_name": "妈妈",
  "pronoun": "她",
+ "source_detail": "synthetic-demo",
  "warnings": [],
  "basics": {
   "total": 294,
@@ -15,7 +16,8 @@
   "span_days": 181,
   "active_days": 119,
   "with_ts": 294,
-  "without_ts": 0
+  "without_ts": 0,
+  "tz": null
  },
  "opens": {
   "her": 86,
@@ -53,6 +55,7 @@
   }
  },
  "longest": {
+  "i": 19,
   "chars": 18,
   "content": "发烧了？多少度 喝水了吗 去医院了没",
   "date": "03-13",
@@ -129,6 +132,28 @@
    "example": "你王阿姨问你有对象了吗"
   }
  ],
+ "meal": {
+  "asks": 19,
+  "at_meal": 8,
+  "off_meal": 11,
+  "off_meal_examples": [
+   {
+    "i": 211,
+    "date": "07-03 22:58",
+    "content": "今天吃的什么"
+   },
+   {
+    "i": 253,
+    "date": "08-01 22:59",
+    "content": "今天吃的什么"
+   },
+   {
+    "i": 265,
+    "date": "08-12 22:49",
+    "content": "早饭吃了没"
+   }
+  ]
+ },
  "care_ratio": 0.627,
  "hours": {
   "her": [
@@ -193,44 +218,54 @@
  "unanswered": {
   "count": 59,
   "turns": 139,
+  "was_her_reply": 38,
+  "ended_with_closer": 25,
   "ratio": 0.424,
   "items": [
    {
+    "i": 262,
     "date": "08-07 12:32",
     "content": "好 到了就好",
     "type": "text"
    },
    {
+    "i": 266,
     "date": "08-12 22:53",
     "content": "[表情包]",
     "type": "sticker"
    },
    {
+    "i": 267,
     "date": "08-13 18:05",
     "content": "今天忙吗",
     "type": "text"
    },
    {
+    "i": 276,
     "date": "08-19 20:30",
     "content": "打扰你了 你忙吧",
     "type": "text"
    },
    {
+    "i": 278,
     "date": "08-20 22:22",
     "content": "[表情包]",
     "type": "sticker"
    },
    {
+    "i": 284,
     "date": "08-23 12:21",
     "content": "没什么事",
     "type": "text"
    },
    {
+    "i": 292,
     "date": "08-27 02:26",
     "content": "没事 就是问问",
     "type": "text"
    },
    {
+    "i": 293,
     "date": "08-28 06:08",
     "content": "你那边台风大不大",
     "type": "text"
@@ -247,7 +282,31 @@
    "你忙你的",
    "打扰你了 你忙吧"
   ],
-  "nothing": 9
+  "nothing": 9,
+  "self_shrink_after_my_short": 6,
+  "self_shrink_after_her": 0
+ },
+ "self": {
+  "count": 1,
+  "short_or_none": 1,
+  "items": [
+   {
+    "i": 268,
+    "date": "08-14 07:15",
+    "content": "最近腰不太好 医生说要少干活",
+    "words": [
+     "腰"
+    ],
+    "reply": {
+     "i": 269,
+     "content": "注意休息",
+     "chars": 4,
+     "after": "11 小时 47 分"
+    },
+    "i_mentioned_again": 0,
+    "she_mentioned_again": 0
+   }
+  ]
  },
  "extras": {
   "her_voice_count": 25,
@@ -409,6 +468,73 @@
     5
    ]
   ]
+ },
+ "voice": {
+  "her": {
+   "text_n": 118,
+   "avg_chars": 7.4,
+   "median_chars": 6.0,
+   "punct_ratio": 0.068,
+   "space_ratio": 0.492,
+   "emoji_ratio": 0.0,
+   "burst": 1.4,
+   "openers": [
+    [
+     "今天吃的什么",
+     7
+    ],
+    [
+     "你那边降温了 多穿点",
+     5
+    ],
+    [
+     "钱够不够花",
+     5
+    ]
+   ],
+   "closers": [
+    [
+     "你那边降温了 多穿点",
+     3
+    ],
+    [
+     "好 我去接你",
+     3
+    ],
+    [
+     "没什么事",
+     3
+    ]
+   ],
+   "after_my_short": [
+    [
+     "那你忙 没事",
+     3
+    ],
+    [
+     "没什么事",
+     3
+    ],
+    [
+     "今天吃的什么",
+     3
+    ]
+   ]
+  },
+  "me": {
+   "text_n": 100,
+   "avg_chars": 5.0,
+   "median_chars": 2.5,
+   "punct_ratio": 0.0,
+   "space_ratio": 0.37,
+   "emoji_ratio": 0.0,
+   "longest": {
+    "i": 291,
+    "date": "08-27",
+    "chars": 18,
+    "content": "最近项目忙 周末可能加班 下个月看看"
+   }
+  }
  },
  "forwards": {
   "count": 7,
@@ -574,6 +700,7 @@
   {
    "name": "母亲节",
    "date": "2026-05-10",
+   "i": 123,
    "first": "me",
    "time": "21:40",
    "content": "[表情包]",
@@ -584,6 +711,7 @@
   {
    "name": "你的生日",
    "date": "2026-06-03",
+   "i": 161,
    "first": "her",
    "time": "00:02",
    "content": "生日快乐 儿子 妈妈永远爱你",
@@ -686,6 +814,14 @@
   "balance": 90,
   "unanswered": 59,
   "calls": 3
+ },
+ "sensitivity": {
+  "conflict": 0,
+  "conflict_examples": [],
+  "marriage_ratio": 0.008,
+  "stale_days": 2,
+  "suggest": null,
+  "reasons": []
  },
  "today": "2026-08-30"
 }

@@ -33,6 +33,9 @@ CASES = {
     "utf16.txt": {"format": "txt", "n": 3, "senders": ["her", "me", "her"], "types": ["text", "text", "voice"], "ts0": "2026-05-12T21:03:14", "encoding": "utf-16"},
     "ms.csv": {"format": "memotrace-csv", "n": 2, "senders": ["her", "me"], "types": ["text", "text"], "ts0": LOCAL.strftime("%Y-%m-%dT%H:%M:%S")},
     "native-as-txt.txt": {"format": "native", "n": 2, "senders": ["her", "me"], "types": ["text", "text"], "ts0": "2026-05-12T21:03:14"},
+    "transcript.txt": {"format": "transcript", "n": 10, "senders": ["her", "me", "her", "her", "her", "me", "her", "her", "me", "me"],
+                       "types": ["text", "text", "text", "text", "voice", "text", "text", "link", "call_video", "text"],
+                       "ts0": "2026-08-14T07:15:00", "args": ["--shot-date", "2026-08-30"]},
 }
 
 
@@ -106,6 +109,102 @@ class Fixtures(unittest.TestCase):
             r = run("parse_export.py", p, "--her", "妈妈", "--out", os.path.join(d, "m.json"))
             self.assertEqual(r.returncode, 1)
             self.assertIn("JSON", r.stdout)
+
+
+class Transcript(unittest.TestCase):
+    """截图转录稿：AI 照截图抄，脚本去重叠、排顺序、换算相对时间"""
+    def _parse(self, *args):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "m.json")
+            r = run("parse_export.py", os.path.join(FIXTURES, "transcript.txt"), "--call", "妈妈", "--out", out, *args)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            return load(out), r.stdout
+
+    def test_with_shot_date(self):
+        data, out = self._parse("--shot-date", "2026-08-30")
+        ms = data["messages"]
+        self.assertEqual(data["source"], "screenshots")
+        self.assertIn("倒过来", out)                       # 截图是从新到旧给的
+        self.assertIn("重叠的 2 条", out)                  # 两处重叠：“打扰你了 你忙吧”、“[语音 12秒]”
+        self.assertEqual([m["ts"] for m in ms if m["ts"]],
+                         ["2026-08-14T07:15:00", "2026-08-14T19:02:00", "2026-08-19T20:30:00", "2026-08-25T21:10:00",
+                          "2026-08-28T09:30:00",            # 星期五（截图那天是星期日）
+                          "2026-08-29T15:05:00",            # 昨天 下午3:05
+                          "2026-08-30T21:30:00"])           # 只写了 21:30 = 截图当天
+        self.assertEqual(sum(1 for m in ms if not m["ts"]), 3)   # 一个时间只给它下面第一条，后面的不编
+        self.assertEqual(ms[4]["dur"], 12)
+        self.assertEqual(ms[8]["dur"], 205)
+        self.assertEqual(ms[7]["content"], "久坐伤腰 三个动作缓解")
+
+    def test_without_shot_date_still_orders_and_dedupes(self):
+        """没给截图日期：相对时间换算不了（留空、提示），但顺序和去重靠重叠方向照样对"""
+        data, out = self._parse()
+        ms = data["messages"]
+        self.assertEqual(len(ms), 10)
+        self.assertIn("--shot-date", out)
+        self.assertEqual(ms[0]["content"], "最近腰不太好 医生说要少干活")
+        self.assertEqual(ms[3]["ts"], "2026-08-25T21:10:00")     # “8月25日”借了别处写全的年份
+        self.assertIsNone(ms[5]["ts"])
+
+    def test_plain_pasted_dialogue(self):
+        with tempfile.TemporaryDirectory() as d:
+            src = os.path.join(d, "paste.txt")
+            with open(src, "w", encoding="utf-8") as f:
+                f.write("妈妈：吃饭了吗\n我：吃了\n妈妈：吃的什么\n我：面\n")
+            out = os.path.join(d, "m.json")
+            r = run("parse_export.py", src, "--out", out)
+            self.assertEqual(r.returncode, 0, r.stdout)
+            self.assertEqual([m["sender"] for m in load(out)["messages"]], ["her", "me", "her", "me"])
+            # 聊天 AI 回的稿子：前面一句客套话、包在代码块里、“她（妈妈）：”、续行里带冒号
+            with open(src, "w", encoding="utf-8") as f:
+                f.write("好的，下面是抄好的稿子：\n```\n=== 截图 1 ===\n-- 2026-05-12 21:03 --\n她（妈妈）：明天降温\n注意：多穿点\n我：好\n```\n")
+            r = run("parse_export.py", src, "--out", out)
+            self.assertEqual(r.returncode, 0, r.stdout)
+            ms = load(out)["messages"]
+            self.assertEqual([(m["sender"], m["content"]) for m in ms], [("her", "明天降温\n注意：多穿点"), ("me", "好")])
+            self.assertEqual(ms[0]["ts"], "2026-05-12T21:03:00")
+
+    def test_sep_time_forms(self):
+        from datetime import date
+        from parse_export import sep_time
+        st = {"date": None, "shot": date(2026, 8, 30), "relative": 0, "year": None}
+        cases = {"2026年5月12日 晚上9:03": "2026-05-12 21:03", "5月12日 下午3:05": "2026-05-12 15:05",
+                 "12月30日 08:00": "2025-12-30 08:00",       # 比截图那天晚 → 是去年的
+                 "昨天 凌晨1:20": "2026-08-29 01:20", "前天 12:30": "2026-08-28 12:30", "星期二 中午12:10": "2026-08-25 12:10",
+                 "周日 07:00": "2026-08-23 07:00", "21:30": "2026-08-30 21:30", "上午 12:05": "2026-08-30 00:05"}
+        for text, want in cases.items():
+            dt = sep_time(text, dict(st))
+            self.assertEqual(dt.strftime("%Y-%m-%d %H:%M") if dt else None, want, text)
+        st2 = {"date": None, "shot": None, "relative": 0, "year": None}
+        self.assertIsNone(sep_time("昨天 21:30", st2))
+        self.assertEqual(st2["relative"], 1)
+
+
+class TimeZone(unittest.TestCase):
+    def test_tz_flag_makes_utc_deterministic(self):
+        """weclone CSV 的 UTC 时间：给了 --tz 就按那个时区换算，在哪台机器上跑都一样"""
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "m.json")
+            r = run("parse_export.py", os.path.join(FIXTURES, "weclone.csv"), "--out", out, "--tz", "+08:00")
+            self.assertEqual(r.returncode, 0, r.stdout)
+            data = load(out)
+            self.assertEqual(data["messages"][0]["ts"], "2026-05-12T21:03:14")
+            self.assertEqual(data["tz"], "+08:00")
+            r = run("parse_export.py", os.path.join(FIXTURES, "weclone.csv"), "--out", out, "--tz", "UTC-5")
+            self.assertEqual(load(out)["messages"][0]["ts"], "2026-05-12T08:03:14")
+            r = run("parse_export.py", os.path.join(FIXTURES, "weclone.csv"), "--out", out, "--tz", "北京")
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("+08:00", r.stdout)
+
+    def test_parse_tz(self):
+        from datetime import timedelta
+        self.assertIsNone(_common.parse_tz(None))
+        for s, h in (("+08:00", 8), ("+0800", 8), ("UTC+8", 8), ("-5", -5), ("+05:30", 5.5)):
+            self.assertEqual(_common.parse_tz(s).utcoffset(None), timedelta(hours=h), s)
+        for bad in ("8", "北京", "+25:00"):
+            with self.assertRaises(ValueError):
+                _common.parse_tz(bad)
+        self.assertRegex(_common.tz_label(), r"^[+-]\d{2}:\d{2}$")
 
 
 class NativeAndClip(unittest.TestCase):

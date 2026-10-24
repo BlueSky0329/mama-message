@@ -8,7 +8,8 @@
   python tools/pack.py --sync-to ../..       # .skill 和 README / SKILL / 普通用户版 / 示例 HTML / HANDOFF 一起放到该目录
   python tools/pack.py --sync-to dist        # Release 用：目录不存在会建
 
-不进包的：web/（浏览器版，skill 用不到）、tools/、docs/（README 截图和交接文档）、.github/、__pycache__、.pyc、.git。
+不进包的：web/（浏览器版，skill 用不到）、tools/、docs/（README 截图和交接文档）、evals/（触发测试集）、.github/、
+mama-out/（跑出来的产物）、__pycache__、.pyc、.git。
 上级目录里的那些文件是发布副本，改源文件再同步，不要直接改它们。只用标准库。
 """
 import argparse
@@ -23,7 +24,7 @@ from _common import setup_utf8  # noqa: E402
 
 setup_utf8()
 
-SKIP_DIRS = {"__pycache__", ".pytest_cache", ".git", ".github", "web", "tools", "docs"}
+SKIP_DIRS = {"__pycache__", ".pytest_cache", ".git", ".github", "web", "tools", "docs", "evals", "mama-out", ".snap-tmp"}
 SYNC = {
     "README.md": "README.md",
     "SKILL.md": "SKILL.md",
@@ -32,6 +33,7 @@ SYNC = {
     os.path.join("examples", "reports", "mama-message-report.html"): "示例报告-模拟数据.html",
     os.path.join("examples", "reports", "mama-message-card-bill.html"): "示例卡片-亲情账单.html",
     os.path.join("examples", "reports", "mama-message-card-send.html"): "示例卡片-发给她.html",
+    os.path.join("examples", "reports", "mama-message-card-compare.html"): "示例卡片-对照组.html",
 }
 
 

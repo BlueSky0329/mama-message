@@ -109,7 +109,7 @@
   <div class="eyebrow">妈妈的消息</div>
   <h1>{{TITLE}}</h1>
   <div class="range">{{RANGE_LINE}}</div>
-  <div class="countdown">{{COUNTDOWN}}</div>
+  <!--#countdown--><div class="countdown">{{COUNTDOWN}}</div><!--/countdown-->
 </section>
 
 <section class="card">
@@ -137,7 +137,7 @@
   <div class="cert">
     <div><div class="who">{{PRONOUN}}</div><div class="type">{{MOTHER_TYPE}}</div><div class="sub">{{MOTHER_TYPE_SUB}}</div><div class="q">{{MOTHER_TYPE_LINE}}</div></div>
     <div><div class="who">你</div><div class="type">{{CHILD_TYPE}}</div><div class="sub">{{CHILD_TYPE_SUB}}</div><div class="q">{{CHILD_TYPE_LINE}}</div></div>
-    <div class="stamp"><span class="lbl">综合评级</span><span class="val">{{RATING}}</span></div>
+    <!--#rating--><div class="stamp"><span class="lbl">综合评级</span><span class="val">{{RATING}}</span></div><!--/rating-->
   </div>
 </section>
 
@@ -151,11 +151,11 @@
   <table class="fest">{{FESTIVAL_ROWS}}</table>
 </section>
 
-<section class="card">
+<!--#unanswered--><section class="card">
   <h2>{{PRONOUN}}发了，你没回</h2>
   {{UNANSWERED_BUBBLES}}
   <div class="noreply">这里本来该有你的一句</div>
-</section>
+</section><!--/unanswered-->
 
 <section class="card">
   <h2>{{PRONOUN}}转给你的</h2>
@@ -163,10 +163,10 @@
   <p style="font-size:13px;color:var(--mute);margin-top:6px">{{FORWARD_TITLES}}</p>
 </section>
 
-<section class="card">
+<!--#signals--><section class="card">
   <h2>该打电话了</h2>
   <ul class="sig">{{SIGNAL_ROWS}}</ul>
-</section>
+</section><!--/signals-->
 
 <section class="card">
   <h2>你们像两个时区</h2>
@@ -174,10 +174,10 @@
   <div class="legend"><span><i style="background:var(--green)"></i>{{PRONOUN}}</span><span><i style="background:#9A9A9A"></i>你</span><span>颜色越深消息越多</span></div>
   <h2 style="margin-top:20px">每周消息量</h2>
   <div class="chart">{{WEEKLY_SVG}}</div>
-  <div class="big">
+  <!--#gap--><div class="big">
     <div><div class="n">{{DAYS_SINCE_MY_OPEN}}</div><div class="l">天没有主动找{{PRONOUN}}</div></div>
     <div><div class="n">{{DAYS_SINCE_HER_OPEN}}</div><div class="l">天前{{PRONOUN}}上次主动找你</div></div>
-  </div>
+  </div><!--/gap-->
 </section>
 
 <section class="card">
@@ -185,19 +185,22 @@
   <div class="say">{{SHE_MEANS}}</div>
 </section>
 
-<section class="card">
+<!--#tonight--><section class="card">
   <h2>你可以今晚就做的三件事</h2>
   <ol class="tonight">{{TONIGHT_ROWS}}</ol>
-</section>
+</section><!--/tonight-->
 
-<section class="card">
+<!--#replies--><section class="card">
   <h2>帮你回</h2>
   {{REPLY_ROWS}}
-  <h2 style="margin-top:16px">三句打电话的开场白</h2>
-  <ul class="openers">{{CALL_OPENERS}}</ul>
-</section>
+</section><!--/replies-->
 
-<section class="card">
+<!--#openers--><section class="card">
+  <h2>三句打电话的开场白</h2>
+  <ul class="openers">{{CALL_OPENERS}}</ul>
+</section><!--/openers-->
+
+<!--#bill--><section class="card">
   <h2>亲情账单</h2>
   <div class="bill">
     <div class="r"><span>{{PRONOUN}}发给你</span><span>{{BILL_HER}} 条</span></div>
@@ -206,13 +209,13 @@
     <div class="r"><span>通话</span><span>{{BILL_CALLS}} 次</span></div>
     <div class="r total"><span>结余</span><span>{{BILL_BALANCE}}</span></div>
   </div>
-</section>
+</section><!--/bill-->
 
-<section class="card">
+<!--#send--><section class="card">
   <h2>可以直接发给{{PRONOUN}}的一条</h2>
   <div class="send">{{SEND_TEXT}}</div>
   <div class="send-note">长按复制，或者打开 mama-message-card-send.html 截图发过去</div>
-</section>
+</section><!--/send-->
 
 <section class="card">
   <p class="foot"><b>数据说明</b> {{FOOTNOTE}}</p>

@@ -95,6 +95,59 @@ class LintSample(unittest.TestCase):
         errors, warnings = ln.lint(self.N)
         self.assertEqual(errors, [])
 
+    def test_mode_changes_required_fields(self):
+        """memorial（她已经不在了）不用写发给她的那条、今晚三件事、帮你回；normal 缺了就是错"""
+        N = copy.deepcopy(self.N)
+        for k in ("send_text", "tonight", "replies", "call_openers"):
+            N.pop(k)
+        errors, _ = ln.lint(N, self.S, self.M)
+        self.assertTrue(any("send_text" in e for e in errors))
+        N["mode"] = "memorial"
+        errors, _ = ln.lint(N, self.S, self.M)
+        self.assertEqual(errors, [])
+        N["mode"] = "neutral"                    # 中性：帮你回还是要写（事务性的）
+        errors, _ = ln.lint(N, self.S, self.M)
+        self.assertTrue(any("replies" in e for e in errors))
+        self.assertFalse(any("send_text" in e for e in errors))
+        N["mode"] = "sad"
+        errors, _ = ln.lint(N, self.S, self.M)
+        self.assertTrue(any("mode" in e for e in errors))
+
+    def test_amount_is_an_error(self):
+        errors, _ = self._errs(forward_insight="她给你转了 2000 元，你回了“嗯”。")
+        self.assertTrue(any("金额" in e for e in errors))
+        errors, _ = self._errs(forward_insight="她一年发了 1 万条消息。")
+        self.assertFalse(any("金额" in e for e in errors))
+
+    def test_apology_in_send_text_warns(self):
+        _, warnings = self._errs(send_text="妈，对不起，我用了个软件，它说我欠你一个电话。你发了我 192 条，我回了 102 条。今晚 8 点打给你，等我。")
+        self.assertTrue(any("道歉" in w for w in warnings))
+
+    def test_pronoun_mixup_warns(self):
+        S = copy.deepcopy(self.S)
+        S["pronoun"] = "他"
+        _, warnings = ln.lint(self.N, S, self.M)
+        self.assertTrue(any("称呼串了" in w for w in warnings))
+        _, warnings = ln.lint(self.N, self.S, self.M)
+        self.assertFalse(any("称呼串了" in w for w in warnings))
+        _, warnings = self._errs(cta="母亲节快到了，他们都在等你")      # 她们 / 他们 不算；分析妈妈时提父亲节才算
+        self.assertFalse(any("称呼串了" in w for w in warnings))
+        _, warnings = self._errs(cta="父亲节快到了")
+        self.assertTrue(any("称呼串了" in w for w in warnings))
+
+    def test_noisy_arrays_dont_vouch_for_numbers(self):
+        """时段分布、每周条数这些数组里什么小数字都有，不能拿来给文字里的数字作证"""
+        known = ln.numbers_in_stats(self.S)
+        self.assertIn(192, known)                           # bill.her_sent
+        self.assertIn(56, known)                            # short.ratio 0.56 → 56%
+        S = {"schema": 1, "hours": {"her": [0] * 23 + [777], "me": [0] * 24}, "weekly": [{"week": "2026-W01", "her": 888, "me": 0}],
+             "longest": {"i": 999, "chars": 18}}
+        known = ln.numbers_in_stats(S)
+        self.assertNotIn(777, known)
+        self.assertNotIn(888, known)
+        self.assertNotIn(999, known)
+        self.assertIn(18, known)
+
 
 class LintCli(unittest.TestCase):
     def test_exit_codes(self):

@@ -1,10 +1,13 @@
 messages.json
 stats.json
 narrative.json
+brief.md
 friend-*.json
 compare.json
 reports/
 !examples/reports/
+mama-out/
+.snap-tmp/
 *.redacted.*
 __pycache__/
 dist/

@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## v0.6 · 2026-10-24
+
+让写文字的 AI 写得准、让"收着"的规矩真的生效、让 Agent 少走错步。示例基线数字不变（stats.json 只多了写作素材字段）。
+
+加：
+- `scripts/brief.py`：写作素材包。把关键数字和对应的原话整理成 brief.md——她说起自己的事和你当时的回复、没回清单带上下文、她最常问的原话、她说过不止一次的话和几点说的、节日那天、她转给你的、她和你的说话方式、要不要收着、narrative.json 骨架。篇幅有上限，记录再长也读得完。网页版提示词从"整份 stats.json"换成"素材包 + 精简 stats"，AI 终于看得到原话
+- `stats.py` 写作素材字段（不进指数）：`self`（她说起自己的事 + 你的回复 + 之后有没有再提）、`meal`（问吃饭几次在饭点）、`voice`（说话方式）、`sensitivity`（冲突字眼 / 催婚占比 / 最后一条多久以前 → 建议口吻）、`phrases.self_shrink_after_my_short / _her`、`unanswered.was_her_reply / ended_with_closer`（"没回"口径诊断）、`basics.tz`、`source_detail`、各处消息下标 `i`；`compute_with_ctx()`
+- 截图转录稿：AI 照截图抄成"她：/ 我："+ `-- 时间 --` + `=== 截图 N ===`，`parse_export.py` 去相邻截图的重叠、把倒序给的截图顺过来、按 `--shot-date` 换算"昨天 / 星期二 / 下午 3:05 / 只写几点"，换算不了的留空不编；容忍代码块包裹、"她（妈妈）："、续行带冒号。粘贴的"妈妈：… / 我：…"也认（以前 0 条）
+- 口吻表 `_common.MODES`（normal / gentle / neutral / memorial / third）：`render.py` 按 narrative.json 的 `mode` 去掉版块和卡片（模板里 `<!--#版块-->` 标记），换口吻时删掉上次留下的卡；`lint_narrative.py` 按它算必填字段
+- `scripts/mama.py`：run（解析 → 校验 → 算数 → 素材包）/ finish（lint → 报告和卡）/ explain（列出某个数字背后的消息）/ compare / practice（练习打分，T14）/ status，产物都在 `mama-out/`
+- `scripts/snap.py` 和 `--png`：用本机 Chrome / Edge 无头模式把卡片截成 2 倍清晰度的 PNG，先量高度再截；没装浏览器就只出 HTML
+- `assets/card-compare.html` 对照卡（T11）；`compare.py` 接受 messages.json / 输出目录；示例数据加了一份朋友的聊天
+- `parse_export.py --tz`（T21）：Unix / UTC 时间换算到指定时区，messages.json 记 `tz`，报告数据说明自动写时区
+- lint：口吻和必填、金额（错误）、发给她的那条道歉（提醒）、称呼串了（分析爸爸时冒出"她 / 母亲节"，提醒）
+- `evals/triggers.json`：Skill 触发测试集 12 正 12 反（T6 备料）；SKILL.md description 加"不用于"
+- 普通用户版 ④ 截图转录版（T22 第一步）
+- 测试 77 → 115：`test_workflow.py`（素材、brief、口吻、对照卡、mama.py、出图）、转录稿、时区、lint 新规则、口吻表和新阈值的文档同步
+
+改：
+- lint 的数字核对不再拿时段分布、每周条数、类型打分、指数分项、消息下标作证——以前几乎任何小数字都能"找到"
+- `render.py` 自动把 stats.json 的 warnings 和时区补进数据说明；核心拆成 `render_all()`
+- `parse_export.py` 核心拆成 `convert()`（出错抛 `ParseError`），CLI 和 mama.py 共用
+- SKILL.md 重写：一条命令、五步、追问和纠正、口吻表；writing-rules.md 加「素材从哪来」和口吻表；export-guide.md 加截图转录格式
+- lexicon.json v2：加 `self_words`、`question`、`conflict`
+
+修：
+- 示例 narrative 里三处和模拟数据对不上的话："只有 3 次是在饭点"（实际 8 次在饭点、11 次不在）、"这 8 次里有 6 次前一条是她问的问题"（前一条是你的短回复）、"3 月 13 日咳嗽之后她转的三篇和这个有关"（记录里没有）；"早点睡 别熬夜"她是中午和晚上九点多发的，按 dictionary.md 第 4 条改译；发给她的那条去掉"还有 59 条我压根没回"（没回的口径是段，不是条）
+- writing-rules.md、types.md 的例子同步改成和示例数据一致
+- 账单卡上"嗯 / 好 / 知道了"的引号方向
+
+已知、没改（见 HANDOFF 已知问题 16 / T23）：没回的口径偏宽——她在回你、说完对话自然结束也算没回，示例 59 段里 38 段是这种。改口径会动"欠 59 条回复"这个招牌数字，等真实数据和作者决定。
+
 ## v0.5 · 2026-09-04
 
 架构整理，示例基线数字不变（同一份模拟数据，stats.json 逐字段一致，只多了 `schema` / `lexicon` 两个键）。

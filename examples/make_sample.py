@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-生成一份模拟的母子聊天记录 examples/sample-messages.json，用来测试脚本和做演示。
-全部是编的，没有任何真实的人。
+生成模拟聊天记录，用来测试脚本和做演示。全部是编的，没有任何真实的人。
+  examples/sample-messages.json          和妈妈的半年（seed=7）
+  examples/sample-friend-messages.json   和一个朋友的两个月（对照组示例，单独的随机数，不影响上面那份）
 """
 import json
+import os
 import random
 import sys
-
-# Windows 默认控制台是 GBK，打不出 emoji；统一把输出切到 UTF-8（其他平台无影响）
-for _s in (sys.stdout, sys.stderr):
-    if hasattr(_s, "reconfigure"):
-        try:
-            _s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
 from datetime import datetime, timedelta
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "scripts"))
+from _common import dump_json, setup_utf8  # noqa: E402
+
+setup_utf8()
 
 random.seed(7)
 start = datetime(2026, 3, 1, 7, 30)
@@ -101,5 +101,29 @@ add(datetime(2026, 5, 24, 20, 5), "her", "call_video", "视频通话", dur=27 * 
 
 msgs.sort(key=lambda m: m["ts"])
 data = {"me": "我", "her": "妈妈", "her_pronoun": "她", "source": "synthetic-demo", "messages": msgs}
-json.dump(data, open("examples/sample-messages.json", "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+dump_json(data, os.path.join(HERE, "sample-messages.json"))
 print(len(msgs), "条模拟消息 → examples/sample-messages.json")
+
+
+# ---------- 对照组：和一个朋友，回得快、话也多 ----------
+fr = random.Random(11)
+FRIEND = ["晚上开黑吗", "看到那个新闻没", "周六吃火锅去不去", "你上次说的那家店在哪", "哈哈哈哈哈", "我真的服了",
+          "明天几点", "帮我看看这个", "你到了没", "在吗在吗"]
+ME_TO_FRIEND = ["来来来 九点上线", "看到了 太离谱了", "去 我订位置", "就在公司旁边那条街 我发你定位", "笑死我了",
+                "又怎么了 说说", "十点吧 我去接你", "发我看看", "刚到 在门口了", "在 啥事"]
+fm = []
+t = datetime(2026, 7, 1, 12, 0)
+while t < datetime(2026, 8, 28):
+    t = t.replace(hour=fr.choice([12, 13, 19, 20, 21, 22, 23]), minute=fr.randint(0, 59))
+    who = "her" if fr.random() < 0.55 else "me"
+    fm.append({"ts": t.strftime("%Y-%m-%dT%H:%M:%S"), "sender": who, "type": "text",
+               "content": fr.choice(FRIEND if who == "her" else ME_TO_FRIEND), "dur": None})
+    other = "me" if who == "her" else "her"
+    rt = t + timedelta(minutes=fr.choice([1, 1, 2, 3, 3, 5, 8, 12]))
+    fm.append({"ts": rt.strftime("%Y-%m-%dT%H:%M:%S"), "sender": other, "type": "text",
+               "content": fr.choice(ME_TO_FRIEND if other == "me" else FRIEND), "dur": None})
+    t += timedelta(days=fr.choice([1, 1, 2]))
+fm.sort(key=lambda m: m["ts"])
+dump_json({"me": "我", "her": "朋友", "her_pronoun": "他", "source": "synthetic-demo", "messages": fm},
+          os.path.join(HERE, "sample-friend-messages.json"))
+print(len(fm), "条模拟消息 → examples/sample-friend-messages.json")

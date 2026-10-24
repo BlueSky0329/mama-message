@@ -1,0 +1,624 @@
+{
+ "me": "我",
+ "her": "朋友",
+ "her_pronoun": "他",
+ "source": "synthetic-demo",
+ "messages": [
+  {
+   "ts": "2026-07-01T20:55:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-01T21:07:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你到了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-03T13:11:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-03T13:13:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-04T19:09:00",
+   "sender": "her",
+   "type": "text",
+   "content": "晚上开黑吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-04T19:17:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-06T22:39:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-06T22:40:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你到了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-07T12:02:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-07T12:03:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-08T20:37:00",
+   "sender": "me",
+   "type": "text",
+   "content": "刚到 在门口了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-08T20:40:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T12:42:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-09T12:50:00",
+   "sender": "me",
+   "type": "text",
+   "content": "刚到 在门口了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T22:16:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-10T22:19:00",
+   "sender": "me",
+   "type": "text",
+   "content": "来来来 九点上线",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-11T21:49:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-11T21:52:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-12T12:54:00",
+   "sender": "me",
+   "type": "text",
+   "content": "就在公司旁边那条街 我发你定位",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-12T12:57:00",
+   "sender": "her",
+   "type": "text",
+   "content": "晚上开黑吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-13T20:45:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-13T20:48:00",
+   "sender": "me",
+   "type": "text",
+   "content": "笑死我了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-14T12:19:00",
+   "sender": "her",
+   "type": "text",
+   "content": "明天几点",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-14T12:20:00",
+   "sender": "me",
+   "type": "text",
+   "content": "去 我订位置",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-15T22:06:00",
+   "sender": "her",
+   "type": "text",
+   "content": "帮我看看这个",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-15T22:18:00",
+   "sender": "me",
+   "type": "text",
+   "content": "去 我订位置",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-17T21:12:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-17T21:14:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-19T20:07:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-19T20:08:00",
+   "sender": "me",
+   "type": "text",
+   "content": "笑死我了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-21T19:56:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周六吃火锅去不去",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-21T20:04:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-23T21:06:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周六吃火锅去不去",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-23T21:09:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-24T12:49:00",
+   "sender": "me",
+   "type": "text",
+   "content": "笑死我了",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-24T12:57:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-25T12:13:00",
+   "sender": "me",
+   "type": "text",
+   "content": "就在公司旁边那条街 我发你定位",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-25T12:14:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在吗在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-26T19:39:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在吗在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-26T19:51:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-27T23:24:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周六吃火锅去不去",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-27T23:27:00",
+   "sender": "me",
+   "type": "text",
+   "content": "就在公司旁边那条街 我发你定位",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-29T13:46:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你到了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-29T13:49:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-30T21:05:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-07-30T21:06:00",
+   "sender": "me",
+   "type": "text",
+   "content": "来来来 九点上线",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-01T19:15:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-01T19:18:00",
+   "sender": "her",
+   "type": "text",
+   "content": "明天几点",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-03T20:18:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-03T20:20:00",
+   "sender": "me",
+   "type": "text",
+   "content": "就在公司旁边那条街 我发你定位",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-04T21:41:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-04T21:42:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-05T13:47:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-05T13:55:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-06T12:02:00",
+   "sender": "her",
+   "type": "text",
+   "content": "我真的服了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-06T12:04:00",
+   "sender": "me",
+   "type": "text",
+   "content": "看到了 太离谱了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-07T13:57:00",
+   "sender": "her",
+   "type": "text",
+   "content": "我真的服了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-07T13:59:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-08T12:30:00",
+   "sender": "me",
+   "type": "text",
+   "content": "笑死我了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-08T12:31:00",
+   "sender": "her",
+   "type": "text",
+   "content": "晚上开黑吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-10T22:04:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-10T22:09:00",
+   "sender": "me",
+   "type": "text",
+   "content": "去 我订位置",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-11T12:28:00",
+   "sender": "her",
+   "type": "text",
+   "content": "晚上开黑吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-11T12:30:00",
+   "sender": "me",
+   "type": "text",
+   "content": "又怎么了 说说",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-12T12:43:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-12T12:51:00",
+   "sender": "me",
+   "type": "text",
+   "content": "来来来 九点上线",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-13T21:00:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-13T21:08:00",
+   "sender": "her",
+   "type": "text",
+   "content": "在吗在吗",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-14T21:04:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-14T21:07:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-16T19:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-16T19:36:00",
+   "sender": "her",
+   "type": "text",
+   "content": "帮我看看这个",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-17T23:34:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你到了没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-17T23:35:00",
+   "sender": "me",
+   "type": "text",
+   "content": "笑死我了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-19T12:30:00",
+   "sender": "her",
+   "type": "text",
+   "content": "看到那个新闻没",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-19T12:42:00",
+   "sender": "me",
+   "type": "text",
+   "content": "在 啥事",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-21T20:16:00",
+   "sender": "me",
+   "type": "text",
+   "content": "又怎么了 说说",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-21T20:19:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周六吃火锅去不去",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-23T21:12:00",
+   "sender": "her",
+   "type": "text",
+   "content": "我真的服了",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-23T21:24:00",
+   "sender": "me",
+   "type": "text",
+   "content": "发我看看",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-24T19:25:00",
+   "sender": "me",
+   "type": "text",
+   "content": "就在公司旁边那条街 我发你定位",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-24T19:33:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T20:14:00",
+   "sender": "me",
+   "type": "text",
+   "content": "又怎么了 说说",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-25T20:17:00",
+   "sender": "her",
+   "type": "text",
+   "content": "周六吃火锅去不去",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-26T20:22:00",
+   "sender": "me",
+   "type": "text",
+   "content": "来来来 九点上线",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-26T20:23:00",
+   "sender": "her",
+   "type": "text",
+   "content": "哈哈哈哈哈",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-27T12:28:00",
+   "sender": "her",
+   "type": "text",
+   "content": "你上次说的那家店在哪",
+   "dur": null
+  },
+  {
+   "ts": "2026-08-27T12:36:00",
+   "sender": "me",
+   "type": "text",
+   "content": "十点吧 我去接你",
+   "dur": null
+  }
+ ]
+}

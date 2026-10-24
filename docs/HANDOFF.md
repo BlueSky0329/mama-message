@@ -1,7 +1,7 @@
 # 妈妈的消息 · 开发交接文档
 
-> 给 Claude Code 的。读完这份再动代码。仓库里是可运行的 v0.5，你的工作是把它做到可首发。
-> 首次写于 2026-08-31（v0.3），2026-09-04 按 v0.5 更新。首发目标：中秋（2026-09-25）前两周内发第一个视频，仓库同步公开。
+> 给 Claude Code 的。读完这份再动代码。仓库里是可运行的 v0.6，你的工作是把它做到可首发。
+> 首次写于 2026-08-31（v0.3），2026-09-04 按 v0.5、2026-10-24 按 v0.6 更新。原定首发目标是中秋（2026-09-25）前发第一个视频，已经错过；下一个节点是春节（2027-02-06），作者定。
 > 本文件在仓库里的位置是 `docs/HANDOFF.md`；上一级目录的 `HANDOFF.md` 是 `tools/pack.py --sync-to` 同步出来的副本，不要直接改它。
 
 ---
@@ -9,10 +9,11 @@
 ## 0. 一分钟版
 
 - **产品**：把用户和妈妈（或爸爸/外婆）的聊天截图算成一份报告 + 两张卡 + 一句可以直接发给她的话。Agent Skill 形态，另有普通用户复制粘贴版提示词和浏览器版。
-- **已完成**：SKILL.md、7 份 references + 词表、7 个脚本（全标准库、不联网）、3 个 HTML 模板、普通用户版提示词、README、模拟数据端到端跑通、测试、CI、浏览器版。
-- **未完成**：真实数据校准、导出格式在真实样本上验证、Skill 触发测试、普通用户版实测。见第 6 节 P0。
+- **已完成**：SKILL.md、7 份 references + 词表、11 个脚本（全标准库、不联网；入口 `mama.py`）、4 个 HTML 模板、普通用户版提示词、README、模拟数据端到端跑通、测试、CI、浏览器版。
+- **未完成**：真实数据校准（含"没回"口径的决定，T23）、导出格式在真实样本上验证、Skill 触发测试（测试集已备好）、普通用户版实测、网页版部署。见第 6 节 P0。
 - **v0.4（2026-08-31）补**：测试、validate.py、农历表、Windows 兼容、短回复口径修正、导出指南、浏览器版 MVP、CLAUDE.md、CHANGELOG。见 2.4 节。
 - **v0.5（2026-09-04）补**：stats 拆分、词表外置、契约版本号、输入层适配器 + fixtures + 编码嗅探、narrative lint、文档口径同步测试、refresh.py、CI / Release、网页版 CDN 竞速 + 离线缓存。见 2.5 节。
+- **v0.6（2026-10-24）补**：写作素材包 `brief.py`、截图转录稿（自动去重叠 / 排顺序 / 换算相对时间）、口吻表 `MODES`（渲染和 lint 都照它去掉版块）、`mama.py` 一条命令、lint 加称呼 / 金额 / 道歉 / 更严的数字核对、卡片直接出 PNG、对照卡、`--tz`、练习打分、触发测试集。示例基线数字不变。见 2.6 节。
 - **不能碰的原则**：不联网、不解密数据库、不写金额、不评判用户、称呼跟人走、文字部分不抒情不说教。见第 5 节。
 
 ---
@@ -57,11 +58,11 @@
 
 ## 2. 当前状态
 
-### 2.1 已完成（v0.5）
+### 2.1 已完成（v0.6）
 
 ```
 mama-message/
-├── SKILL.md                    入口。触发描述、七步流程（第六步含 lint）、附加入口、收着的情况、自检
+├── SKILL.md                    入口。触发描述（含"不用于"）、一条命令、五步流程、追问和纠正、附加入口、口吻表、自检
 ├── README.md                   隐私第一屏 → 模拟输出钩子 → 用法 → 模块表 → 数据来源 → 写在最后
 ├── CLAUDE.md · CHANGELOG.md · LICENSE (MIT) · .gitignore · .gitattributes
 ├── references/
@@ -69,30 +70,46 @@ mama-message/
 │   ├── metrics.md              每个数字的定义（与 stats.py 一一对应；时区、契约版本、lint 也在这里）
 │   ├── types.md                10 个她的类型 + 6 个你的类型 + 五档评级 + 类型句写法
 │   ├── dictionary.md           黑话翻译表 20 条基础词典 + 个性化生成规则
-│   ├── writing-rules.md        先问三个问题、各段文字规矩、反 AI 黑名单（lint 从这里读）、什么时候要收着
+│   ├── writing-rules.md        先问三个问题、各段文字规矩、反 AI 黑名单（lint 从这里读）、素材从哪来、口吻表（什么时候要收着）
 │   ├── report-template.md      对话 Markdown 报告模板 + narrative.json 字段 + 命令
 │   ├── practice.md             练习模式：准备、对话规则、打分、边界
-│   └── export-guide.md         分平台的导出 / 截图指南、编码、时区、认不出来怎么办
+│   └── export-guide.md         分平台的导出 / 截图指南、截图转录格式、编码、时区、认不出来怎么办
 ├── scripts/                    全部只用 Python 标准库，无网络
-│   ├── _common.py              共用：SCHEMA_VERSION、TYPES / TYPE_CN、parse_ts / fmt_delta、epoch_to_local、read_text（编码嗅探）、load_lexicon
-│   ├── parse_export.py         适配器：WeFlow JSON/TXT/weclone CSV、留痕 CSV、txt、通用 JSON、messages.json 直通 → messages.json
+│   ├── mama.py                 入口：run（解析→校验→算数→素材包）/ finish（lint→出报告）/ explain / compare / practice / status
+│   ├── _common.py              共用：SCHEMA_VERSION、MODES（口吻表）、NARRATIVE_REQUIRED、TYPES / TYPE_CN、AMOUNT_RE、时间和时区（parse_tz / tz_label）、read_text、load_lexicon
+│   ├── parse_export.py         适配器：WeFlow JSON/TXT/weclone CSV、留痕 CSV、txt、截图转录稿、通用 JSON、messages.json 直通；convert() 给 mama.py 用
 │   ├── validate.py             messages.json 校验：字段、枚举、时间、顺序、重复、金额、dur、sender 标反、schema
-│   ├── stats.py                Ctx + sec_xxx 各算一块 → stats.json + 终端摘要；FORMULA / *_RULES 在顶部
-│   ├── lint_narrative.py       narrative.json 规矩检查：字段、字数、感叹号、黑名单、评判词、原话核对、数字核对
-│   ├── render.py               stats.json + narrative.json → 报告 + 两张卡（内联 SVG 图表）；拒绝旧 schema
-│   ├── compare.py              两份 stats.json → 对照组 / 偏心报告
+│   ├── stats.py                Ctx + sec_xxx 各算一块 → stats.json + 终端摘要；FORMULA / *_RULES / MEAL_HOURS 在顶部；compute_with_ctx() 给 explain 用
+│   ├── brief.py                stats + messages → brief.md（写作素材包，篇幅有上限）
+│   ├── lint_narrative.py       narrative.json 规矩检查：口吻和必填、字数、感叹号、黑名单、评判词、金额、道歉、称呼、原话核对、数字核对
+│   ├── render.py               stats.json + narrative.json → 报告 + 两张卡（内联 SVG 图表）；按口吻去掉版块和卡；--png；拒绝旧 schema
+│   ├── snap.py                 卡片 HTML → PNG：本机 Chrome / Edge 无头模式，先量高度再截，2 倍清晰度
+│   ├── compare.py              两份 stats / messages / 输出目录 → 对照组 / 偏心报告 + 对照卡
 │   └── redact.py               打码：手机号、身份证、卡号、金额、邮箱、指定名字（输入编码自动识别）
-├── assets/                     report.html · card-bill.html · card-send.html
-├── prompts/普通用户版.md        三段提示词：报告版 / 练习版 / 帮你回版
-├── web/                        index.html（Pyodide 跑 scripts/ 原文件；多个下载源竞速、失败顺延）· sw.js（缓存运行时）
-├── examples/                   make_sample.py（seed=7）· sample-messages/stats/narrative.json · reports/ 三个 HTML
-├── tests/                      test_pipeline · test_parse_export · test_lint · test_docs_sync · helpers · fixtures/（10 种样本）
-├── tools/                      refresh.py（一键验证）· pack.py（打包 + 同步副本）· snapshot.py（HTML → PNG）
+├── assets/                     report.html · card-bill.html · card-send.html · card-compare.html（版块用 <!--#名字--> 包起来）
+├── prompts/普通用户版.md        四段提示词：报告版 / 练习版 / 帮你回版 / 截图转录版
+├── web/                        index.html（Pyodide 跑 scripts/ 原文件；多个下载源竞速、失败顺延；素材包进提示词；口吻可选）· sw.js（缓存运行时）
+├── examples/                   make_sample.py（妈妈 seed=7 + 朋友）· sample-messages/friend-messages/stats/narrative.json · sample-brief.md · reports/ 四个 HTML
+├── tests/                      test_pipeline · test_parse_export · test_lint · test_docs_sync · test_workflow · helpers · fixtures/（11 种样本）
+├── evals/                      triggers.json（Skill 触发测试集，12 正 12 反，T6 用）
+├── tools/                      refresh.py（一键验证）· pack.py（打包 + 同步副本）· snapshot.py（HTML → PNG，README 用）
 ├── docs/                       HANDOFF.md（本文件）· img/（README 截图）
 └── .github/workflows/          ci.yml（3 系统 × py3.8/3.12）· release.yml（打 tag 出 Release）
 ```
 
 ### 2.2 已验证
+
+v0.6 新增：
+- 示例基线（第 7 节）不变；`examples/sample-stats.json` 只多了 `source_detail`、`basics.tz`、`meal`、`self`、`voice`、`sensitivity`、`unanswered.was_her_reply / ended_with_closer`、`phrases.self_shrink_after_*`、几处 `i`（消息下标）。
+- 用新字段核对了示例 narrative，改掉了三处和模拟数据对不上的话："只有 3 次是在饭点"（实际饭点 8 次、不在饭点 11 次）、"这 8 次里有 6 次前一条是她问的问题"（6 对，但前一条是你的短回复）、"你 3 月 13 日咳嗽之后她转的三篇和这个有关"（记录里没有）；"早点睡 别熬夜"她是 12:25 和 21:47 发的，按 dictionary.md 第 4 条改译。
+- 截图转录稿：倒序给的三张截图 + 两处重叠 + 星期五 / 昨天 下午 / 只写几点 / 跨年的"12月30日"，有无 `--shot-date` 两种都核对过；聊天 AI 常见的代码块包裹、"她（妈妈）："、续行带冒号也认。
+- 五种口吻各渲染一遍，逐个版块核对去掉没有；memorial 会删掉上次留下的卡片（含 PNG）。
+- `snap.py` 在本机 Chrome 155 上出图：发给她的卡 780×1302、账单卡 780×1858、对照卡，人工看过版面。
+- `mama.py run → finish → explain（10 种）→ status → compare → practice` 全链路在临时目录跑通，有测试。
+- Python 3.8 语法用 `ast.parse(feature_version=(3, 8))` 查过；本机没有 3.8 解释器，CI 会跑。
+- 网页版的改动（素材包进提示词、口吻下拉、截图日期 / 时区、不出的卡不显示）在本机 Chrome 里走通过，见 2.6 节最后一条。
+
+v0.5 及以前：
 
 - 模拟数据端到端：`make_sample.py → stats.py → lint_narrative.py → render.py`，三个 HTML 无未填占位符；v0.5 重构后 stats.json 与 v0.4 逐字段一致（只多 `schema` / `lexicon`），HTML 逐字节一致。
 - `parse_export.py`：`tests/fixtures/` 十种样本（WeFlow 三种、留痕 CSV、两行式、单行式、GBK、UTF-16、毫秒时间戳、.txt 里装 JSON）逐个核对条数 / 发送者 / 类型 / 时间；`--peek` 每个都能跑。
@@ -115,16 +132,33 @@ mama-message/
 | 7 | HTML 用了 CSS grid，wkhtmltoimage（旧 WebKit）下网格塌成单列；服务端出图用 Chrome（tools/snapshot.py） | assets/*.html | 低 |
 | 8 | ~~没有任何单元测试~~ v0.4 加了 28 个；v0.5 拆成四个文件、加 fixtures 和文档同步测试，数量见 README 徽章（refresh.py 自动改） | tests/ | 已修 |
 | 9 | 普通用户版报告提示词约 2000 字，没在豆包 / Kimi / DeepSeek 上实测过；它让模型手算中位数，是三份口径实现里最不可靠的一份 | prompts/ | 高 |
-| 10 | 练习模式纯 prompt，没有脚本统计回合 | references/practice.md | 低 |
-| 11 | Skill 的 description 没做触发测试（正例/反例） | SKILL.md | 中 |
+| 10 | ~~练习模式纯 prompt，没有脚本统计回合~~ v0.6 有 `mama.py practice` 打分；对话本身仍是 prompt | references/practice.md | 低 |
+| 11 | Skill 的 description 没做触发测试。v0.6 加了"不用于"并备好 `evals/triggers.json`（12 正 12 反），还没跑 | SKILL.md · evals/ | 中 |
 | 12 | ~~README 没有截图~~ v0.4 加了截图和徽章 | README.md | 已修 |
-| 13 | 时段按运行脚本那台机器的时区算；留学生分析国内记录会整体偏一个时差。已写进 metrics.md，未实现 `tz` 字段 | stats.py `sec_hours` | 中 |
+| 13 | ~~时段按运行脚本那台机器的时区算~~ v0.6 `parse_export --tz +08:00`，messages.json 记 `tz`，报告数据说明自动写时区。本来就是本地时间的 txt / 留痕 StrTime 只能记、不能换算 | parse_export.py | 低 |
 | 14 | ~~GBK / UTF-16 导出解析出 0 条；CSV 毫秒时间戳崩；02-29 生日崩；旧 stats.json KeyError；--help 没说明~~ v0.5 全修 | — | 已修 |
 | 15 | ~~HANDOFF 不在仓库里，CLAUDE.md 的指引对 clone 者失效~~ v0.5 进 `docs/`，上级目录的是同步副本 | — | 已修 |
+| 16 | **"没回"的口径偏宽**：她在回你的话、说完对话自然结束，第二天她又开口，也算"没回"。示例 59 段里 38 段是这种（朋友样本 15 段全是）。v0.6 只加了诊断字段（`was_her_reply` / `ended_with_closer`）并让 brief / 写作规矩别说过头，**没改口径**——改了会动"欠 59 条回复"这个招牌数字，等 T23 作者决定 | stats.py `sec_unanswered` | 高 |
+| 17 | 截图转录格式只在自造样本上验证过，没拿真实截图让豆包 / Kimi / Claude 转一遍看格式守不守得住 | parse_export.py `parse_transcript` | 中 |
+| 18 | "她说起自己的事"用 self_words + "我……≥ 6 字" + 不是问句 + 不含"你"判断，会漏（"今天去体检了"没有"我"也没有词表词时）也会误报；词表在 lexicon.json，随 T1 校准 | lexicon.json `self_words` | 中 |
+| 19 | GitHub Pages 没开，网页版只能本地 `python -m http.server` 用；普通用户版 ④ 转录版因此还要靠电脑 | — | 中 |
 
 ### 2.4 v0.4 增量（2026-08-31）
 
 详见 `CHANGELOG.md`。要点：短回复只算"回复"（紧跟她的消息、24 小时内）；"早上 8 点前"拆成 `her_early_count` / `her_late_count`；`validate.py`、`tools/pack.py`、`parse_export.py --call / --since / --until / --last-days / --peek`；`stats.json` 加 `warnings`；Windows UTF-8；`CLAUDE.md`、`CHANGELOG.md`、`export-guide.md`；浏览器版 MVP；WeFlow 三种导出。
+
+### 2.6 v0.6 增量（2026-10-24，Claude Code）
+
+详见 `CHANGELOG.md`。这一版的方向是"让写文字的 AI 写得准、让收着的规矩真的生效、让 Agent 少走错步"：
+
+- **写作素材包**：`brief.py` 把 stats.json 的数字和 messages.json 里对应的原话整理成 brief.md（11 节，记录再长也就几千字）。stats 新增写作素材字段：`self`（她说起自己的事 + 你的回复 + 之后有没有再提）、`meal`（问吃饭几次在饭点）、`voice`（她和你的说话方式，练习模式照着扮）、`sensitivity`（冲突字眼、催婚占比、最后一条多久以前 → 建议口吻）、`phrases.self_shrink_after_*`、`unanswered` 的口径诊断。都不进指数。网页版的提示词从"整份 stats.json"换成"素材包 + 去掉分布数组的 stats"，AI 终于能看到原话了。
+- **截图转录稿**：AI 照截图抄成"她：/ 我："+ `-- 时间 --` + `=== 截图 N ===`，`parse_export.py` 去相邻截图的重叠、把倒序的截图顺过来、按 `--shot-date` 换算"昨天 / 星期二 / 下午 3:05 / 只写几点"，没法换算的留空不编。粘贴的"妈妈：… / 我：…"也认了（以前解析出 0 条）。
+- **口吻表**：`_common.MODES`（normal / gentle / neutral / memorial / third）定义每种口吻去掉哪些版块和卡片；`render.py` 按 narrative.json 的 `mode` 去掉（模板里 `<!--#版块-->` 包起来），`lint_narrative.py` 按它算必填字段；SKILL.md 和 writing-rules.md 的表由 `test_docs_sync` 比对。"收着"从提示词里的一句话变成了脚本行为。
+- **mama.py**：run / finish / explain / compare / practice / status，产物都在 `mama-out/`。explain 把某个数字背后的消息原样列出来（"这个怎么算的""那条为什么算没回"）。
+- **lint**：口吻和必填、金额（错误）、发给她的那条道歉（提醒）、称呼串了（分析爸爸时冒出"她 / 母亲节"，提醒）；数字核对不再拿时段分布、每周条数、类型打分、消息下标作证（以前几乎任何小数字都能"找到"）。
+- **出图和对照卡**：`snap.py` 用本机 Chrome / Edge 无头模式把卡片截成 PNG（render / compare / finish 的 `--png`）；`card-compare.html` 是视频开头那一帧（T11）。
+- **其他**：`parse_export --tz`（T21）、`mama.py practice`（T14）、`evals/triggers.json`（T6 备料）、普通用户版 ④ 截图转录版（T22 的第一步）、`compute_with_ctx()`、`parse_export.convert()`、`render.render_all()` 把核心和 CLI 拆开。
+- 网页版在本机 Chrome 里（Playwright 驱动，Pyodide 真下载）实测过：模拟数据 normal 口吻 lint 通过、出三个文件；改成 memorial 只出报告、状态行写明没出哪两张卡、"发给她"那句提示隐藏；粘贴三段截图转录稿 + 截图日期，倒序、去重、星期五换算都对；复制出的提示词约 1.85 万字，含素材包和口吻，不含分布数组。手机浏览器没测（T15）。
 
 ### 2.5 v0.5 增量（2026-09-04，Claude Code）
 
@@ -143,26 +177,27 @@ mama-message/
 
 ## 3. 数据流与接口契约
 
-```
-截图 ──(AI 转录)──┐
-导出文件 ──parse_export.py──┤──▶ messages.json ──validate.py──▶ stats.py ──▶ stats.json ──┐
-粘贴文本 ──(AI 转录)──┘                                                                    ├──render.py──▶ reports/*.html
-                        AI 按 writing-rules 写 ──▶ narrative.json ──lint_narrative.py──▶ 过 ┘
-两份 stats.json ──compare.py──▶ compare.json + 终端表
-```
+三份契约共用一个版本号 `schema`（`scripts/_common.py` 的 `SCHEMA_VERSION`，现在是 1）。字段改到不兼容时 +1，并让 `render.py` / `validate.py` 的提示写清怎么办。v0.6 加的都是可选字段（messages.json 的 `tz`，narrative.json 的 `mode`，stats.json 的写作素材），没升版本；`brief.py` 发现 stats.json 没有 `self` 会让你重跑 stats。
 
-三份契约共用一个版本号 `schema`（`scripts/_common.py` 的 `SCHEMA_VERSION`，现在是 1）。字段改到不兼容时 +1，并让 `render.py` / `validate.py` 的提示写清怎么办。
+```
+截图 ──(AI 抄成转录稿)──┐
+导出文件 ────────────────┤──parse_export.py──▶ messages.json ──validate──▶ stats.py ──▶ stats.json ──brief.py──▶ brief.md
+粘贴文本 ────────────────┘                                                                          （AI 照 brief.md 写）
+                                                                 narrative.json ──lint_narrative──▶ render.py（按 mode）──▶ reports/
+两份记录 ──compare.py──▶ compare.json + 对照卡
+mama.py run = 解析 + 校验 + 算数 + 素材包；mama.py finish = lint + render（+ --png）
+```
 
 ### 3.1 messages.json（唯一的输入契约，改它要全链路同步）
 
 ```json
 {"schema": 1, "me": "我", "her": "妈妈", "her_pronoun": "她", "source": "screenshots|export|manual",
- "source_detail": "weflow-json 1.0.3 · utf-8",
+ "source_detail": "weflow-json 1.0.3 · utf-8", "tz": "+08:00",
  "messages": [
    {"ts": "2026-05-12T21:03:14", "sender": "her", "type": "text", "content": "吃饭了吗", "dur": null}
  ]}
 ```
-- `schema` 可缺（AI 手工转录的可能没写）；比当前版本新会被 validate 拒绝。`source_detail` 是 parse_export 写的来源 / 版本 / 编码，进报告的数据说明。
+- `schema` 可缺（AI 手工转录的可能没写）；比当前版本新会被 validate 拒绝。`source_detail` 是 parse_export 写的来源 / 版本 / 编码，进报告的数据说明。`tz` 可缺，是时间戳所在的时区（parse_export 写；`--tz` 给了就是它，否则是运行机器的时区）。
 - `ts` ISO 8601 或 `null`（截图无时间戳时）。`null` 参与计数，不参与时间计算。**不许编时间。** 时间按导出电脑的本地时区（metrics.md「时区」）。
 - `sender` ∈ `her` | `me`
 - `type` ∈ `_common.TYPES`：text · voice · image · video · sticker · transfer · link · call_voice · call_video · recall · location · file · other
@@ -172,25 +207,32 @@ mama-message/
 
 ### 3.2 stats.json（关键字段，完整见 `references/metrics.md`）
 
-`schema` `lexicon`（词表版本）`her_name` `pronoun` `warnings` `basics` `opens` `reply.me/her` `longest` `short` `topics` `care_ratio` `hours` `unanswered` `phrases` `extras` `composition` `emoji` `catchphrases` `forwards` `weekly` `trend` `festivals` `countdown` `signals` `index.care/short/forgive` `mother_type` `child_type` `rating` `bill` `today`
+`schema` `lexicon`（词表版本，v0.6 是 2）`her_name` `pronoun` `source_detail` `warnings` `basics`（含 `tz`）`opens` `reply.me/her` `longest` `short` `topics` `meal` `care_ratio` `hours` `unanswered`（含 `was_her_reply` `ended_with_closer`）`phrases`（含 `self_shrink_after_my_short / _her`）`self` `extras` `composition` `emoji` `catchphrases` `voice` `forwards` `weekly` `trend` `festivals` `countdown` `signals` `index.care/short/forgive` `mother_type` `child_type` `rating` `bill` `sensitivity` `today`。列表里的 `i` 是这条消息在 messages.json 里的下标，brief.py 按它取上下文。
 
 三个指数的公式在 `metrics.md`，权重在 `stats.py` 的 `FORMULA`。**改公式或阈值必须同步四处**：`stats.py` 常量、`references/metrics.md`、`references/types.md`、`prompts/普通用户版.md`，`tests/test_docs_sync.py` 会红。改词表只改 `references/lexicon.json`（`version` +1），跑 `tools/refresh.py` 看基线变化。
 
 ### 3.3 narrative.json（AI 写，lint 查，render.py 读）
 
-必填：`she_means` `send_text` `dictionary[]` `tonight[]` `replies[]` `call_openers[]` `type_lines.mother/child`
-选填（缺省自动拼）：`schema` `title` `index_lines` `forward_insight` `bill_balance` `send_cta` `child_call` `cta` `footnote`
+必填（normal / gentle）：`she_means` `send_text` `dictionary[]` `tonight[]` `replies[]` `call_openers[]` `type_lines.mother/child`；其他口吻去掉的版块对应字段不必填（`_common.required_fields(mode)`）
+选填（缺省自动拼）：`schema` `mode`（缺省 normal）`title` `index_lines` `forward_insight` `bill_balance` `send_cta` `child_call` `cta` `footnote`（stats 的 warnings 和时区会自动补进去）
 缺必填字段 render.py 不报错，HTML 里显示〔待写：字段名〕并在终端列出。`lint_narrative.py` 的 ✗ 要改到没有再 render：引号里的原话必须在 messages.json 里真出现过（"没说过“…”"和"你说“…”"除外），数字要能在 stats.json 里找到（找不到是 ⚠）。
 
 ### 3.4 CLI
 
 ```bash
-python scripts/parse_export.py 文件 --her 记录里的名字 [--call 妈妈] [--me 我] [--pronoun 她] [--since/--until/--last-days] [--out messages.json] [--peek]
+python scripts/mama.py run 文件 [--call/--her/--me/--pronoun/--since/--until/--last-days/--tz/--shot-date/--her-birthday/--my-birthday/--today/--lexicon] [--dir mama-out]
+python scripts/mama.py finish [--dir] [--png] [--force]
+python scripts/mama.py explain 短回复|没回|开口|回复|自己|收尾|没事|追问|信号|节日|主题 吃饭 [--dir] [--all]
+python scripts/mama.py compare 目录A 目录B --labels 你妈 朋友 [--mode friend|papa] [--out] [--png]
+python scripts/mama.py practice 练习.txt [--dir]  ·  python scripts/mama.py status [--dir]
+python scripts/parse_export.py 文件 --her 记录里的名字 [--call 妈妈] [--me 我] [--pronoun 她] [--since/--until/--last-days] [--tz +08:00] [--shot-date YYYY-MM-DD] [--out messages.json] [--peek]
 python scripts/validate.py messages.json [--strict]
 python scripts/stats.py messages.json [--out stats.json] [--today YYYY-MM-DD] [--her-birthday MM-DD] [--my-birthday MM-DD] [--lexicon 词表.json] [--quiet]
+python scripts/brief.py stats.json messages.json [--out brief.md] [--lexicon 词表.json]
 python scripts/lint_narrative.py narrative.json [--stats stats.json] [--messages messages.json] [--strict]
-python scripts/render.py stats.json [narrative.json] [--out reports/]
-python scripts/compare.py a-stats.json b-stats.json --labels 你妈 朋友 --mode friend|papa [--out compare.json]
+python scripts/render.py stats.json [narrative.json] [--out reports/] [--png]
+python scripts/snap.py 卡片.html [--out 卡.png] [--width 390] [--scale 2]
+python scripts/compare.py a b --labels 你妈 朋友 --mode friend|papa [--out compare.json] [--card 卡.html] [--png] [--today]   # a / b：stats.json、messages.json 或输出目录
 python scripts/redact.py 文件 [--map 真名=称呼]... [--names 名字...]
 python tools/refresh.py [--no-sync] [--snapshot]        # 改完之后的一条命令
 python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步发布副本
@@ -219,7 +261,7 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 | 亲情账单卡 | card-bill.html | 必有 | 结尾 |
 | **发给她的卡** | card-send.html | **必有，产品出口** | 结尾 |
 | 练习模式 | practice.md | 必有 | **中段实录** |
-| 对照组（回朋友 vs 回妈） | compare.py | 必有 | **开头那一行** |
+| 对照组（回朋友 vs 回妈） | compare.py + card-compare.html | 必有 | **开头那一帧**（v0.6 有卡） |
 | 偏心报告（妈 vs 爸） | compare.py --mode papa | 彩蛋 | |
 
 视频三段：开头「你回朋友 3 分钟，回你妈 4 小时」→ 中间练习模式实录（打"嗯"被抓）→ 结尾发给她的卡 + 中秋倒计时。标题用"欠一个电话"。
@@ -237,7 +279,9 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 7. **中文优先**：所有面向用户的文本中文。代码注释中文。变量名英文。
 8. **一处定义**：词表只在 `references/lexicon.json`；公式和阈值只在 `stats.py` 顶部；`metrics.md` / `types.md` / `普通用户版.md` 是复述，`tests/test_docs_sync.py` 守着。
 9. **契约有版本**：改 messages.json / stats.json / narrative.json 的字段到不兼容，`SCHEMA_VERSION` +1，并更新 SKILL.md 第三步的示例、report-template.md、本文件第 3 节。
-10. **新脚本要进网页**：新加的 `scripts/*.py` 或 `references/*` 文件，要加进 `web/index.html` 的 `APP_FILES`，否则页面里取不到。
+10. **新脚本要进网页**：新加的 `scripts/*.py` 或 `references/*` 文件，要加进 `web/index.html` 的 `APP_FILES`，否则页面里取不到（网页用不到的 `mama.py` `snap.py` `compare.py` 没加）。
+11. **口吻一处定义**：哪种口吻去掉哪些版块、哪些字段不必填，只在 `_common.MODES`；模板里的版块用 `<!--#名字-->…<!--/名字-->` 包起来。SKILL.md 和 writing-rules.md 的口吻表是复述，`test_docs_sync` 比对。
+12. **素材包只引原话**：brief.md 里 “” 引的必须是记录原话（`test_workflow` 逐条核对），说明文字用「」。
 
 ---
 
@@ -262,9 +306,17 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 
 **T5 README 截图** ✅ v0.4（`tools/snapshot.py`）。
 
-**T6 Skill 触发测试**
-- 按 skill-creator 的方法：5 条正例（"分析我和我妈的聊天""我是不是太敷衍我爸了""[直接发家人截图]""帮我看看我妈多久找我一次""陪我练练怎么回我妈"）、5 条反例（"分析我和女朋友的聊天""帮我写给妈妈的生日祝福""微信怎么导出聊天记录""我妈是什么星座""统计一下群聊谁最活跃"）。
-- 调 description 直到正例全触发、反例不触发（"女朋友"那条尤其要不触发，那是她不一样的地盘）。
+**T6 Skill 触发测试**（v0.6 备料完成，没跑）
+- 测试集在 `evals/triggers.json`：12 条正例（含"[附截图]""奶奶走了想再看看她的消息""/mama-message"）、12 条反例（女朋友、生日祝福、微信怎么导出、星座、群聊、老板、室友、亲子沟通的书、WhatsApp 脚本、血压、打码、前任）。
+- description 已加"不用于：恋人 / 伴侣 / 朋友之间的关系分析，群聊统计，单纯写节日祝福，单纯问微信怎么导出"。
+- 跑法：skill-creator 的 `run_loop.py --eval-set evals/triggers.json --skill-path .`（会调很多次 `claude -p`，花钱，作者决定什么时候跑）。调 description 直到正例全触发、反例不触发（"女朋友"那条尤其要不触发）。
+
+**T23 "没回"的口径**（v0.6 新增，作者决定）
+- 现状：她在回你的话、说完对话自然结束（你"妈我到了"→ 她"好 到了就好"→ 第二天她又开口），算"没回"。示例 59 段里 38 段是这种。
+- 选项 A：不改，报告里如实写"段"，brief 提醒 AI 别说过头（v0.6 现状）。
+- 选项 B：`was_her_reply` 的那些段不算没回（示例会从 59 降到 21 左右，嗯哦好指数、评级、账单、README 首屏、视频文案都要跟着改）。
+- 选项 C：只排除"她在回你、并且最后一句是收尾"的（两个诊断字段的交集）。
+- 拿 T1 的真实数据看哪种让作者说"这是我"，再定。改了按第 5 节第 8 条同步四处。
 
 **T7 普通用户版实测**（和 T22 一起做）
 - 在豆包、Kimi、DeepSeek、Claude 各跑一次报告版提示词 + 10 张模拟截图。
@@ -275,17 +327,19 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 
 ### P1 · 首发后一周
 
+**T24 网页版上线**：GitHub Pages 开仓库根目录（Settings → Pages → main / root），之后 README、普通用户版 ④ 才能给手机用户一个能点的链接。公开发布动作，作者来开。
+
 **T9 `.claude/commands/`** 三个快捷命令：`mama-practice.md` `mama-reply.md` `mama-compare.md`，内容是"读 SKILL.md，进入 X 模式"。验证 Claude Code 当前版本的 commands 目录规范。
 
 **T10 卡片版式兼容**：把 `card-bill.html` `card-send.html` 的 grid 改成 flex（老 WebKit 也能渲染），报告可以保留 grid。
 
-**T11 `compare.py` 增强**：直接接受 messages.json（内部调 stats），并出一张对照卡 `card-compare.html`（"你回朋友 3 分钟 / 回你妈 4 小时 12 分" 两个大数字）。这是视频开头那一帧。
+**T11 `compare.py` 增强** ✅ v0.6：接受 messages.json / 输出目录，出 `card-compare.html`（可 `--png`），示例在 `examples/reports/`。
 
 **T12 农历表扩到 2030** ✅ v0.4。
 
 **T13 表情转录规范**：`references/emoji.md` 列微信常见内置表情名，SKILL.md 转录步骤引用，保证截图路径和导出路径的表情统计口径一致。
 
-**T14 练习模式计分脚本**（可选）：`scripts/practice_score.py` 读一段对话文本，数短回复、问句、字数，输出打分模板。
+**T14 练习模式计分** ✅ v0.6：`mama.py practice`，数短回复、问句、带具体信息的，找和记录里一模一样的那句，对比记录里的短回复占比。
 
 **T15 浏览器版**（v0.4 MVP，v0.5 加固）
 - 现状：Pyodide 跑 `scripts/` 原文件；下载源竞速（jsDelivr 主站 / Fastly / Gcore / Quantil 节点 + unpkg，探 python_stdlib.zip 本身、失败顺延；npmmirror 对 .zip 返回 451 所以不用），带进度；`sw.js` 缓存运行时，https 或 localhost 下断网可用；输入 → parse_export（含最近 N 天 / 起止）→ validate → stats → 复制提示词 → 粘回 narrative → lint → render → 三个 HTML 页内预览、可下载。数据不出浏览器。
@@ -295,9 +349,9 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 
 **T16 导出更方便** ✅ v0.4（export-guide、--call / --since / --until / --last-days / --peek、WeFlow 三种导出）。仍要真实样本（= T2）；iMessage-exporter、短信 XML 没支持。WeFlow 本地 HTTP API（127.0.0.1:5031）网页版以后可直连。
 
-**T21 时区字段**：`messages.json` 加可选 `tz`（如 `+08:00`），`stats.py` 按它算时段；`parse_export.py` 写入运行机器的时区。没做之前报告数据说明写"时段按 X 时区"。
+**T21 时区字段** ✅ v0.6：`parse_export --tz`，messages.json 的 `tz`，`basics.tz`，数据说明自动写。
 
-**T22 普通用户版三段化**：拆成"转录 → 算数 → 写作"三条消息；转录那条的输出严格等于 messages.json 的形状，用户可以把它贴进网页拿到准确数字，再回到 AI 写字。和 T7 一起做，减少让模型手算的部分。
+**T22 普通用户版三段化**（v0.6 做了第一步）：④ 截图转录版让聊天 AI 只抄成转录稿（脚本认的格式，比 JSON 好守），稿子交给 skill 或网页版算数。剩下：网页上线（T24）后把链接写进 ④，再在 T7 里实测国产模型守不守得住格式。
 
 ### P2 · 之后
 
@@ -312,7 +366,7 @@ python tools/pack.py [--sync-to 目录]                    # 打 .skill + 同步
 
 ```bash
 cd mama-message-repo/mama-message
-python tools/refresh.py          # 重生成示例 → 算数 → 校验 → 渲染 → lint → 测试 → 打包并同步上级目录，最后打印基线变化
+python tools/refresh.py          # 重生成示例 → 算数 → 校验 → 渲染 → lint → 素材包 → 对照卡 → 测试 → 打包并同步上级目录，最后打印基线变化
 ```
 
 它等于：
@@ -325,14 +379,15 @@ python scripts/validate.py examples/sample-messages.json
 python scripts/render.py examples/sample-stats.json examples/sample-narrative.json --out examples/reports
 python scripts/lint_narrative.py examples/sample-narrative.json --stats examples/sample-stats.json --messages examples/sample-messages.json
 grep -c "〔待写" examples/reports/mama-message-report.html   # 期望 0
-python scripts/compare.py examples/sample-stats.json examples/sample-stats.json --labels 妈 爸 --mode papa --out compare.json
+python scripts/brief.py examples/sample-stats.json examples/sample-messages.json --out examples/sample-brief.md
+python scripts/compare.py examples/sample-messages.json examples/sample-friend-messages.json --labels 你妈 朋友 --today 2026-08-30 --out examples/reports/sample-compare.json --card examples/reports/mama-message-card-compare.html
 python tools/pack.py --sync-to ../..                           # 重打 .skill + 同步上级目录发布副本（含本文件）
 python -m http.server 8000                                     # 然后开 http://localhost:8000/web/ 点"用模拟数据试试"
 ```
 
 Windows 上 `python` 而不是 `python3`；脚本已自带 UTF-8 输出。改了算法忘了重跑示例，golden 测试会红并告诉你命令。
 
-当前 sample 的基线数字（v0.4 起不变，v0.5 重构后逐字段一致；改词典/公式后 `refresh.py` 会列出变化，变了要能解释）：
+当前 sample 的基线数字（v0.4 起不变，v0.5、v0.6 重构后逐项一致；改词典/公式后 `refresh.py` 会列出变化，变了要能解释）：
 ```
 她 192 条 / 你 102 条 · 181 天
 谁先开口 她 86 / 你 42 · 你回她中位 1 小时 30 分 · 短回复 52 条 / 93 条回复 56%（v0.3 是 53/100，口径变了）
@@ -341,6 +396,8 @@ Windows 上 `python` 而不是 `python3`；脚本已自带 UTF-8 输出。改了
 她 三餐监督型（副 语音轰炸型）· 你 嗯哦好选手 · 评级 欠一个电话
 信号：🔴 腰不好回了4字 · 🔴 8 次打扰你了收尾 · 🟡 通话时长降 · 🟡 9 次没事
 ```
+
+v0.6 的写作素材（不进基线比对，narrative 里用到了）：问吃饭 19 次，饭点 8 / 不在饭点 11 · 她说起自己的事 1 次（08-14 腰，你 11 小时 47 分后回"注意休息"，之后都没再提）· 收尾 8 次里 6 次前一条是你的短回复 · 没回 59 段里 38 段是她在回你、25 段以收尾结束 · 对照组：回朋友 3 分钟 / 回妈 1 小时 30 分，30 倍。
 
 ---
 
@@ -364,16 +421,22 @@ Windows 上 `python` 而不是 `python3`；脚本已自带 UTF-8 输出。改了
 | narrative 先过 lint 再 render（v0.5） | "不编造"靠模型自觉不可靠；引号原话和数字都能机器核对 | 引用必须一字不差，AI 偶尔要改第二版 |
 | 网页版多源竞速、失败顺延 + Service Worker（v0.5） | 目标用户在国内，jsdelivr 主站时通时不通；npmmirror 对 .zip 返回 451；README 承诺"断网也能用"要成立 | 多一个 sw.js 要维护，缓存名变了要改 |
 | HANDOFF 进仓库，上级目录只放同步副本（v0.5） | 公开仓库的 CLAUDE.md 指向仓库外的文件，clone 的人找不到 | — |
+| 写作素材包 brief.md（v0.6） | lint 要求原话一字不差，但 AI 拿不到原话（网页只给 stats.json；Skill 里几万条读不完）；素材包把"写得准"要的原话和数字摆在一处，篇幅有上限 | 多一个脚本和一份产物 |
+| 截图走"转录稿"而不是 JSON（v0.6） | AI 抄文字比写合法 JSON 稳；去重叠、排顺序、换算"昨天 / 星期二"是机械活，归脚本 | 多一个适配器；格式要在真实截图上验证（已知问题 17） |
+| 口吻做成脚本行为（v0.6） | "收着"只写在提示词里时，render 照样盖"欠一次回家"的章、出"发给她"的卡——对她已经不在的用户是伤害 | 模板多了版块标记 |
+| "没回"只加诊断不改口径（v0.6） | 改口径会动招牌数字和视频文案，需要真实数据和作者拍板 | 报告里的"没回"仍偏宽（已知问题 16，T23） |
+| 出图调本机浏览器而不是加依赖（v0.6） | 标准库约束不变；Windows 11 自带 Edge，大多数人有 Chrome；没有就退回 HTML | 版面依赖本机字体；浏览器本身的行为不归我们管（已关后台联网） |
 
 ---
 
 ## 9. 给 Claude Code 的工作方式
 
 1. 先跑第 7 节的 `python tools/refresh.py`，确认全绿、基线没变。
-2. 按 P0 顺序做，T1 需要作者数据，没有就先做 T2、T6、T7/T22。
+2. 按 P0 顺序做，T1 需要作者数据（T23 跟着 T1 定），没有就先做 T2、T6、T7/T22、T24（要作者开）。
 3. 改词表只改 `lexicon.json`（`version` +1）；改公式或阈值改 `stats.py` 顶部常量，再同步 `metrics.md` / `types.md` / `普通用户版.md`，`test_docs_sync` 过了才算；改契约字段 `SCHEMA_VERSION` +1（第 5 节第 8、9 条）。基线变了更新第 7 节和 CHANGELOG。
 4. 改任何面向用户的字符串：过一遍 `writing-rules.md` 的黑名单和"不评判"；写 narrative 一律跑 `lint_narrative.py`。
-5. 新脚本：标准库、Python 3.8 语法、中文注释、`from _common import …`、`argparse(description=__doc__)`、失败时输出人话 exit 1、加进 `web/index.html` 的 `APP_FILES`。
+5. 新脚本：标准库、Python 3.8 语法、中文注释、`from _common import …`、`argparse(description=__doc__)`、失败时输出人话 exit 1、核心逻辑写成函数（mama.py 和测试直接调）、网页要用就加进 `web/index.html` 的 `APP_FILES`。
+5b. 自己跑一遍用户流程：`python scripts/mama.py run examples/sample-messages.json --today 2026-08-30 --dir mama-out` → 读 brief.md → `finish` → `explain` → `status`。
 6. 不要为了完整而加模块。首发清单在第 4 节，彩蛋以外的新想法记到 P2。
 7. 每完成一个 T，在 `CHANGELOG.md` 记一行，跑一次 `refresh.py`（它会重打 .skill 并同步上级目录的发布副本，包括本文件）。上级目录的 README / SKILL / 普通用户版 / 示例 HTML / HANDOFF / .skill 都是副本，不要直接改它们。
 8. 有疑问优先回第 1 节看产品定位，再回第 5 节看约束。两者都没答案的，问作者，不要猜。

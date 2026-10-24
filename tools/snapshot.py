@@ -14,8 +14,11 @@
 产出:
   docs/img/card-send.png    发给她的卡（只截卡片本身）
   docs/img/card-bill.png    亲情账单卡
+  docs/img/card-compare.png 对照卡（examples/reports 里有才出）
   docs/img/report.png       完整报告（整页）
   docs/img/report-top.png   报告首屏（README 里用）
+
+只想把一张卡出成 PNG、不想装 playwright：python scripts/snap.py 卡片.html（直接调本机 Chrome / Edge）。
 """
 import argparse
 import os
@@ -62,7 +65,12 @@ def main():
             sys.exit(1)
         ctx = browser.new_context(viewport={"width": 760, "height": 1200}, device_scale_factor=a.scale, locale="zh-CN")
         page = ctx.new_page()
-        for k in ("card-send", "card-bill"):
+        cmp_card = os.path.join(a.reports, "mama-message-card-compare.html")
+        if os.path.exists(cmp_card):
+            files["card-compare"] = cmp_card
+        for k in ("card-send", "card-bill", "card-compare"):
+            if k not in files:
+                continue
             page.goto("file:///" + os.path.abspath(files[k]).replace("\\", "/"))
             page.wait_for_timeout(400)
             page.locator("article.card").screenshot(path=os.path.join(a.out, f"{k}.png"))

@@ -78,11 +78,12 @@
 
 ## narrative.json
 
-`render.py` 读这些字段，缺哪个就在 HTML 里显示〔待写〕。
+`render.py` 读这些字段，缺哪个就在 HTML 里显示〔待写〕。素材（数字和能引的原话）在 `brief.md` 里，写之前通读一遍。
 
 ```json
 {
   "schema": 1,
+  "mode": "normal",
   "title": "你和妈妈的半年",
   "index_lines": {"care": "…", "short": "…", "forgive": "…"},
   "type_lines": {"mother": "…", "child": "…"},
@@ -101,17 +102,27 @@
 }
 ```
 
-`index_lines`、`forward_insight`、`bill_balance`、`send_cta`、`cta`、`footnote` 不写会用默认值（从 stats 自动拼）。其余必须写。`schema` 可不写。
+`index_lines`、`forward_insight`、`bill_balance`、`send_cta`、`cta`、`footnote` 不写会用默认值（从 stats 自动拼；footnote 里没写到的 `warnings` 和时区会自动补上）。`schema` 可不写。
 
-写完先过一遍 `python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json`：必填字段、字数、感叹号、黑名单、评判词，以及**引号里的原话必须在记录里真出现过、数字必须能在 stats.json 里找到**。有 ✗ 就改，改到过为止再 render。
+`mode` 是口吻，缺省 `normal`，可选 `normal / gentle / neutral / memorial / third`（什么时候用哪个、各去掉什么，见 `writing-rules.md`「什么时候要收着」）。口吻去掉的版块，对应字段不用写：`neutral` 不用写 `tonight` `call_openers` `send_text`；`memorial` 只用写 `she_means` `dictionary` `type_lines`；`third` 不用写 `tonight` `send_text`。其余口吻下 `she_means` `send_text` `dictionary` `tonight` `replies` `call_openers` `type_lines` 都必须写。
+
+写完先过一遍 lint（`mama.py finish` 会自动跑）：口吻和必填字段、字数、感叹号、黑名单、评判词、金额、称呼有没有串，以及**引号里的原话必须在记录里真出现过、数字必须能在 stats.json 里找到**。有 ✗ 就改，改到过为止再出报告。
 
 ## 生成命令
 
 ```bash
-python scripts/stats.py messages.json --out stats.json --today 2026-08-30 --her-birthday 10-20 --my-birthday 06-03
-# 读 stats.json，写 narrative.json
-python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json   # 过规矩
-python scripts/render.py stats.json narrative.json --out reports/
+python scripts/mama.py run 导出文件 --call 妈妈 --her-birthday 10-20 --my-birthday 06-03   # → mama-out/ stats.json、brief.md
+# 读 mama-out/brief.md，写 mama-out/narrative.json
+python scripts/mama.py finish --png                                                      # lint → 报告和卡片
 ```
 
-产出 `reports/mama-message-report.html`（完整报告）、`mama-message-card-bill.html`（亲情账单卡）、`mama-message-card-send.html`（发给她的卡）。告诉用户用浏览器打开、截图。
+拆开跑也行：
+
+```bash
+python scripts/stats.py messages.json --out stats.json --today 2026-08-30 --her-birthday 10-20 --my-birthday 06-03
+python scripts/brief.py stats.json messages.json --out brief.md
+python scripts/lint_narrative.py narrative.json --stats stats.json --messages messages.json
+python scripts/render.py stats.json narrative.json --out reports/ --png
+```
+
+产出 `reports/mama-message-report.html`（完整报告）、`mama-message-card-bill.html`（亲情账单卡）、`mama-message-card-send.html`（发给她的卡），`--png` 时两张卡各多一张 PNG（本机 Chrome / Edge 截的，没装就只有 HTML）。口吻去掉的卡不出。
