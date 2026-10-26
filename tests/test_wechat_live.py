@@ -57,11 +57,13 @@ class FakeAlpha(BaseHTTPRequestHandler):
         pass
 
     def do_POST(self):
+        body = self.rfile.read(int(self.headers["Content-Length"]))   # 先读完请求再回，不然 Windows 上客户端会收到"连接被中止"
         if self.headers.get("Authorization") != "Bearer " + TOKEN:
             self.send_response(401)
+            self.send_header("Content-Length", "0")
             self.end_headers()
             return
-        req = json.loads(self.rfile.read(int(self.headers["Content-Length"])).decode("utf-8"))
+        req = json.loads(body.decode("utf-8"))
         name, args = req["params"].get("name"), req["params"].get("arguments", {})
         FakeAlpha.calls.append(name)
         if name == "wechat.chat.resolve_session":
