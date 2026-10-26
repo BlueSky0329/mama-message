@@ -14,7 +14,7 @@ import _common      # noqa: E402
 from parse_export import TYPE_MARKERS, WX_TYPE, clip, norm_ts   # noqa: E402
 
 # 时间戳按本机时区解释，期望值也按本机算，CI 在哪个时区都过
-LOCAL = datetime(2026, 5, 12, 21, 3, 14)
+LOCAL = datetime.fromtimestamp(1778590994)   # ms.csv 第一条的毫秒时间戳，北京时间 2026-05-12 21:03:14
 UTC_13_03 = datetime.fromisoformat("2026-05-12T13:03:14+00:00").astimezone().strftime("%Y-%m-%dT%H:%M:%S")
 
 CASES = {
